@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Last Tech</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#f8f8f8;color:#111;min-height:100vh}
+.page{display:none;min-height:100vh;padding-bottom:80px}
+.page.active{display:block}
+header{background:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;position:sticky;top:0;z-index:50}
+.logo{display:flex;align-items:center;gap:8px;cursor:pointer}
+.logo-icon{width:34px;height:34px;background:#e11d48;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px}
+.logo-text{font-size:18px;font-weight:800}.logo-text span{color:#e11d48}
+.btn{background:#e11d48;color:#fff;border:none;padding:14px;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;width:100%;text-align:center}
+.btn:disabled{background:#ccc}
+.btn.dark{background:#111}
+.btn.outline{background:transparent;border:1px solid #444;color:#fff}
+.btn.sm{padding:10px 16px;width:auto;font-size:13px}
+.btn.green{background:#16a34a}
+input,select,textarea{width:100%;padding:13px 14px;border:1px solid #e5e5e5;border-radius:11px;font-size:15px;background:#fafafa;outline:none;font-family:inherit}
+input:focus,select:focus{border-color:#e11d48;background:#fff}
+label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+.form-group{margin-bottom:14px}
+.container{max-width:480px;margin:0 auto;padding:20px}
+.card{background:#fff;border-radius:16px;padding:18px;border:1px solid #eee;margin-bottom:14px}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;display:flex;justify-content:space-around;padding:10px 0 14px;z-index:100}
+.nav-item{text-align:center;color:#999;font-size:11px;font-weight:600;background:none;border:none;cursor:pointer}
+.nav-item.active{color:#e11d48}
+.nav-item .icon{font-size:20px;display:block;margin-bottom:2px}
+.user-chip{background:#f1f1f1;padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600}
+.balance-card{background:linear-gradient(135deg,#111,#2a2a2a);color:#fff;border-radius:20px;padding:24px 20px;margin-bottom:18px}
+.balance-label{font-size:13px;color:#aaa;margin-bottom:4px}
+.balance-amount{font-size:32px;font-weight:800;margin-bottom:16px}
+.balance-actions{display:flex;gap:10px}
+.balance-actions .btn{flex:1}
+.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.quick-item{background:#fff;border-radius:16px;padding:18px 14px;text-align:center;border:1px solid #eee;cursor:pointer}
+.quick-item .qicon{font-size:24px;margin-bottom:6px}
+.quick-item .qlabel{font-size:13px;font-weight:600}
+.section-title{font-size:16px;font-weight:800;margin-bottom:12px}
+.task{background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid #eee}
+.task-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.task-info h4{font-size:14px;font-weight:700;margin-bottom:2px}
+.task-info p{font-size:12px;color:#666}
+.task-reward{background:#fef2f2;color:#e11d48;font-weight:700;font-size:13px;padding:6px 10px;border-radius:8px}
+.plan-card{background:#fff;border-radius:18px;padding:20px;margin-bottom:14px;border:2px solid #eee;position:relative}
+.plan-card .badge{position:absolute;top:-10px;right:16px;background:#e11d48;color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px}
+.plan-card h3{font-size:18px;font-weight:800;margin-bottom:4px}
+.plan-card .price{font-size:24px;font-weight:800;color:#e11d48;margin-bottom:6px}
+.plan-card .earn{background:#fef2f2;color:#be123c;display:inline-block;padding:5px 10px;border-radius:8px;font-size:13px;font-weight:700;margin-bottom:12px}
+.back-btn{font-size:20px;background:none;border:none;cursor:pointer;margin-right:8px}
+.header-title{font-size:17px;font-weight:700}
+.status-box{border-radius:12px;padding:14px;font-size:13px;margin-bottom:14px;font-weight:600}
+.status-box.open{background:#dcfce7;color:#166534}
+.status-box.closed{background:#fef2f2;color:#be123c}
+.hero{text-align:center;padding:40px 20px 20px}
+.hero h1{font-size:26px;font-weight:800;margin-bottom:8px}
+.hero p{color:#555;font-size:14px;max-width:300px;margin:0 auto 20px}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 20px 30px;max-width:480px;margin:0 auto}
+.stat{background:#f8f8f8;border-radius:14px;padding:14px 6px;text-align:center}
+.stat strong{display:block;font-size:20px;font-weight:800;color:#e11d48}
+.stat span{font-size:11px;color:#666}
+.step{display:flex;gap:12px;background:#fafafa;border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid #f0f0f0}
+.step-num{width:30px;height:30px;background:#e11d48;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+.name-box{margin-top:12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:14px;display:none}
+.name-box.show{display:block}
+.name-box .name{font-size:17px;font-weight:700;color:#15803d}
+.bank-details{background:#f8f8f8;border-radius:12px;padding:14px}
+.detail-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #eee;font-size:14px}
+.detail-row:last-child{border-bottom:none}
+.copy-btn{background:#e11d48;color:#fff;border:none;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer}
+.amount-card{background:linear-gradient(135deg,#111,#2a2a2a);color:#fff;border-radius:18px;padding:24px 20px;text-align:center;margin-bottom:18px}
+.amount-card .amount{font-size:36px;font-weight:800}
+.item{background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid #eee;display:flex;justify-content:space-between;align-items:center}
+.item-left h4{font-size:14px;font-weight:700}
+.item-left p{font-size:12px;color:#888}
+.item-right .amount{font-weight:800;font-size:15px}
+.item-right .amount.plus{color:#16a34a}
+.item-right .amount.minus{color:#e11d48}
+.empty{text-align:center;padding:40px 20px;color:#aaa;font-size:14px}
+.admin-login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#f1f5f9}
+.admin-box{background:#fff;padding:32px 28px;border-radius:16px;width:100%;max-width:360px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+.admin-header{background:#0f172a;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center}
+.admin-tabs{display:flex;background:#fff;border-bottom:1px solid #e2e8f0;overflow-x:auto}
+.admin-tab{flex:1;min-width:70px;text-align:center;padding:12px 4px;font-size:12px;font-weight:600;color:#64748b;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent}
+.admin-tab.active{color:#e11d48;border-bottom-color:#e11d48}
+.admin-card{background:#fff;border-radius:14px;border:1px solid #e2e8f0;margin-bottom:12px;padding:14px 16px}
+.admin-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}
+.admin-row .l{color:#64748b}
+.loading{text-align:center;padding:40px;color:#888}
+.error{background:#fef2f2;color:#be123c;padding:12px;border-radius:10px;font-size:13px;margin-bottom:14px;display:none}
+</style>
+</head>
+<body>
+
+<!-- LANDING -->
+<div class="page active" id="page-landing" style="background:#fff;padding-bottom:40px">
+  <header>
+    <div class="logo"><div class="logo-icon">L</div><div class="logo-text">Last<span>Tech</span></div></div>
+    <button class="btn sm dark" onclick="go('login')">Sign in</button>
+  </header>
+  <div class="hero">
+    <h1>Last Tech</h1>
+    <p>Earn real cash by leaving genuine Google reviews for local businesses.</p>
+  </div>
+  <div class="stats-row">
+    <div class="stat"><strong>12K+</strong><span>Reviewers</span></div>
+    <div class="stat"><strong>3.5K</strong><span>Businesses</span></div>
+    <div class="stat"><strong>180K</strong><span>Reviews</span></div>
+  </div>
+  <div class="container">
+    <div class="section-title" style="text-align:center">How it works</div>
+    <div class="step"><div class="step-num">01</div><div><h3 style="font-size:14px;font-weight:700">Visit a business</h3><p style="font-size:12px;color:#555">Explore their service</p></div></div>
+    <div class="step"><div class="step-num">02</div><div><h3 style="font-size:14px;font-weight:700">Leave a genuine review</h3><p style="font-size:12px;color:#555">On Google Maps</p></div></div>
+    <div class="step"><div class="step-num">03</div><div><h3 style="font-size:14px;font-weight:700">Earn rewards</h3><p style="font-size:12px;color:#555">Money added to your wallet</p></div></div>
+    <button class="btn" style="margin-top:20px" onclick="go('register')">Create free account</button>
+    <button class="btn dark" style="margin-top:10px" onclick="go('login')">Sign in</button>
+    
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="page" id="page-login" style="background:#fff">
+  <header><div class="logo" onclick="go('landing')"><div class="logo-icon">L</div><div class="logo-text">Last<span>Tech</span></div></div></header>
+  <div class="container" style="padding-top:40px">
+    <h1 style="font-size:26px;font-weight:800;text-align:center;margin-bottom:8px">Welcome back</h1>
+    <p style="text-align:center;color:#666;font-size:14px;margin-bottom:24px">Sign in to continue earning</p>
+    <div class="error" id="loginError"></div>
+    <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="you@example.com"/></div>
+    <div class="form-group"><label>Password</label><input type="password" id="loginPass" placeholder="Your password"/></div>
+    <button class="btn" id="loginBtn" onclick="doLogin()">Sign in</button>
+    <p style="text-align:center;margin-top:20px;font-size:14px">No account? <a href="#" onclick="go('register')" style="color:#e11d48;font-weight:600">Create one</a></p>
+  </div>
+</div>
+
+<!-- REGISTER -->
+<div class="page" id="page-register" style="background:#fff">
+  <header><div class="logo" onclick="go('landing')"><div class="logo-icon">L</div><div class="logo-text">Last<span>Tech</span></div></div></header>
+  <div class="container" style="padding-top:24px">
+    <h1 style="font-size:26px;font-weight:800;text-align:center;margin-bottom:8px">Create account</h1>
+    <p style="text-align:center;color:#666;font-size:14px;margin-bottom:20px">Start earning with Last Tech</p>
+    <div class="error" id="regError"></div>
+    <div class="form-group"><label>Full Name</label><input type="text" id="regName"/></div>
+    <div class="form-group"><label>Email</label><input type="email" id="regEmail"/></div>
+    <div class="form-group"><label>Phone</label><input type="tel" id="regPhone" placeholder="080..."/></div>
+    <div class="form-group"><label>Password</label><input type="password" id="regPass"/></div>
+    <div style="border-top:1px solid #eee;padding-top:14px;margin-top:6px">
+      <div class="section-title">Bank Verification</div>
+      <div class="form-group"><label>Bank</label>
+        <select id="regBank">
+          <option value="">Choose bank</option>
+          <option value="opay">OPay</option><option value="kuda">Kuda</option>
+          <option value="gtb">GTBank</option><option value="access">Access</option>
+          <option value="zenith">Zenith</option><option value="uba">UBA</option>
+          <option value="firstbank">First Bank</option><option value="palmpay">PalmPay</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Account Number</label><input type="text" id="regAcc" maxlength="10" placeholder="10 digits"/></div>
+      <button class="btn dark" onclick="verifyBank()">Verify Account</button>
+      <div class="name-box" id="nameBox"><div style="font-size:12px;color:#166534">Account Name</div><div class="name" id="accName">—</div></div>
+    </div>
+    <button class="btn" style="margin-top:18px" id="regBtn" onclick="doRegister()">Create Account</button>
+    <p style="text-align:center;margin-top:14px;font-size:14px">Have account? <a href="#" onclick="go('login')" style="color:#e11d48;font-weight:600">Sign in</a></p>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="page" id="page-dashboard">
+  <header>
+    <div class="logo"><div class="logo-icon">L</div><div class="logo-text">Last<span>Tech</span></div></div>
+    <div class="user-chip" id="userChip">User</div>
+  </header>
+  <div class="container">
+    <div class="balance-card">
+      <div class="balance-label">Available Balance</div>
+      <div class="balance-amount" id="dashBalance">₦0.00</div>
+      <div class="balance-actions">
+        <button class="btn" onclick="go('withdraw')">Withdraw</button>
+        <button class="btn outline" onclick="go('referral')">Invite</button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong>Your Plan</strong>
+        <span style="background:#fef2f2;color:#e11d48;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700" id="dashPlan">Free</span>
+      </div>
+      <p style="font-size:13px;color:#666;margin-top:6px" id="dashPlanInfo">Earn ₦0 – ₦50 per task</p>
+    </div>
+    <div class="quick-grid">
+      <div class="quick-item" onclick="go('tasks')"><div class="qicon">📝</div><div class="qlabel">Tasks</div></div>
+      <div class="quick-item" onclick="go('plans')"><div class="qicon">🚀</div><div class="qlabel">Upgrade</div></div>
+      <div class="quick-item" onclick="go('history')"><div class="qicon">📊</div><div class="qlabel">History</div></div>
+      <div class="quick-item" onclick="go('support')"><div class="qicon">💬</div><div class="qlabel">Support</div></div>
+    </div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="go('dashboard')"><span class="icon">🏠</span>Home</button>
+    <button class="nav-item" onclick="go('tasks')"><span class="icon">✅</span>Tasks</button>
+    <button class="nav-item" onclick="go('referral')"><span class="icon">👥</span>Invite</button>
+    <button class="nav-item" onclick="go('withdraw')"><span class="icon">💰</span>Wallet</button>
+  </nav>
+</div>
+
+<!-- TASKS -->
+<div class="page" id="page-tasks">
+  <header>
+    <div class="logo"><div class="logo-icon">L</div><div class="logo-text">Last<span>Tech</span></div></div>
+    <span style="background:#fef2f2;color:#e11d48;padding:5px 12px;border-radius:999px;font-size:12px;font-weight:700" id="taskPlanBadge">Free</span>
+  </header>
+  <div class="container">
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+      <div><strong style="font-size:14px">Earning range</strong><p style="font-size:12px;color:#666" id="taskPlanDesc">Free plan</p></div>
+      <div style="font-size:15px;font-weight:800;color:#e11d48" id="taskEarnRange">₦0–50</div>
+    </div>
+    <div id="upgradeBanner" class="card" style="background:linear-gradient(135deg,#111,#2a2a2a);color:#fff;text-align:center">
+      <p style="font-size:13px;margin-bottom:10px">Upgrade to earn more!</p>
+      <button class="btn sm" onclick="go('plans')">View Plans</button>
+    </div>
+    <div class="section-title">Available Tasks</div>
+    <div id="taskList"></div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-item" onclick="go('dashboard')"><span class="icon">🏠</span>Home</button>
+    <button class="nav-item active" onclick="go('tasks')"><span class="icon">✅</span>Tasks</button>
+    <button class="nav-item" onclick="go('referral')"><span class="icon">👥</span>Invite</button>
+    <button class="nav-item" onclick="go('withdraw')"><span class="icon">💰</span>Wallet</button>
+  </nav>
+</div>
+
+<!-- TASK DETAIL -->
+<div class="page" id="page-taskdetail">
+  <header>
+    <button class="back-btn" onclick="go('tasks')">←</button>
+    <div class="header-title">Task</div>
+  </header>
+  <div class="container">
+    <div class="card">
+      <div style="font-size:13px;color:#e11d48;font-weight:700;margin-bottom:6px" id="tdReward">₦0–50</div>
+      <h2 style="font-size:18px;font-weight:800;margin-bottom:8px" id="tdName">Task</h2>
+      <p style="font-size:13px;color:#555" id="tdDesc"></p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:10px">Instructions</h3>
+      <ol style="font-size:13px;color:#444;line-height:1.8;padding-left:18px" id="tdSteps"></ol>
+    </div>
+    <div class="card" id="tdTimerCard" style="text-align:center">
+      <div style="font-size:13px;color:#666;margin-bottom:8px">Time remaining</div>
+      <div style="font-size:36px;font-weight:800;color:#e11d48" id="tdTimer">00:30</div>
+    </div>
+    <div class="card" id="tdProofCard" style="display:none">
+      <p style="font-size:13px;color:#555;margin-bottom:10px">Have you completed the task?</p>
+    </div>
+    <button class="btn" id="tdActionBtn" onclick="taskAction()">Start Task</button>
+    <p id="tdStatus" style="text-align:center;margin-top:12px;font-size:13px;display:none"></p>
+  </div>
+</div>
+
+<!-- PLANS -->
+<div class="page" id="page-plans">
+  <header><button class="back-btn" onclick="go('dashboard')">←</button><div class="header-title">Upgrade Plan</div></header>
+  <div class="container">
+    <div class="card" style="display:flex;justify-content:space-between"><span>Current</span><strong style="color:#e11d48" id="plansCurrent">Free</strong></div>
+    <div class="plan-card"><h3>Free</h3><div class="price">₦0</div><div class="earn">₦0 – ₦50 / task</div><button class="btn" disabled>Current Plan</button></div>
+    <div class="plan-card"><div class="badge">Popular</div><h3>Beginner</h3><div class="price">₦1,000</div><div class="earn">₦400 – ₦500 / task</div><button class="btn" onclick="startDeposit('beginner',1000)">Upgrade</button></div>
+    <div class="plan-card"><h3>Pro</h3><div class="price">₦5,000</div><div class="earn">₦900 – ₦1,000 / task</div><button class="btn" onclick="startDeposit('pro',5000)">Upgrade</button></div>
+    <div class="plan-card"><h3>Master</h3><div class="price">₦15,000</div><div class="earn">₦2,000 – ₦3,000 / task</div><button class="btn" onclick="startDeposit('master',15000)">Upgrade</button></div>
+  </div>
+</div>
+
+<!-- DEPOSIT -->
+<div class="page" id="page-deposit">
+  <header><button class="back-btn" onclick="go('plans')">←</button><div class="header-title">Make Payment</div></header>
+  <div class="container">
+    <div class="amount-card">
+      <div style="font-size:13px;opacity:.8">Amount to Pay</div>
+      <div class="amount" id="depAmount">₦0</div>
+      <div style="font-size:14px;margin-top:6px" id="depPlanName">—</div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:12px">Transfer to</h3>
+      <div class="bank-details">
+        <div class="detail-row"><span>Bank</span><strong>OPay</strong></div>
+        <div class="detail-row"><span>Account</span><strong>9033527049 <button class="copy-btn" onclick="copyText('9033527049')">Copy</button></strong></div>
+        <div class="detail-row"><span>Name</span><strong>Last Tech</strong></div>
+      </div>
+    </div>
+    <button class="btn" id="paidBtn" onclick="confirmPaid()">I have paid</button>
+    <p id="depStatus" style="text-align:center;margin-top:14px;font-size:13px;display:none"></p>
+  </div>
+</div>
+
+<!-- WITHDRAW -->
+<div class="page" id="page-withdraw">
+  <header><button class="back-btn" onclick="go('dashboard')">←</button><div class="header-title">Withdraw</div></header>
+  <div class="container">
+    <div class="card" style="text-align:center">
+      <div style="font-size:13px;color:#666">Balance</div>
+      <div style="font-size:28px;font-weight:800;color:#e11d48" id="wdBalance">₦0</div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:10px">Main Withdraw</h3>
+      <div class="status-box" id="mainStatus">Checking...</div>
+      <div class="form-group"><label>Amount</label><input type="number" id="mainAmount" placeholder="Min ₦500"/></div>
+      <button class="btn" id="mainBtn" onclick="doMainWithdraw()" disabled>Request</button>
+      <p style="font-size:12px;color:#888;margin-top:8px;text-align:center">Only 30th – 6th of month</p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:10px">Referral Withdraw</h3>
+      <div class="status-box" id="refStatus">Checking...</div>
+      <div class="form-group"><label>Referral Balance</label><input type="text" id="refBalDisplay" readonly style="background:#eee"/></div>
+      <div class="form-group"><label>Amount</label><input type="number" id="refAmount" placeholder="Min ₦200"/></div>
+      <button class="btn" id="refBtn" onclick="doRefWithdraw()" disabled>Request</button>
+      <p style="font-size:12px;color:#888;margin-top:8px;text-align:center">Only 9AM – 10AM daily</p>
+    </div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-item" onclick="go('dashboard')"><span class="icon">🏠</span>Home</button>
+    <button class="nav-item" onclick="go('tasks')"><span class="icon">✅</span>Tasks</button>
+    <button class="nav-item" onclick="go('referral')"><span class="icon">👥</span>Invite</button>
+    <button class="nav-item active" onclick="go('withdraw')"><span class="icon">💰</span>Wallet</button>
+  </nav>
+</div>
+
+<!-- REFERRAL -->
+<div class="page" id="page-referral">
+  <header><button class="back-btn" onclick="go('dashboard')">←</button><div class="header-title">Invite & Earn</div></header>
+  <div class="container">
+    <div class="card" style="background:linear-gradient(135deg,#e11d48,#be123c);color:#fff;text-align:center">
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:6px">Earn ₦200 per friend</h2>
+      <p style="font-size:13px;opacity:.9">When they sign up AND deposit</p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:10px">Your Link</h3>
+      <div style="background:#f8f8f8;border-radius:10px;padding:12px;font-size:13px;word-break:break-all;margin-bottom:12px" id="inviteLink">—</div>
+      <button class="btn" onclick="copyInvite()">Copy Link</button>
+    </div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-item" onclick="go('dashboard')"><span class="icon">🏠</span>Home</button>
+    <button class="nav-item" onclick="go('tasks')"><span class="icon">✅</span>Tasks</button>
+    <button class="nav-item active" onclick="go('referral')"><span class="icon">👥</span>Invite</button>
+    <button class="nav-item" onclick="go('withdraw')"><span class="icon">💰</span>Wallet</button>
+  </nav>
+</div>
+
+<!-- HISTORY -->
+<div class="page" id="page-history">
+  <header><button class="back-btn" onclick="go('dashboard')">←</button><div class="header-title">History</div></header>
+  <div class="container"><div id="historyList"></div></div>
+</div>
+
+<!-- SUPPORT -->
+<div class="page" id="page-support">
+  <header><button class="back-btn" onclick="go('dashboard')">←</button><div class="header-title">Support</div></header>
+  <div class="container">
+    <div class="card">
+      <p style="font-size:13px;margin-bottom:8px">WhatsApp: <strong>09033527049</strong></p>
+      <p style="font-size:13px">Email: support@lasttech.com.ng</p>
+    </div>
+    <div class="card">
+      <div class="form-group"><label>Subject</label>
+        <select id="supSubject"><option value="deposit">Deposit</option><option value="withdraw">Withdrawal</option><option value="other">Other</option></select>
+      </div>
+      <div class="form-group"><label>Message</label><textarea id="supMsg" rows="4"></textarea></div>
+      <button class="btn" onclick="sendSupport()">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="page" id="page-admin">
+  <div id="adminLoginScreen" class="admin-login">
+    <div class="admin-box">
+      <h1 style="font-size:22px;font-weight:800;text-align:center;margin-bottom:6px">Admin</h1>
+      <p style="text-align:center;color:#64748b;font-size:13px;margin-bottom:20px">Enter password</p>
+      <div class="error" id="adminError"></div>
+      <input type="password" id="adminPass" placeholder="Password" style="margin-bottom:12px"/>
+      <button class="btn" onclick="adminLogin()">Login</button>
+      <p style="text-align:center;margin-top:14px"><a href="#" onclick="go('landing')" style="font-size:13px;color:#e11d48">← Back</a></p>
+    </div>
+  </div>
+  <div id="adminPanel" style="display:none">
+    <div class="admin-header">
+      <h1 style="font-size:17px">Last Tech Admin</h1>
+      <button class="btn sm" onclick="adminLogout()">Logout</button>
+    </div>
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="adminTab('overview',this)">Overview</button>
+      <button class="admin-tab" onclick="adminTab('deposits',this)">Deposits</button>
+      <button class="admin-tab" onclick="adminTab('withdrawals',this)">Withdrawals</button>
+      <button class="admin-tab" onclick="adminTab('users',this)">Users</button>
+    </div>
+    <div class="container" style="padding-top:16px">
+      <div id="admin-overview">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+          <div class="card" style="text-align:center"><strong id="aUsers" style="font-size:22px;color:#e11d48">0</strong><div style="font-size:12px;color:#666">Users</div></div>
+          <div class="card" style="text-align:center"><strong id="aDeps" style="font-size:22px;color:#e11d48">0</strong><div style="font-size:12px;color:#666">Pending Deposits</div></div>
+          <div class="card" style="text-align:center"><strong id="aWds" style="font-size:22px;color:#e11d48">0</strong><div style="font-size:12px;color:#666">Pending Withdrawals</div></div>
+        </div>
+      </div>
+      <div id="admin-deposits" style="display:none"></div>
+      <div id="admin-withdrawals" style="display:none"></div>
+      <div id="admin-users" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'https://lasttech.onrender.com';
+const plans = {
+  free: {name:'Free', min:0, max:50},
+  beginner: {name:'Beginner', min:400, max:500},
+  pro: {name:'Pro', min:900, max:1000},
+  master: {name:'Master', min:2000, max:3000}
+};
+let token = localStorage.getItem('lt_token') || '';
+let adminToken = sessionStorage.getItem('lt_admin_token') || '';
+let currentUser = null;
+let pendingPlan = null;
+let currentTask = null, taskTimer = null, taskTimeLeft = 0, taskPhase = 'ready';
+let completedTasks = [];
+
+const $ = id => document.getElementById(id);
+
+async function api(path, options = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+  if (token && !options.admin) headers.Authorization = 'Bearer ' + token;
+  if (options.admin && adminToken) headers.Authorization = 'Bearer ' + adminToken;
+  const res = await fetch(API + path, { ...options, headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+function go(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const el = $('page-' + page);
+  if (el) el.classList.add('active');
+  window.scrollTo(0, 0);
+  if (page === 'dashboard') loadDashboard();
+  if (page === 'tasks') loadTasks();
+  if (page === 'plans') loadPlans();
+  if (page === 'withdraw') loadWithdraw();
+  if (page === 'referral') loadReferral();
+  if (page === 'history') loadHistory();
+  if (page === 'admin') {
+    if (adminToken) { $('adminLoginScreen').style.display = 'none'; $('adminPanel').style.display = 'block'; loadAdmin(); }
+    else { $('adminLoginScreen').style.display = 'flex'; $('adminPanel').style.display = 'none'; }
+  }
+}
+
+// AUTH
+async function doLogin() {
+  const email = $('loginEmail').value.trim();
+  const password = $('loginPass').value;
+  $('loginError').style.display = 'none';
+  $('loginBtn').disabled = true;
+  try {
+    const data = await api('/api/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+    token = data.token;
+    localStorage.setItem('lt_token', token);
+    currentUser = data.user;
+    go('dashboard');
+  } catch (e) {
+    $('loginError').textContent = e.message;
+    $('loginError').style.display = 'block';
+  }
+  $('loginBtn').disabled = false;
+}
+
+const fakeNames = ['CHINEDU OKORO','ADEOLA BALOGUN','FATIMA ABDULLAHI','EMMANUEL NWANKWO','BLESSING ADEYEMI','IBRAHIM MUSA','CHIOMA EZE','AMINA BELLO','TUNDE OKAFOR'];
+function verifyBank() {
+  const bank = $('regBank').value, acc = $('regAcc').value.trim();
+  if (!bank) return alert('Select bank');
+  if (acc.length !== 10) return alert('Enter 10-digit account number');
+  $('accName').textContent = 'Checking...';
+  $('nameBox').classList.add('show');
+  setTimeout(() => {
+    let h = 0; for (let i = 0; i < acc.length; i++) h = (h + acc.charCodeAt(i) * (i + 1)) % fakeNames.length;
+    $('accName').textContent = fakeNames[h];
+  }, 800);
+}
+
+async function doRegister() {
+  const name = $('regName').value.trim();
+  const email = $('regEmail').value.trim();
+  const phone = $('regPhone').value.trim();
+  const password = $('regPass').value;
+  const bank = $('regBank').value;
+  const account_number = $('regAcc').value.trim();
+  const account_name = $('accName').textContent;
+  $('regError').style.display = 'none';
+  if (!name || !email || !password) return alert('Fill all fields');
+  if (!$('nameBox').classList.contains('show') || account_name === '—' || account_name === 'Checking...') return alert('Verify bank first');
+  $('regBtn').disabled = true;
+  try {
+    const data = await api('/api/register', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, phone, password, bank, account_number, account_name })
+    });
+    token = data.token;
+    localStorage.setItem('lt_token', token);
+    currentUser = data.user;
+    go('dashboard');
+  } catch (e) {
+    $('regError').textContent = e.message;
+    $('regError').style.display = 'block';
+  }
+  $('regBtn').disabled = false;
+}
+
+// DASHBOARD
+async function loadDashboard() {
+  if (!token) return go('login');
+  try {
+    currentUser = await api('/api/me');
+    $('userChip').textContent = (currentUser.name || 'User').split(' ')[0];
+    $('dashBalance').textContent = '₦' + Number(currentUser.balance || 0).toLocaleString() + '.00';
+    const p = plans[currentUser.plan] || plans.free;
+    $('dashPlan').textContent = p.name;
+    $('dashPlanInfo').textContent = 'Earn ₦' + p.min + ' – ₦' + p.max + ' per task';
+  } catch (e) {
+    token = ''; localStorage.removeItem('lt_token');
+    go('login');
+  }
+}
+
+// TASKS
+const allTasks = [
+  {id:1, title:'Google Review – Restaurant', desc:'Leave an honest review for a local restaurant.', type:'review',
+   steps:['Open Google Maps','Search the restaurant','Tap Write a review','Write at least 15 words','Submit','Return here']},
+  {id:2, title:'Google Review – Salon', desc:'Review a nearby beauty salon.', type:'review',
+   steps:['Open Google Maps','Find the salon','Write a genuine review','Submit','Return and confirm']},
+  {id:3, title:'Engage with Ad', desc:'View a featured ad for 20 seconds.', type:'ad',
+   steps:['Tap Start','View the content','Stay until timer ends','Confirm']},
+  {id:4, title:'Google Review – Pharmacy', desc:'Leave a genuine pharmacy review.', type:'review',
+   steps:['Open Google Maps','Search the pharmacy','Write honest review','Submit','Return']},
+  {id:5, title:'Visit Business Website', desc:'Explore a business site for 30 seconds.', type:'visit',
+   steps:['Tap Start','Browse the website','Stay full timer','Confirm']},
+  {id:6, title:'Google Review – Fashion Store', desc:'Review a clothing store.', type:'review',
+   steps:['Open Google Maps','Find the store','Write review','Submit','Confirm']}
+];
+
+async function loadTasks() {
+  if (!token) return go('login');
+  try {
+    if (!currentUser) currentUser = await api('/api/me');
+    completedTasks = await api('/api/tasks/completed');
+  } catch { completedTasks = []; }
+  const p = plans[currentUser?.plan] || plans.free;
+  $('taskPlanBadge').textContent = p.name;
+  $('taskEarnRange').textContent = '₦' + p.min + '–' + p.max;
+  $('taskPlanDesc').textContent = p.name + ' plan';
+  $('upgradeBanner').style.display = (currentUser?.plan || 'free') === 'free' ? 'block' : 'none';
+  const list = $('taskList'); list.innerHTML = '';
+  allTasks.forEach(t => {
+    const done = completedTasks.includes(t.id);
+    list.innerHTML += `<div class="task">
+      <div class="task-top"><div class="task-info"><h4>${t.title}</h4><p>${t.desc}</p></div>
+      <div class="task-reward">${done ? 'Done' : '₦' + p.min + '–' + p.max}</div></div>
+      <button class="btn ${done ? 'dark' : ''}" ${done ? 'disabled' : ''} onclick="openTask(${t.id})">${done ? '✓ Completed' : 'View Task'}</button>
+    </div>`;
+  });
+}
+
+function openTask(id) {
+  const t = allTasks.find(x => x.id === id);
+  if (!t) return;
+  currentTask = t; taskPhase = 'ready';
+  if (taskTimer) { clearInterval(taskTimer); taskTimer = null; }
+  const p = plans[currentUser?.plan] || plans.free;
+  $('tdName').textContent = t.title;
+  $('tdDesc').textContent = t.desc;
+  $('tdReward').textContent = 'Earn ₦' + p.min + ' – ₦' + p.max;
+  $('tdSteps').innerHTML = t.steps.map(s => '<li>' + s + '</li>').join('');
+  $('tdTimer').textContent = '00:30';
+  $('tdTimerCard').style.display = 'block';
+  $('tdProofCard').style.display = 'none';
+  $('tdActionBtn').disabled = false;
+  $('tdActionBtn').textContent = 'Start Task';
+  $('tdActionBtn').className = 'btn';
+  $('tdStatus').style.display = 'none';
+  go('taskdetail');
+}
+
+function taskAction() {
+  if (!currentTask) return;
+  if (taskPhase === 'ready') {
+    taskPhase = 'running';
+    taskTimeLeft = (currentTask.type === 'ad' || currentTask.type === 'visit') ? 20 : 30;
+    $('tdActionBtn').disabled = true;
+    $('tdActionBtn').textContent = 'In progress...';
+    $('tdStatus').style.display = 'block';
+    $('tdStatus').style.color = '#d97706';
+    $('tdStatus').textContent = 'Complete the steps while timer runs.';
+    taskTimer = setInterval(() => {
+      taskTimeLeft--;
+      const m = String(Math.floor(taskTimeLeft / 60)).padStart(2, '0');
+      const s = String(taskTimeLeft % 60).padStart(2, '0');
+      $('tdTimer').textContent = m + ':' + s;
+      if (taskTimeLeft <= 0) {
+        clearInterval(taskTimer); taskTimer = null; taskPhase = 'confirm';
+        $('tdTimerCard').style.display = 'none';
+        $('tdProofCard').style.display = 'block';
+        $('tdActionBtn').disabled = false;
+        $('tdActionBtn').textContent = 'I have completed this task';
+        $('tdStatus').style.color = '#16a34a';
+        $('tdStatus').textContent = 'Confirm to receive reward.';
+      }
+    }, 1000);
+  } else if (taskPhase === 'confirm') {
+    const p = plans[currentUser?.plan] || plans.free;
+    const reward = Math.floor(Math.random() * (p.max - p.min + 1)) + p.min;
+    $('tdActionBtn').disabled = true;
+    $('tdActionBtn').textContent = 'Submitting...';
+    api('/api/tasks/complete', { method: 'POST', body: JSON.stringify({ task_id: currentTask.id, reward }) })
+      .then(data => {
+        $('tdActionBtn').textContent = '✓ Earned ₦' + data.reward;
+        $('tdActionBtn').className = 'btn dark';
+        $('tdStatus').textContent = 'Reward added!';
+        setTimeout(() => go('tasks'), 1500);
+      })
+      .catch(e => {
+        alert(e.message);
+        $('tdActionBtn').disabled = false;
+        $('tdActionBtn').textContent = 'I have completed this task';
+      });
+  }
+}
+
+// PLANS / DEPOSIT
+function loadPlans() {
+  const p = plans[currentUser?.plan] || plans.free;
+  $('plansCurrent').textContent = p.name;
+}
+function startDeposit(key, price) {
+  pendingPlan = { key, price, name: plans[key].name };
+  $('depAmount').textContent = '₦' + price.toLocaleString();
+  $('depPlanName').textContent = plans[key].name + ' Plan';
+  $('paidBtn').disabled = false;
+  $('paidBtn').textContent = 'I have paid';
+  $('depStatus').style.display = 'none';
+  go('deposit');
+}
+async function confirmPaid() {
+  if (!pendingPlan) return;
+  $('paidBtn').disabled = true;
+  $('paidBtn').textContent = 'Submitting...';
+  try {
+    await api('/api/deposits', { method: 'POST', body: JSON.stringify({ plan: pendingPlan.key, amount: pendingPlan.price }) });
+    $('paidBtn').textContent = 'Submitted ✓';
+    $('depStatus').style.display = 'block';
+    $('depStatus').style.color = '#d97706';
+    $('depStatus').textContent = 'Waiting for admin approval. Plan will activate after confirmation.';
+  } catch (e) {
+    alert(e.message);
+    $('paidBtn').disabled = false;
+    $('paidBtn').textContent = 'I have paid';
+  }
+}
+
+// WITHDRAW
+function loadWithdraw() {
+  if (!currentUser) return go('login');
+  $('wdBalance').textContent = '₦' + Number(currentUser.balance || 0).toLocaleString();
+  $('refBalDisplay').value = '₦' + Number(currentUser.ref_balance || 0).toLocaleString();
+  const day = new Date().getDate(), hour = new Date().getHours();
+  const mainOpen = (day >= 30 || day <= 6);
+  const refOpen = (hour === 9);
+  $('mainStatus').className = 'status-box ' + (mainOpen ? 'open' : 'closed');
+  $('mainStatus').textContent = mainOpen ? '✓ OPEN (30th–6th)' : '✗ Closed. Opens 30th–6th';
+  $('mainBtn').disabled = !mainOpen;
+  $('refStatus').className = 'status-box ' + (refOpen ? 'open' : 'closed');
+  $('refStatus').textContent = refOpen ? '✓ OPEN (9–10 AM)' : '✗ Closed. Only 9AM–10AM';
+  $('refBtn').disabled = !refOpen;
+}
+async function doMainWithdraw() {
+  const amount = Number($('mainAmount').value);
+  if (!amount || amount < 500) return alert('Minimum ₦500');
+  try {
+    await api('/api/withdrawals', { method: 'POST', body: JSON.stringify({ type: 'main', amount }) });
+    alert('Withdrawal requested!');
+    currentUser = await api('/api/me');
+    loadWithdraw();
+    $('mainAmount').value = '';
+  } catch (e) { alert(e.message); }
+}
+async function doRefWithdraw() {
+  const amount = Number($('refAmount').value);
+  if (!amount || amount < 200) return alert('Minimum ₦200');
+  try {
+    await api('/api/withdrawals', { method: 'POST', body: JSON.stringify({ type: 'referral', amount }) });
+    alert('Referral withdrawal requested!');
+    currentUser = await api('/api/me');
+    loadWithdraw();
+    $('refAmount').value = '';
+  } catch (e) { alert(e.message); }
+}
+
+// REFERRAL
+function loadReferral() {
+  const code = currentUser?.referral_code || 'USER';
+  $('inviteLink').textContent = 'https://lasttech.onrender.com/?ref=' + code;
+}
+function copyInvite() {
+  navigator.clipboard.writeText($('inviteLink').textContent).then(() => alert('Copied!')).catch(() => prompt('Copy:', $('inviteLink').textContent));
+}
+
+// HISTORY
+async function loadHistory() {
+  try {
+    const rows = await api('/api/history');
+    const el = $('historyList');
+    if (!rows.length) { el.innerHTML = '<div class="empty">No records yet</div>'; return; }
+    el.innerHTML = rows.map(h => {
+      const plus = h.type === 'earning';
+      return `<div class="item"><div class="item-left"><h4>${h.title || h.type}</h4><p>${new Date(h.created_at).toLocaleString()}</p></div>
+        <div class="item-right"><div class="amount ${plus ? 'plus' : 'minus'}">${plus ? '+' : '-'}₦${Number(h.amount || 0).toLocaleString()}</div>
+        ${h.status ? `<div style="font-size:11px;color:#888">${h.status}</div>` : ''}</div></div>`;
+    }).join('');
+  } catch { $('historyList').innerHTML = '<div class="empty">Could not load</div>'; }
+}
+
+// SUPPORT
+async function sendSupport() {
+  const subject = $('supSubject').value, message = $('supMsg').value.trim();
+  if (!message) return alert('Enter message');
+  try {
+    await api('/api/messages', { method: 'POST', body: JSON.stringify({ subject, message }) });
+    alert('Sent!'); $('supMsg').value = '';
+  } catch (e) { alert(e.message); }
+}
+
+// ADMIN
+async function adminLogin() {
+  $('adminError').style.display = 'none';
+  try {
+    const data = await api('/api/admin/login', { method: 'POST', body: JSON.stringify({ password: $('adminPass').value }) });
+    adminToken = data.token;
+    sessionStorage.setItem('lt_admin_token', adminToken);
+    $('adminLoginScreen').style.display = 'none';
+    $('adminPanel').style.display = 'block';
+    loadAdmin();
+  } catch (e) {
+    $('adminError').textContent = e.message;
+    $('adminError').style.display = 'block';
+  }
+}
+function adminLogout() { adminToken = ''; sessionStorage.removeItem('lt_admin_token'); go('admin'); }
+function adminTab(name, el) {
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  ['overview','deposits','withdrawals','users'].forEach(n => {
+    const p = $('admin-' + n); if (p) p.style.display = n === name ? 'block' : 'none';
+  });
+  if (name === 'deposits') renderAdminDeps();
+  if (name === 'withdrawals') renderAdminWds();
+  if (name === 'users') renderAdminUsers();
+}
+async function loadAdmin() {
+  try {
+    const s = await api('/api/admin/stats', { admin: true });
+    $('aUsers').textContent = s.users;
+    $('aDeps').textContent = s.pendingDeps;
+    $('aWds').textContent = s.pendingWds;
+  } catch (e) { console.error(e); }
+}
+async function renderAdminDeps() {
+  try {
+    const list = await api('/api/admin/deposits', { admin: true });
+    const el = $('admin-deposits');
+    if (!list.length) { el.innerHTML = '<div class="empty">No pending deposits</div>'; return; }
+    el.innerHTML = list.map(d => `<div class="admin-card">
+      <div class="admin-row"><span class="l">User</span><span>${d.user_name}</span></div>
+      <div class="admin-row"><span class="l">Plan</span><span>${d.plan}</span></div>
+      <div class="admin-row"><span class="l">Amount</span><span>₦${Number(d.amount).toLocaleString()}</span></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn sm green" style="flex:1" onclick="approveDep('${d.id}')">Approve</button>
+        <button class="btn sm" style="flex:1" onclick="rejectDep('${d.id}')">Reject</button>
+      </div>
+    </div>`).join('');
+  } catch (e) { $('admin-deposits').innerHTML = '<div class="empty">' + e.message + '</div>'; }
+}
+async function approveDep(id) {
+  try { await api('/api/admin/deposits/' + id + '/approve', { method: 'POST', admin: true }); alert('Approved'); loadAdmin(); renderAdminDeps(); }
+  catch (e) { alert(e.message); }
+}
+async function rejectDep(id) {
+  try { await api('/api/admin/deposits/' + id + '/reject', { method: 'POST', admin: true }); alert('Rejected'); loadAdmin(); renderAdminDeps(); }
+  catch (e) { alert(e.message); }
+}
+async function renderAdminWds() {
+  try {
+    const list = await api('/api/admin/withdrawals', { admin: true });
+    const el = $('admin-withdrawals');
+    if (!list.length) { el.innerHTML = '<div class="empty">No pending withdrawals</div>'; return; }
+    el.innerHTML = list.map(w => `<div class="admin-card">
+      <div class="admin-row"><span class="l">User</span><span>${w.user_name}</span></div>
+      <div class="admin-row"><span class="l">Type</span><span>${w.type}</span></div>
+      <div class="admin-row"><span class="l">Amount</span><span>₦${Number(w.amount).toLocaleString()}</span></div>
+      <div class="admin-row"><span class="l">Bank</span><span>${w.bank} • ${w.account_number}</span></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn sm green" style="flex:1" onclick="approveWd('${w.id}')">Mark Paid</button>
+        <button class="btn sm" style="flex:1" onclick="rejectWd('${w.id}')">Reject</button>
+      </div>
+    </div>`).join('');
+  } catch (e) { $('admin-withdrawals').innerHTML = '<div class="empty">' + e.message + '</div>'; }
+}
+async function approveWd(id) {
+  try { await api('/api/admin/withdrawals/' + id + '/approve', { method: 'POST', admin: true }); alert('Marked paid'); loadAdmin(); renderAdminWds(); }
+  catch (e) { alert(e.message); }
+}
+async function rejectWd(id) {
+  try { await api('/api/admin/withdrawals/' + id + '/reject', { method: 'POST', admin: true }); alert('Rejected'); loadAdmin(); renderAdminWds(); }
+  catch (e) { alert(e.message); }
+}
+async function renderAdminUsers() {
+  try {
+    const list = await api('/api/admin/users', { admin: true });
+    const el = $('admin-users');
+    if (!list.length) { el.innerHTML = '<div class="empty">No users</div>'; return; }
+    el.innerHTML = list.map(u => `<div class="admin-card">
+      <div class="admin-row"><span class="l">Name</span><span>${u.name}</span></div>
+      <div class="admin-row"><span class="l">Email</span><span>${u.email}</span></div>
+      <div class="admin-row"><span class="l">Plan</span><span>${u.plan}</span></div>
+      <div class="admin-row"><span class="l">Balance</span><span>₦${Number(u.balance || 0).toLocaleString()}</span></div>
+    </div>`).join('');
+  } catch (e) { $('admin-users').innerHTML = '<div class="empty">' + e.message + '</div>'; }
+}
+
+function copyText(t) { navigator.clipboard.writeText(t).then(() => alert('Copied!')).catch(() => prompt('Copy:', t)); }
+
+// Auto login if token exists
+if (token) {
+  api('/api/me').then(u => { currentUser = u; }).catch(() => { token = ''; localStorage.removeItem('lt_token'); });
+}
+
+// Secret admin access only: open https://lasttech.onrender.com/#lt-admin-x9k2
+function checkSecretAdmin() {
+  if (location.hash === '#lt-admin-x9k2') {
+    go('admin');
+  }
+}
+window.addEventListener('hashchange', checkSecretAdmin);
+checkSecretAdmin();
+</script>
+</body>
+</html>
