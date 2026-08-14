@@ -510,6 +510,95 @@ app.get('*', (req, res) => {
   else res.json({ message: 'Last Tech API is running', health: '/api/health' });
 });
 
+// ========== TELEGRAM BOT ==========
+function startTelegramBot() {
+  const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+  if (!TELEGRAM_BOT_TOKEN) {
+    console.log('TELEGRAM_BOT_TOKEN not set – Telegram bot disabled');
+    return;
+  }
+
+  let TelegramBot;
+  try {
+    TelegramBot = require('node-telegram-bot-api');
+  } catch (e) {
+    console.error('node-telegram-bot-api not installed');
+    return;
+  }
+
+  const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
+
+  bot.onText(/\/start/, (msg) => {
+    const chatId = msg.chat.id;
+    const name = msg.from.first_name || 'there';
+
+    bot.sendMessage(chatId,
+`👋 Hello ${name}!
+
+Welcome to *LastTech Support Bot*.
+
+I can help you with:
+• How to deposit
+• How to withdraw
+• Tasks & daily reset
+• Referral system
+• Contact support
+
+Choose an option below:`, {
+      parse_mode: 'Markdown',
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '💰 How to Deposit', callback_data: 'deposit' }],
+          [{ text: '💸 How to Withdraw', callback_data: 'withdraw' }],
+          [{ text: '✅ Tasks Info', callback_data: 'tasks' }],
+          [{ text: '👥 Referrals', callback_data: 'referral' }],
+          [{ text: '📞 Contact Support', callback_data: 'support' }],
+          [{ text: '🌐 Open LastTech Website', url: 'https://lasttech.onrender.com' }]
+        ]
+      }
+    }).catch(err => console.log('TG send error:', err.message));
+  });
+
+  bot.on('callback_query', (query) => {
+    const chatId = query.message.chat.id;
+    const data = query.data;
+    let text = '';
+
+    if (data === 'deposit') {
+      text = `💰 *How to Deposit / Upgrade Plan*\n\n1. Open the LastTech app\n2. Go to *Plans*\n3. Choose a higher plan than your current one\n4. Transfer the exact amount to the account shown\n5. Tap *I have paid*\n6. Wait for admin approval\n\nYou can only upgrade to a *higher* plan.`;
+    } else if (data === 'withdraw') {
+      text = `💸 *Withdrawal Rules*\n\n*Main Balance:*\n• Minimum ₦500\n• Only open from 30th – 6th of every month\n\n*Referral Balance:*\n• Minimum ₦200\n• Only open 9AM – 10AM daily\n\nMake sure your bank details are correct in the app.`;
+    } else if (data === 'tasks') {
+      text = `✅ *Tasks Info*\n\n• Tasks refresh every day at *12:00 AM*\n• You can complete the same tasks again every day\n• Higher plans earn more per task\n• Always leave genuine reviews`;
+    } else if (data === 'referral') {
+      text = `👥 *Referral System*\n\n• Share your invite link\n• When your friend signs up *and deposits*, you earn ₦200\n• You can see your referrals and their progress inside the app (Invite page)`;
+    } else if (data === 'support') {
+      text = `📞 *Contact Support*\n\n• Telegram: https://t.me/LASTTECHNIGERIA\n• Email: support@lasttech.com.ng\n\nOr just type your question here and an admin will reply as soon as possible.`;
+    }
+
+    bot.answerCallbackQuery(query.id).catch(() => {});
+    if (text) {
+      bot.sendMessage(chatId, text, { parse_mode: 'Markdown' }).catch(err => console.log('TG send error:', err.message));
+    }
+  });
+
+  bot.on('message', (msg) => {
+    if (msg.text && !msg.text.startsWith('/')) {
+      bot.sendMessage(msg.chat.id,
+`Thanks for your message. An admin will reply soon.
+
+Meanwhile you can use the menu:
+/start`).catch(() => {});
+    }
+  });
+
+  bot.on('polling_error', (err) => {
+    console.log('Telegram polling error:', err.message);
+  });
+
+  console.log('LastTech Telegram Support Bot started');
+}
+
 // ========== START ==========
 async function start() {
   if (!MONGODB_URI) {
@@ -520,7 +609,10 @@ async function start() {
   try {
     await mongoose.connect(MONGODB_URI);
     console.log('MongoDB connected');
-    app.listen(PORT, () => console.log('Last Tech API on port ' + PORT));
+    app.listen(PORT, () => {
+      console.log('Last Tech API on port ' + PORT);
+      startTelegramBot();
+    });
   } catch (e) {
     console.error('MongoDB connection failed:', e.message);
     process.exit(1);
