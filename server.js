@@ -573,7 +573,7 @@ Choose an option below:`, {
     } else if (data === 'referral') {
       text = `👥 *Referral System*\n\n• Share your invite link\n• When your friend signs up *and deposits*, you earn ₦200\n• You can see your referrals and their progress inside the app (Invite page)`;
     } else if (data === 'support') {
-      text = `📞 *Contact Support*\n\n• Telegram: https://t.me/LASTTECHNIGERIA\n• Email: support@lasttech.com.ng\n\nOr just type your question here and an admin will reply as soon as possible.`;
+      text = `📞 *Contact Support*\n\n• Support Bot: https://t.me/LastTechNigeriaBot\n• Channel: https://t.me/LASTTECHNIGERIA\n• Email: support@lasttech.com.ng\n\nOr just type your question here and an admin will reply as soon as possible.`;
     }
 
     bot.answerCallbackQuery(query.id).catch(() => {});
