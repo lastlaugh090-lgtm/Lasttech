@@ -63,9 +63,16 @@ const taskSchema = new mongoose.Schema({
   user_id: { type: String, required: true, index: true },
   task_id: { type: Number, required: true },
   reward: { type: Number, required: true },
+  date: { type: String, required: true }, // YYYY-MM-DD for daily reset at midnight
   created_at: { type: Date, default: Date.now }
 });
-taskSchema.index({ user_id: 1, task_id: 1 }, { unique: true });
+taskSchema.index({ user_id: 1, task_id: 1, date: 1 }, { unique: true });
+
+function todayDateStr() {
+  // Africa/Lagos (WAT, UTC+1) — tasks refresh at 12:00 AM local
+  const d = new Date(Date.now() + 60 * 60 * 1000);
+  return d.toISOString().slice(0, 10);
+}
 
 const historySchema = new mongoose.Schema({
   id: { type: String, default: () => uuidv4() },
@@ -203,8 +210,17 @@ app.get('/api/me', auth, async (req, res) => {
 });
 
 // ========== DEPOSITS ==========
+const PLAN_RANK = { free: 0, beginner: 1, pro: 2, master: 3 };
+
 app.post('/api/deposits', auth, async (req, res) => {
   const { plan, amount } = req.body;
+  const user = await User.findOne({ id: req.user.id });
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  const curRank = PLAN_RANK[user.plan] ?? 0;
+  const newRank = PLAN_RANK[plan] ?? -1;
+  if (newRank <= curRank) {
+    return res.status(400).json({ error: 'You can only upgrade to a higher plan than your current one' });
+  }
   const id = uuidv4();
   await Deposit.create({ id, user_id: req.user.id, plan, amount, status: 'pending' });
   await History.create({ id: uuidv4(), user_id: req.user.id, type: 'deposit', title: plan + ' Plan payment', amount, status: 'pending' });
@@ -243,13 +259,14 @@ app.post('/api/withdrawals', auth, async (req, res) => {
   res.json({ id, status: 'pending' });
 });
 
-// ========== TASKS ==========
+// ========== TASKS (daily reset at 12:00 AM WAT) ==========
 app.post('/api/tasks/complete', auth, async (req, res) => {
   const { task_id, reward } = req.body;
-  const exists = await TaskDone.findOne({ user_id: req.user.id, task_id });
-  if (exists) return res.status(400).json({ error: 'Task already completed' });
+  const date = todayDateStr();
+  const exists = await TaskDone.findOne({ user_id: req.user.id, task_id, date });
+  if (exists) return res.status(400).json({ error: 'Task already completed today' });
 
-  await TaskDone.create({ id: uuidv4(), user_id: req.user.id, task_id, reward });
+  await TaskDone.create({ id: uuidv4(), user_id: req.user.id, task_id, reward, date });
   const user = await User.findOne({ id: req.user.id });
   user.balance += reward;
   await user.save();
@@ -258,8 +275,23 @@ app.post('/api/tasks/complete', auth, async (req, res) => {
 });
 
 app.get('/api/tasks/completed', auth, async (req, res) => {
-  const rows = await TaskDone.find({ user_id: req.user.id });
+  const date = todayDateStr();
+  const rows = await TaskDone.find({ user_id: req.user.id, date });
   res.json(rows.map(r => r.task_id));
+});
+
+// ========== REFERRALS ==========
+app.get('/api/referrals', auth, async (req, res) => {
+  const refs = await User.find({ referred_by: req.user.id })
+    .select('name email plan has_deposited created_at')
+    .sort({ created_at: -1 });
+  res.json(refs.map(u => ({
+    name: u.name,
+    email: u.email,
+    plan: u.plan || 'free',
+    has_deposited: !!u.has_deposited,
+    created_at: u.created_at
+  })));
 });
 
 // ========== HISTORY ==========
