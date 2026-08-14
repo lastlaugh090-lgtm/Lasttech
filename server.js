@@ -504,6 +504,71 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+app.get('/privacy', (req, res) => {
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LastTech – Privacy Policy</title>
+  <style>
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;max-width:720px;margin:0 auto;padding:24px 16px;line-height:1.6;color:#1a1a2e;background:#f5f6fa}
+    h1{font-size:24px;margin-bottom:8px}
+    h2{font-size:17px;margin-top:28px;margin-bottom:8px;color:#e11d48}
+    p,li{font-size:15px;color:#374151}
+    ul{padding-left:20px}
+    a{color:#e11d48}
+    .back{display:inline-block;margin-bottom:20px;color:#e11d48;font-weight:600;text-decoration:none}
+  </style>
+</head>
+<body>
+  <a class="back" href="/">← Back to LastTech</a>
+  <h1>LastTech Privacy Policy</h1>
+  <p><strong>Last updated:</strong> August 14, 2026</p>
+
+  <h2>1. Information We Collect</h2>
+  <p>When you use LastTech, we may collect:</p>
+  <ul>
+    <li>Name, email address, and phone number</li>
+    <li>Bank account details (for withdrawals)</li>
+    <li>Referral information</li>
+    <li>Task completion and transaction history</li>
+    <li>Device and usage information</li>
+  </ul>
+
+  <h2>2. How We Use Your Information</h2>
+  <p>We use your information to:</p>
+  <ul>
+    <li>Create and manage your account</li>
+    <li>Process deposits and withdrawals</li>
+    <li>Track tasks and earnings</li>
+    <li>Manage the referral system</li>
+    <li>Provide customer support</li>
+    <li>Improve our services</li>
+  </ul>
+
+  <h2>3. Sharing of Information</h2>
+  <p>We do <strong>not</strong> sell your personal information. We only share data when necessary with payment providers, administrators, or if required by law.</p>
+
+  <h2>4. Data Security</h2>
+  <p>We take reasonable steps to protect your information. However, no method of transmission over the internet is 100% secure.</p>
+
+  <h2>5. Bank Details</h2>
+  <p>Your bank account information is used only for processing withdrawals. We do not store full sensitive banking credentials beyond what is needed for payouts.</p>
+
+  <h2>6. Your Rights</h2>
+  <p>You may request to view, correct, or delete your information (subject to pending transactions).</p>
+
+  <h2>7. Contact Us</h2>
+  <p>
+    Email: <a href="mailto:support@lasttech.com.ng">support@lasttech.com.ng</a><br/>
+    Support Bot: <a href="https://t.me/LastTechNigeriaBot">@LastTechNigeriaBot</a><br/>
+    Channel: <a href="https://t.me/LASTTECHNIGERIA">@LASTTECHNIGERIA</a>
+  </p>
+</body>
+</html>`);
+});
+
 app.get('*', (req, res) => {
   const index = path.join(__dirname, 'index.html');
   if (fs.existsSync(index)) res.sendFile(index);
