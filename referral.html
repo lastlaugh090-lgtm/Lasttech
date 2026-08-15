@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>Invite & Earn — Last Tech</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #f8f8f8;
+      color: #111;
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+    header {
+      background: #fff;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #eee;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .back {
+      font-size: 20px;
+      text-decoration: none;
+      color: #111;
+    }
+    .header-title {
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .hero-card {
+      background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+      color: white;
+      border-radius: 20px;
+      padding: 28px 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .hero-card h2 {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .hero-card p {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 18px;
+    }
+    .reward-box {
+      background: rgba(255,255,255,0.15);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid #eee;
+      margin-bottom: 16px;
+    }
+    .card h3 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .link-box {
+      background: #f8f8f8;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 13px;
+      word-break: break-all;
+      margin-bottom: 12px;
+      border: 1px dashed #ddd;
+    }
+
+    .btn {
+      width: 100%;
+      background: #e11d48;
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .btn.secondary {
+      background: #111;
+      margin-top: 10px;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .stat {
+      background: #fff;
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+      border: 1px solid #eee;
+    }
+    .stat strong {
+      display: block;
+      font-size: 22px;
+      font-weight: 800;
+      color: #e11d48;
+    }
+    .stat span {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .how {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.6;
+    }
+    .how li {
+      margin-bottom: 8px;
+      margin-left: 18px;
+    }
+
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0 14px;
+      z-index: 100;
+    }
+    .nav-item {
+      text-align: center;
+      text-decoration: none;
+      color: #999;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .nav-item.active { color: #e11d48; }
+    .nav-item .nav-icon {
+      font-size: 20px;
+      display: block;
+      margin-bottom: 2px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="dashboard.html" class="back">←</a>
+    <div class="header-title">Invite & Earn</div>
+  </header>
+
+  <div class="container">
+    <div class="hero-card">
+      <h2>Earn ₦200 per friend</h2>
+      <p>Money enters only when your friend signs up <strong>and deposits</strong></p>
+      <div class="reward-box">+ 35% commission on their upgrades</div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat">
+        <strong id="invites">0</strong>
+        <span>Friends invited</span>
+      </div>
+      <div class="stat">
+        <strong id="earnings">₦0</strong>
+        <span>Referral earnings</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Your Invite Link</h3>
+      <div class="link-box" id="inviteLink">https://lasttech.com.ng/r/USER123</div>
+      <button class="btn" onclick="copyLink()">Copy Link</button>
+      <button class="btn secondary" onclick="shareLink()">Share via WhatsApp</button>
+    </div>
+
+    <div class="card">
+      <h3>How it works</h3>
+      <ul class="how">
+        <li>Share your unique invite link with friends</li>
+        <li>They create an account and verify their bank</li>
+        <li>When they <strong>deposit/upgrade</strong>, you get <strong>₦200</strong> in referral balance</li>
+        <li>Earn <strong>35%</strong> commission whenever they upgrade their plan</li>
+        <li>Referral withdraw open daily <strong>9:00 AM – 10:00 AM</strong> only</li>
+      </ul>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="dashboard.html" class="nav-item">
+      <span class="nav-icon">🏠</span>
+      Home
+    </a>
+    <a href="tasks.html" class="nav-item">
+      <span class="nav-icon">✅</span>
+      Tasks
+    </a>
+    <a href="referral.html" class="nav-item active">
+      <span class="nav-icon">👥</span>
+      Invite
+    </a>
+    <a href="withdraw.html" class="nav-item">
+      <span class="nav-icon">💰</span>
+      Wallet
+    </a>
+  </nav>
+
+  <script>
+    if (localStorage.getItem('lt_logged_in') !== 'true') {
+      window.location.href = 'login.html';
+    }
+
+    // Generate simple referral code from name
+    const name = localStorage.getItem('lt_user_name') || 'USER';
+    const code = name.replace(/\s+/g, '').substring(0, 6).toUpperCase() + Math.floor(Math.random()*90+10);
+    const link = `https://lasttech.com.ng/r/${code}`;
+    document.getElementById('inviteLink').textContent = link;
+
+    function copyLink() {
+      navigator.clipboard.writeText(link).then(() => {
+        alert('Link copied!');
+      }).catch(() => {
+        prompt('Copy this link:', link);
+      });
+    }
+
+    function shareLink() {
+      const text = encodeURIComponent(`Join Last Tech and earn money for Google reviews! Use my link: ${link}`);
+      window.open(`https://wa.me/?text=${text}`, '_blank');
+    }
+  </script>
+</body>
+</html>

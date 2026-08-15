@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>Dashboard — Last Tech</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #f8f8f8;
+      color: #111;
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+    header {
+      background: #fff;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #eee;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+    .logo-icon {
+      width: 34px;
+      height: 34px;
+      background: #e11d48;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+      font-size: 16px;
+    }
+    .logo-text {
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .logo-text .black { color: #111; }
+    .logo-text span { color: #e11d48; }
+
+    .user-chip {
+      background: #f1f1f1;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Balance Card */
+    .balance-card {
+      background: linear-gradient(135deg, #111 0%, #2a2a2a 100%);
+      color: white;
+      border-radius: 20px;
+      padding: 24px 20px;
+      margin-bottom: 20px;
+    }
+    .balance-label {
+      font-size: 13px;
+      color: #aaa;
+      margin-bottom: 4px;
+    }
+    .balance-amount {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+    .balance-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .bal-btn {
+      flex: 1;
+      background: #e11d48;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+    }
+    .bal-btn.outline {
+      background: transparent;
+      border: 1px solid #444;
+    }
+
+    /* Trust Score */
+    .trust-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 20px;
+      border: 1px solid #eee;
+    }
+    .trust-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .trust-header h3 {
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .trust-level {
+      background: #fef2f2;
+      color: #e11d48;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .progress-bar {
+      height: 8px;
+      background: #f1f1f1;
+      border-radius: 99px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #e11d48;
+      border-radius: 99px;
+      width: 25%;
+    }
+    .trust-info {
+      font-size: 12px;
+      color: #666;
+    }
+
+    /* Quick Links */
+    .quick-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .quick-item {
+      background: #fff;
+      border-radius: 16px;
+      padding: 18px 14px;
+      text-align: center;
+      text-decoration: none;
+      color: #111;
+      border: 1px solid #eee;
+    }
+    .quick-item .icon {
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+    .quick-item .label {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* Tasks */
+    .section-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+    .task {
+      background: #fff;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .task-info h4 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .task-info p {
+      font-size: 12px;
+      color: #666;
+    }
+    .task-reward {
+      background: #fef2f2;
+      color: #e11d48;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 6px 10px;
+      border-radius: 8px;
+    }
+
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0 14px;
+      z-index: 100;
+    }
+    .nav-item {
+      text-align: center;
+      text-decoration: none;
+      color: #999;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .nav-item.active {
+      color: #e11d48;
+    }
+    .nav-item .nav-icon {
+      font-size: 20px;
+      display: block;
+      margin-bottom: 2px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="dashboard.html" class="logo">
+      <div class="logo-icon">L</div>
+      <div class="logo-text"><span class="black">Last</span><span>Tech</span></div>
+    </a>
+    <div class="user-chip" id="userChip">User</div>
+  </header>
+
+  <div class="container">
+    <!-- Balance -->
+    <div class="balance-card">
+      <div class="balance-label">Available Balance</div>
+      <div class="balance-amount" id="balance">₦0.00</div>
+      <div class="balance-actions">
+        <a href="withdraw.html" class="bal-btn">Withdraw</a>
+        <a href="referral.html" class="bal-btn outline">Invite</a>
+      </div>
+    </div>
+
+    <!-- Plan + Trust -->
+    <div class="trust-card">
+      <div class="trust-header">
+        <h3>Your Plan</h3>
+        <div class="trust-level" id="planLevel">Free</div>
+      </div>
+      <div class="trust-info" id="planInfo" style="margin-bottom:12px;">Earn ₦0 – ₦50 per task</div>
+      <div class="trust-header">
+        <h3>Trust Score</h3>
+        <div class="trust-level" id="trustLevel">1</div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="trustBar"></div>
+      </div>
+      <div class="trust-info" id="trustInfo">Complete tasks daily to level up</div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-grid">
+      <a href="tasks.html" class="quick-item">
+        <div class="icon">📝</div>
+        <div class="label">Available Tasks</div>
+      </a>
+      <a href="plans.html" class="quick-item">
+        <div class="icon">🚀</div>
+        <div class="label">Upgrade Plan</div>
+      </a>
+      <a href="history.html" class="quick-item">
+        <div class="icon">📊</div>
+        <div class="label">History</div>
+      </a>
+      <a href="support.html" class="quick-item">
+        <div class="icon">💬</div>
+        <div class="label">Support</div>
+      </a>
+    </div>
+
+    <!-- Today's Tasks -->
+    <div class="section-title">Today's Tasks</div>
+    
+    <div class="task">
+      <div class="task-info">
+        <h4>Leave Google Review</h4>
+        <p>Review a local business</p>
+      </div>
+      <div class="task-reward">₦300</div>
+    </div>
+    <div class="task">
+      <div class="task-info">
+        <h4>Engage with Ad</h4>
+        <p>Click & view for 15 seconds</p>
+      </div>
+      <div class="task-reward">₦50</div>
+    </div>
+    <div class="task">
+      <div class="task-info">
+        <h4>Daily Check-in</h4>
+        <p>Open the app today</p>
+      </div>
+      <div class="task-reward">+1 Trust</div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <a href="dashboard.html" class="nav-item active">
+      <span class="nav-icon">🏠</span>
+      Home
+    </a>
+    <a href="tasks.html" class="nav-item">
+      <span class="nav-icon">✅</span>
+      Tasks
+    </a>
+    <a href="referral.html" class="nav-item">
+      <span class="nav-icon">👥</span>
+      Invite
+    </a>
+    <a href="withdraw.html" class="nav-item">
+      <span class="nav-icon">💰</span>
+      Wallet
+    </a>
+  </nav>
+
+  <script>
+    // Check login
+    if (localStorage.getItem('lt_logged_in') !== 'true') {
+      window.location.href = 'login.html';
+    }
+
+    // Load user data
+    const name = localStorage.getItem('lt_user_name') || 'User';
+    const email = localStorage.getItem('lt_email') || '';
+    document.getElementById('userChip').textContent = name.split(' ')[0];
+
+    // Check for plan activation from admin
+    const activations = JSON.parse(localStorage.getItem('lt_plan_activations') || '{}');
+    if (email && activations[email]) {
+      localStorage.setItem('lt_plan', activations[email].plan);
+      localStorage.setItem('lt_has_deposited', 'true');
+      // Optional: remove after applying so it doesn't re-trigger
+      // delete activations[email]; localStorage.setItem('lt_plan_activations', JSON.stringify(activations));
+    }
+
+    // Check for balance credits from admin
+    const credits = JSON.parse(localStorage.getItem('lt_balance_credits') || '{}');
+    if (email && credits[email] && credits[email] > 0) {
+      let bal = Number(localStorage.getItem('lt_balance') || 0);
+      bal += credits[email];
+      localStorage.setItem('lt_balance', bal);
+      // Clear credit after applying
+      credits[email] = 0;
+      localStorage.setItem('lt_balance_credits', JSON.stringify(credits));
+    }
+
+    const balance = localStorage.getItem('lt_balance') || '0';
+    document.getElementById('balance').textContent = '₦' + Number(balance).toLocaleString() + '.00';
+
+    // Plan
+    const planKey = localStorage.getItem('lt_plan') || 'free';
+    const planData = {
+      free:     { name: 'Free',     range: '₦0 – ₦50' },
+      beginner: { name: 'Beginner', range: '₦400 – ₦500' },
+      pro:      { name: 'Pro',      range: '₦900 – ₦1,000' },
+      master:   { name: 'Master',   range: '₦2,000 – ₦3,000' }
+    };
+    const plan = planData[planKey] || planData.free;
+    document.getElementById('planLevel').textContent = plan.name;
+    document.getElementById('planInfo').textContent = 'Earn ' + plan.range + ' per task';
+
+    // Trust
+    const trust = parseInt(localStorage.getItem('lt_trust') || '1');
+    document.getElementById('trustLevel').textContent = trust;
+    document.getElementById('trustBar').style.width = Math.min(trust * 20, 100) + '%';
+    document.getElementById('trustInfo').textContent = 
+      trust < 5 ? 'Complete tasks daily to increase Trust Score' : 'Max Trust Score reached!';
+  </script>
+</body>
+</html>

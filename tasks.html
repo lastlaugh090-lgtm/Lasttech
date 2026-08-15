@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>Tasks — Last Tech</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #f8f8f8;
+      color: #111;
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+    header {
+      background: #fff;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #eee;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .back { font-size: 20px; text-decoration: none; color: #111; }
+    .header-title { font-size: 17px; font-weight: 700; }
+
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .plan-banner {
+      background: #111;
+      color: white;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .plan-banner .left h3 { font-size: 14px; font-weight: 700; }
+    .plan-banner .left p { font-size: 12px; color: #aaa; margin-top: 2px; }
+    .plan-badge {
+      background: #e11d48;
+      color: white;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 999px;
+    }
+
+    .task-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 14px;
+      border: 1px solid #eee;
+    }
+    .task-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    .task-top h4 {
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .task-reward {
+      background: #fef2f2;
+      color: #e11d48;
+      font-weight: 800;
+      font-size: 14px;
+      padding: 5px 10px;
+      border-radius: 8px;
+      white-space: nowrap;
+    }
+    .task-desc {
+      font-size: 13px;
+      color: #555;
+      margin-bottom: 14px;
+      line-height: 1.4;
+    }
+    .task-btn {
+      width: 100%;
+      background: #e11d48;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 11px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .task-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .task-btn.done {
+      background: #16a34a;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: #888;
+      font-size: 14px;
+    }
+
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: #fff;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0 14px;
+      z-index: 100;
+    }
+    .nav-item {
+      text-align: center;
+      text-decoration: none;
+      color: #999;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .nav-item.active { color: #e11d48; }
+    .nav-item .nav-icon { font-size: 20px; display: block; margin-bottom: 2px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="dashboard.html" class="back">←</a>
+    <div class="header-title">Available Tasks</div>
+  </header>
+
+  <div class="container">
+    <div class="plan-banner">
+      <div class="left">
+        <h3 id="planName">Free Plan</h3>
+        <p id="planRange">Earn ₦0 – ₦50 per task</p>
+      </div>
+      <div class="plan-badge" id="planBadge">FREE</div>
+    </div>
+
+    <div id="taskList"></div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="dashboard.html" class="nav-item">
+      <span class="nav-icon">🏠</span> Home
+    </a>
+    <a href="tasks.html" class="nav-item active">
+      <span class="nav-icon">✅</span> Tasks
+    </a>
+    <a href="referral.html" class="nav-item">
+      <span class="nav-icon">👥</span> Invite
+    </a>
+    <a href="withdraw.html" class="nav-item">
+      <span class="nav-icon">💰</span> Wallet
+    </a>
+  </nav>
+
+  <script>
+    if (localStorage.getItem('lt_logged_in') !== 'true') {
+      window.location.href = 'login.html';
+    }
+
+    // Plan config
+    const plans = {
+      free:     { name: 'Free Plan',     badge: 'FREE',     min: 0,    max: 50,   label: 'Earn ₦0 – ₦50 per task' },
+      beginner: { name: 'Beginner Plan', badge: 'BEGINNER', min: 400,  max: 500,  label: 'Earn ₦400 – ₦500 per task' },
+      pro:      { name: 'Pro Plan',      badge: 'PRO',      min: 900,  max: 1000, label: 'Earn ₦900 – ₦1,000 per task' },
+      master:   { name: 'Master Plan',   badge: 'MASTER',   min: 2000, max: 3000, label: 'Earn ₦2,000 – ₦3,000 per task' }
+    };
+
+    const currentPlan = localStorage.getItem('lt_plan') || 'free';
+    const p = plans[currentPlan];
+
+    document.getElementById('planName').textContent = p.name;
+    document.getElementById('planRange').textContent = p.label;
+    document.getElementById('planBadge').textContent = p.badge;
+
+    // Sample tasks
+    const tasks = [
+      { id: 1, title: 'Google Review – Local Restaurant', desc: 'Visit the business link and leave a genuine 4-5 star review on Google Maps.' },
+      { id: 2, title: 'Google Review – Fashion Store', desc: 'Leave an honest review about their products and service.' },
+      { id: 3, title: 'Engage with Sponsored Ad', desc: 'Click the ad and stay on the page for at least 20 seconds.' },
+      { id: 4, title: 'Google Review – Barbershop', desc: 'Share your experience to help the business grow on Google.' },
+      { id: 5, title: 'Watch Short Product Video', desc: 'Watch the full 30-second video and confirm completion.' },
+      { id: 6, title: 'Google Review – Phone Accessories', desc: 'Leave a detailed review mentioning product quality.' }
+    ];
+
+    // Track completed tasks today
+    const today = new Date().toDateString();
+    let completed = JSON.parse(localStorage.getItem('lt_completed_tasks') || '{}');
+    if (completed.date !== today) {
+      completed = { date: today, ids: [] };
+      localStorage.setItem('lt_completed_tasks', JSON.stringify(completed));
+    }
+
+    function randomReward(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function renderTasks() {
+      const list = document.getElementById('taskList');
+      list.innerHTML = '';
+
+      tasks.forEach(task => {
+        const isDone = completed.ids.includes(task.id);
+        const reward = isDone ? 'Completed' : `₦${randomReward(p.min, p.max)}`;
+
+        const card = document.createElement('div');
+        card.className = 'task-card';
+        card.innerHTML = `
+          <div class="task-top">
+            <h4>${task.title}</h4>
+            <div class="task-reward">${isDone ? '✓ Done' : '₦' + randomReward(p.min, p.max)}</div>
+          </div>
+          <div class="task-desc">${task.desc}</div>
+          <button class="task-btn ${isDone ? 'done' : ''}" 
+                  ${isDone ? 'disabled' : ''} 
+                  onclick="completeTask(${task.id}, this)">
+            ${isDone ? 'Completed' : 'Start Task'}
+          </button>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    function completeTask(id, btn) {
+      if (completed.ids.includes(id)) return;
+
+      const reward = randomReward(p.min, p.max);
+      
+      // Add to balance
+      let bal = Number(localStorage.getItem('lt_balance') || 0);
+      bal += reward;
+      localStorage.setItem('lt_balance', bal);
+
+      // Add to history
+      const history = JSON.parse(localStorage.getItem('lt_history') || '[]');
+      history.push({
+        type: 'earning',
+        title: 'Task completed',
+        amount: reward,
+        date: new Date().toLocaleString()
+      });
+      localStorage.setItem('lt_history', JSON.stringify(history));
+
+      // Mark completed
+      completed.ids.push(id);
+      localStorage.setItem('lt_completed_tasks', JSON.stringify(completed));
+
+      // Increase trust slightly
+      let trust = Number(localStorage.getItem('lt_trust') || 1);
+      if (trust < 5) {
+        trust = Math.min(5, trust + 0.2);
+        localStorage.setItem('lt_trust', trust);
+      }
+
+      btn.textContent = 'Completed';
+      btn.classList.add('done');
+      btn.disabled = true;
+      btn.previousElementSibling.previousElementSibling.querySelector('.task-reward').textContent = '✓ Done';
+
+      alert(`Task completed!\nYou earned ₦${reward.toLocaleString()}`);
+    }
+
+    renderTasks();
+  </script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>History — Last Tech</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #f8f8f8;
+      color: #111;
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+    header {
+      background: #fff;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #eee;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .back { font-size: 20px; text-decoration: none; color: #111; }
+    .header-title { font-size: 17px; font-weight: 700; }
+
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .tabs {
+      display: flex;
+      background: #fff;
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 20px;
+      border: 1px solid #eee;
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 9px;
+      cursor: pointer;
+      color: #666;
+      border: none;
+      background: none;
+    }
+    .tab.active {
+      background: #e11d48;
+      color: white;
+    }
+
+    .item {
+      background: #fff;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 10px;
+      border: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .item-left h4 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+    .item-left p {
+      font-size: 12px;
+      color: #888;
+    }
+    .item-right {
+      text-align: right;
+    }
+    .item-right .amount {
+      font-weight: 800;
+      font-size: 15px;
+    }
+    .item-right .amount.plus { color: #16a34a; }
+    .item-right .amount.minus { color: #e11d48; }
+    .item-right .status {
+      font-size: 11px;
+      margin-top: 3px;
+      font-weight: 600;
+    }
+    .status.pending { color: #d97706; }
+    .status.approved { color: #16a34a; }
+    .status.rejected { color: #e11d48; }
+
+    .empty {
+      text-align: center;
+      padding: 50px 20px;
+      color: #aaa;
+      font-size: 14px;
+    }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: #fff; border-top: 1px solid #eee;
+      display: flex; justify-content: space-around;
+      padding: 10px 0 14px; z-index: 100;
+    }
+    .nav-item {
+      text-align: center; text-decoration: none;
+      color: #999; font-size: 11px; font-weight: 600;
+    }
+    .nav-item.active { color: #e11d48; }
+    .nav-item .nav-icon { font-size: 20px; display: block; margin-bottom: 2px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="dashboard.html" class="back">←</a>
+    <div class="header-title">History</div>
+  </header>
+
+  <div class="container">
+    <div class="tabs">
+      <button class="tab active" onclick="showPanel('all')">All</button>
+      <button class="tab" onclick="showPanel('earnings')">Earnings</button>
+      <button class="tab" onclick="showPanel('deposits')">Deposits</button>
+      <button class="tab" onclick="showPanel('withdrawals')">Withdrawals</button>
+    </div>
+
+    <div class="panel active" id="panel-all"></div>
+    <div class="panel" id="panel-earnings"></div>
+    <div class="panel" id="panel-deposits"></div>
+    <div class="panel" id="panel-withdrawals"></div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="dashboard.html" class="nav-item">
+      <span class="nav-icon">🏠</span> Home
+    </a>
+    <a href="tasks.html" class="nav-item">
+      <span class="nav-icon">✅</span> Tasks
+    </a>
+    <a href="referral.html" class="nav-item">
+      <span class="nav-icon">👥</span> Invite
+    </a>
+    <a href="withdraw.html" class="nav-item">
+      <span class="nav-icon">💰</span> Wallet
+    </a>
+  </nav>
+
+  <script>
+    if (localStorage.getItem('lt_logged_in') !== 'true') {
+      window.location.href = 'login.html';
+    }
+
+    function showPanel(name) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('panel-' + name).classList.add('active');
+    }
+
+    function getHistory() {
+      return JSON.parse(localStorage.getItem('lt_history') || '[]');
+    }
+
+    function render() {
+      const history = getHistory().reverse(); // newest first
+
+      const all = history;
+      const earnings = history.filter(h => h.type === 'earning');
+      const deposits = history.filter(h => h.type === 'deposit');
+      const withdrawals = history.filter(h => h.type === 'withdrawal');
+
+      function makeList(items) {
+        if (items.length === 0) {
+          return '<div class="empty">No records yet</div>';
+        }
+        return items.map(h => {
+          const isPlus = h.type === 'earning' || (h.type === 'deposit' && h.status === 'approved');
+          const amountClass = isPlus ? 'plus' : 'minus';
+          const sign = isPlus ? '+' : '-';
+          return `
+            <div class="item">
+              <div class="item-left">
+                <h4>${h.title}</h4>
+                <p>${h.date}</p>
+              </div>
+              <div class="item-right">
+                <div class="amount ${amountClass}">${sign}₦${Number(h.amount).toLocaleString()}</div>
+                ${h.status ? `<div class="status ${h.status}">${h.status}</div>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      document.getElementById('panel-all').innerHTML = makeList(all);
+      document.getElementById('panel-earnings').innerHTML = makeList(earnings);
+      document.getElementById('panel-deposits').innerHTML = makeList(deposits);
+      document.getElementById('panel-withdrawals').innerHTML = makeList(withdrawals);
+    }
+
+    render();
+  </script>
+</body>
+</html>

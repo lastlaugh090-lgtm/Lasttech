@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>Last Tech — Earn Real Cash for Google Reviews</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #ffffff;
+      color: #111;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid #eee;
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: #e11d48;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+      font-size: 18px;
+    }
+
+    .logo-text {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-text span {
+      color: #e11d48;
+    }
+
+    .logo-text .black {
+      color: #111;
+    }
+
+    .sign-in {
+      background: #111;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 40px 20px 30px;
+    }
+
+    .hero h1 {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      line-height: 1.2;
+    }
+
+    .hero p {
+      color: #555;
+      font-size: 15px;
+      max-width: 320px;
+      margin: 0 auto 24px;
+    }
+
+    .mobile-tip {
+      background: #fef2f2;
+      color: #be123c;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 30px;
+    }
+
+    /* Stats */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      padding: 0 20px 40px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .stat {
+      background: #f8f8f8;
+      border-radius: 16px;
+      padding: 16px 8px;
+      text-align: center;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 22px;
+      font-weight: 800;
+      color: #e11d48;
+    }
+
+    .stat span {
+      font-size: 12px;
+      color: #666;
+    }
+
+    /* Sections */
+    section {
+      padding: 0 20px 40px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    /* How it works */
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .step {
+      display: flex;
+      gap: 14px;
+      background: #fafafa;
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid #f0f0f0;
+    }
+
+    .step-num {
+      width: 32px;
+      height: 32px;
+      background: #e11d48;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .step-content h3 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .step-content p {
+      font-size: 13px;
+      color: #555;
+    }
+
+    /* Ways to earn */
+    .cards {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #eee;
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .card h3 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card p {
+      font-size: 13px;
+      color: #555;
+    }
+
+    .icon {
+      font-size: 18px;
+    }
+
+    /* Verification Box */
+    .verify-box {
+      background: #111;
+      color: white;
+      border-radius: 20px;
+      padding: 24px 20px;
+      margin: 10px 0 30px;
+    }
+
+    .verify-box h2 {
+      color: white;
+      margin-bottom: 8px;
+    }
+
+    .verify-box > p {
+      color: #aaa;
+      font-size: 13px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .verify-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .verify-form label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #ddd;
+    }
+
+    .verify-form input {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: none;
+      font-size: 15px;
+      background: #222;
+      color: white;
+      outline: none;
+    }
+
+    .verify-form input::placeholder {
+      color: #666;
+    }
+
+    .verify-btn {
+      background: #e11d48;
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+
+    .verify-btn:active {
+      opacity: 0.9;
+    }
+
+    .name-result {
+      margin-top: 18px;
+      background: #1a1a1a;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      display: none;
+    }
+
+    .name-result.show {
+      display: block;
+    }
+
+    .name-result .label {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 4px;
+    }
+
+    .name-result .name {
+      font-size: 20px;
+      font-weight: 800;
+      color: #4ade80;
+    }
+
+    /* Two sides */
+    .sides {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+
+    .side {
+      background: #f8f8f8;
+      border-radius: 16px;
+      padding: 18px 14px;
+      text-align: center;
+    }
+
+    .side h3 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .side p {
+      font-size: 12px;
+      color: #666;
+    }
+
+    /* CTA */
+    .cta {
+      text-align: center;
+      padding-bottom: 50px;
+    }
+
+    .cta h2 {
+      margin-bottom: 8px;
+    }
+
+    .cta p {
+      color: #555;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    .cta-btn {
+      display: block;
+      width: 100%;
+      background: #e11d48;
+      color: white;
+      border: none;
+      padding: 16px;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
+
+    .cta-link {
+      color: #e11d48;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 12px;
+      color: #999;
+      border-top: 1px solid #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <a href="#" class="logo">
+      <div class="logo-icon">L</div>
+      <div class="logo-text">
+        <span class="black">Last</span><span>Tech</span>
+      </div>
+    </a>
+    <a href="login.html" class="sign-in" style="text-decoration:none;display:inline-block;">Sign in</a>
+  </header>
+
+  <!-- Hero -->
+  <div class="hero">
+    <h1>Last Tech is a mobile app</h1>
+    <p>This experience is designed for your phone. Open it on a mobile device to continue earning.</p>
+    <div class="mobile-tip">
+      📱 Tip: open this page on your phone's browser
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat">
+      <strong>12K+</strong>
+      <span>Active reviewers</span>
+    </div>
+    <div class="stat">
+      <strong>3.5K</strong>
+      <span>Businesses</span>
+    </div>
+    <div class="stat">
+      <strong>180K</strong>
+      <span>Reviews given</span>
+    </div>
+  </div>
+
+  <!-- How it works -->
+  <section>
+    <h2>How it works</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-content">
+          <h3>Visit a business</h3>
+          <p>Open a small business website and explore the service they offer.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-content">
+          <h3>Leave a genuine review</h3>
+          <p>Share an honest experience to help the business build trust on Google Maps.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-content">
+          <h3>Engage with ads</h3>
+          <p>Click featured ads and discover more local services around you.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div class="step-content">
+          <h3>Earn rewards</h3>
+          <p>Every completed task adds real value to your Last Tech wallet.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ways to earn -->
+  <section>
+    <h2>Ways to earn & grow</h2>
+    <div class="cards">
+      <div class="card">
+        <h3><span class="icon">🏆</span> Trust Score tiers</h3>
+        <p>Climb from Free to Legend. Each tier unlocks more reviews per day and bigger payouts — up to ₦1,000 per review. Earn +1 every day you finish your tasks, and +1 for every friend you invite.</p>
+      </div>
+      <div class="card">
+        <h3><span class="icon">👥</span> Invite & earn</h3>
+        <p>Share your link and earn ₦200 cash — added straight to your balance — for every friend who joins and verifies their bank, plus 35% commission to your Commission wallet whenever they upgrade.</p>
+      </div>
+      <div class="card">
+        <h3><span class="icon">🏦</span> Fast withdrawals</h3>
+        <p>Cash out to your verified Nigerian bank account with flexible options — Trust Score rewards, your Commission wallet, and general balance withdrawals.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Account Verification -->
+  <section>
+    <div class="verify-box">
+      <h2>Verify Your Account</h2>
+      <p>Enter your bank account number to verify. Your name will appear automatically.</p>
+      
+      <div class="verify-form">
+        <div>
+          <label>Bank Account Number</label>
+          <input type="text" id="accountNumber" placeholder="Enter 10-digit account number" maxlength="10" inputmode="numeric"/>
+        </div>
+        <button class="verify-btn" onclick="verifyAccount()">Verify Account</button>
+      </div>
+
+      <div class="name-result" id="nameResult">
+        <div class="label">Account Name</div>
+        <div class="name" id="accountName">—</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Built for both sides -->
+  <section>
+    <h2>Built for both sides</h2>
+    <div class="sides">
+      <div class="side">
+        <h3>For people</h3>
+        <p>Turn your spare minutes into rewards by completing honest, simple tasks.</p>
+      </div>
+      <div class="side">
+        <h3>For businesses</h3>
+        <p>Get real customer feedback and a stronger reputation on Google Maps.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <h2>Ready to start earning?</h2>
+    <p>Join thousands of Nigerians supporting local business every day.</p>
+    <a href="register.html" class="cta-btn" style="text-decoration:none;display:block;text-align:center;">Create free account</a>
+    <a href="#" class="cta-link">Learn more about Last Tech</a>
+  </section>
+
+  <footer>
+    © 2026 Last Tech · rexify style clone
+  </footer>
+
+  <script>
+    // Simulated name lookup (demo only)
+    const fakeNames = [
+      "CHINEDU OKORO",
+      "ADEOLA BALOGUN",
+      "FATIMA ABDULLAHI",
+      "EMMANUEL NWANKWO",
+      "BLESSING ADEYEMI",
+      "IBRAHIM MUSA",
+      "CHIOMA EZE",
+      "OLUWASEUN ADEKUNLE",
+      "AMINA BELLO",
+      "Tunde Okafor".toUpperCase()
+    ];
+
+    function verifyAccount() {
+      const input = document.getElementById('accountNumber');
+      const result = document.getElementById('nameResult');
+      const nameEl = document.getElementById('accountName');
+      const acc = input.value.trim();
+
+      if (acc.length < 10) {
+        alert('Please enter a valid 10-digit account number');
+        return;
+      }
+
+      // Simple hash to pick a consistent name for same number
+      let hash = 0;
+      for (let i = 0; i < acc.length; i++) {
+        hash = (hash + acc.charCodeAt(i) * (i + 1)) % fakeNames.length;
+      }
+
+      // Small delay to feel real
+      nameEl.textContent = "Checking...";
+      result.classList.add('show');
+
+      setTimeout(() => {
+        nameEl.textContent = fakeNames[hash];
+      }, 800);
+    }
+
+    // Allow Enter key
+    document.getElementById('accountNumber').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') verifyAccount();
+    });
+  </script>
+</body>
+</html>

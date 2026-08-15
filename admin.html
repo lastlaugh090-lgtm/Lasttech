@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin — Last Tech</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #f1f5f9;
+      color: #0f172a;
+      min-height: 100vh;
+    }
+    .login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .login-box {
+      background: #fff;
+      padding: 32px 28px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    .login-box h1 { font-size: 22px; font-weight: 800; margin-bottom: 6px; text-align: center; }
+    .login-box p { text-align: center; color: #64748b; font-size: 13px; margin-bottom: 24px; }
+    .login-box input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 15px;
+      margin-bottom: 12px;
+      outline: none;
+    }
+    .login-box input:focus { border-color: #e11d48; }
+    .login-box button {
+      width: 100%;
+      background: #e11d48;
+      color: white;
+      border: none;
+      padding: 13px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .admin-wrap { display: none; }
+    .admin-wrap.show { display: block; }
+    header {
+      background: #0f172a;
+      color: white;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    header h1 { font-size: 17px; font-weight: 700; }
+    .logout-btn {
+      background: #e11d48;
+      color: white;
+      border: none;
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .tabs {
+      display: flex;
+      background: #fff;
+      border-bottom: 1px solid #e2e8f0;
+      overflow-x: auto;
+      position: sticky;
+      top: 52px;
+      z-index: 40;
+    }
+    .tab {
+      flex: 1;
+      min-width: 80px;
+      text-align: center;
+      padding: 13px 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      background: none;
+      border: none;
+    }
+    .tab.active { color: #e11d48; border-bottom-color: #e11d48; }
+    .content {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 20px 16px 50px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 16px;
+      border: 1px solid #e2e8f0;
+    }
+    .stat-card .label { font-size: 12px; color: #64748b; margin-bottom: 4px; }
+    .stat-card .value { font-size: 22px; font-weight: 800; }
+    .stat-card .value.red { color: #e11d48; }
+    .section-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .card-body { padding: 14px 16px; }
+    .card-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+    .card-row .label { color: #64748b; }
+    .card-row .value { font-weight: 600; text-align: right; max-width: 60%; }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .badge.pending { background: #fef3c7; color: #92400e; }
+    .badge.unread { background: #dbeafe; color: #1e40af; }
+    .actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      flex: 1;
+      min-width: 100px;
+      padding: 9px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .btn.approve { background: #16a34a; color: white; }
+    .btn.reject { background: #e11d48; color: white; }
+    .btn.ghost { background: #f1f5f9; color: #334155; }
+    .btn.primary { background: #e11d48; color: white; }
+    .empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: #94a3b8;
+      font-size: 14px;
+    }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .user-item {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+    .user-item .name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+    .user-item .meta { font-size: 12px; color: #64748b; margin-bottom: 10px; }
+    .form-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .form-row input, .form-row select {
+      flex: 1;
+      padding: 8px 10px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-screen" id="loginScreen">
+    <div class="login-box">
+      <h1>Last Tech Admin</h1>
+      <p>Enter admin password to continue</p>
+      <input type="password" id="adminPass" placeholder="Password" />
+      <button onclick="adminLogin()">Login</button>
+      <p style="margin-top:16px;font-size:11px;color:#94a3b8;">Password: <strong>admin123</strong></p>
+    </div>
+  </div>
+
+  <div class="admin-wrap" id="adminWrap">
+    <header>
+      <h1>Last Tech Admin</h1>
+      <button class="logout-btn" onclick="adminLogout()">Logout</button>
+    </header>
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('overview', this)">Overview</button>
+      <button class="tab" onclick="showTab('deposits', this)">Deposits</button>
+      <button class="tab" onclick="showTab('withdrawals', this)">Withdrawals</button>
+      <button class="tab" onclick="showTab('users', this)">Users</button>
+      <button class="tab" onclick="showTab('messages', this)">Messages</button>
+    </div>
+    <div class="content">
+      <div class="panel active" id="panel-overview">
+        <div class="stats">
+          <div class="stat-card"><div class="label">Total Users</div><div class="value" id="statUsers">0</div></div>
+          <div class="stat-card"><div class="label">Pending Deposits</div><div class="value red" id="statPendingDep">0</div></div>
+          <div class="stat-card"><div class="label">Pending Withdrawals</div><div class="value red" id="statPendingWd">0</div></div>
+          <div class="stat-card"><div class="label">Unread Messages</div><div class="value red" id="statMsgs">0</div></div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <p style="font-size:13px;color:#64748b;margin-bottom:12px;line-height:1.5;">
+              <strong>Flow:</strong><br>
+              1. User pays to <strong>9033527049 (OPay)</strong> and taps “I have paid”<br>
+              2. Request appears under Deposits<br>
+              3. You Approve → user’s plan upgrades<br>
+              4. Process withdrawals from the Withdrawals tab
+            </p>
+            <button class="btn ghost" onclick="seedDemoData()" style="width:100%;">Load Demo Data</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel" id="panel-deposits">
+        <div class="section-title">Pending Deposits <span id="depCount">0</span></div>
+        <div id="depositList"></div>
+      </div>
+      <div class="panel" id="panel-withdrawals">
+        <div class="section-title">Pending Withdrawals <span id="wdCount">0</span></div>
+        <div id="withdrawList"></div>
+      </div>
+      <div class="panel" id="panel-users">
+        <div class="section-title">All Users</div>
+        <div id="userList"></div>
+      </div>
+      <div class="panel" id="panel-messages">
+        <div class="section-title">Support Messages</div>
+        <div id="messageList"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ADMIN_PASS = 'admin123';
+    function adminLogin() {
+      if (document.getElementById('adminPass').value === ADMIN_PASS) {
+        sessionStorage.setItem('lt_admin', 'true');
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('adminWrap').classList.add('show');
+        loadAll();
+      } else alert('Wrong password');
+    }
+    function adminLogout() { sessionStorage.removeItem('lt_admin'); location.reload(); }
+    if (sessionStorage.getItem('lt_admin') === 'true') {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('adminWrap').classList.add('show');
+      loadAll();
+    }
+    function showTab(name, el) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('panel-' + name).classList.add('active');
+    }
+    function getDeposits() { return JSON.parse(localStorage.getItem('lt_admin_deposits') || '[]'); }
+    function saveDeposits(l) { localStorage.setItem('lt_admin_deposits', JSON.stringify(l)); }
+    function getWithdrawals() { return JSON.parse(localStorage.getItem('lt_admin_withdrawals') || '[]'); }
+    function saveWithdrawals(l) { localStorage.setItem('lt_admin_withdrawals', JSON.stringify(l)); }
+    function getUsers() { return JSON.parse(localStorage.getItem('lt_admin_users') || '[]'); }
+    function saveUsers(l) { localStorage.setItem('lt_admin_users', JSON.stringify(l)); }
+    function getMessages() { return JSON.parse(localStorage.getItem('lt_admin_messages') || '[]'); }
+    function saveMessages(l) { localStorage.setItem('lt_admin_messages', JSON.stringify(l)); }
+
+    function loadAll() {
+      renderOverview(); renderDeposits(); renderWithdrawals(); renderUsers(); renderMessages();
+    }
+    function renderOverview() {
+      document.getElementById('statUsers').textContent = getUsers().length;
+      document.getElementById('statPendingDep').textContent = getDeposits().filter(d => d.status === 'pending').length;
+      document.getElementById('statPendingWd').textContent = getWithdrawals().filter(w => w.status === 'pending').length;
+      document.getElementById('statMsgs').textContent = getMessages().filter(m => m.status === 'unread').length;
+    }
+    function renderDeposits() {
+      const list = getDeposits().filter(d => d.status === 'pending');
+      document.getElementById('depCount').textContent = list.length;
+      const el = document.getElementById('depositList');
+      if (!list.length) { el.innerHTML = '<div class="empty">No pending deposits</div>'; return; }
+      el.innerHTML = list.map(d => `
+        <div class="card"><div class="card-body">
+          <div class="card-row"><span class="label">User</span><span class="value">${d.userName}</span></div>
+          <div class="card-row"><span class="label">Email</span><span class="value">${d.email||'—'}</span></div>
+          <div class="card-row"><span class="label">Plan</span><span class="value">${d.plan}</span></div>
+          <div class="card-row"><span class="label">Amount</span><span class="value">₦${Number(d.amount).toLocaleString()}</span></div>
+          <div class="card-row"><span class="label">Date</span><span class="value">${d.date}</span></div>
+          <div class="actions">
+            <button class="btn approve" onclick="approveDeposit('${d.id}')">Approve & Activate</button>
+            <button class="btn reject" onclick="rejectDeposit('${d.id}')">Reject</button>
+          </div>
+        </div></div>`).join('');
+    }
+    function renderWithdrawals() {
+      const list = getWithdrawals().filter(w => w.status === 'pending');
+      document.getElementById('wdCount').textContent = list.length;
+      const el = document.getElementById('withdrawList');
+      if (!list.length) { el.innerHTML = '<div class="empty">No pending withdrawals</div>'; return; }
+      el.innerHTML = list.map(w => `
+        <div class="card"><div class="card-body">
+          <div class="card-row"><span class="label">User</span><span class="value">${w.userName}</span></div>
+          <div class="card-row"><span class="label">Type</span><span class="value">${w.type}</span></div>
+          <div class="card-row"><span class="label">Amount</span><span class="value">₦${Number(w.amount).toLocaleString()}</span></div>
+          <div class="card-row"><span class="label">Bank</span><span class="value">${w.bank} • ${w.account}</span></div>
+          <div class="card-row"><span class="label">Date</span><span class="value">${w.date}</span></div>
+          <div class="actions">
+            <button class="btn approve" onclick="approveWithdraw('${w.id}')">Mark as Paid</button>
+            <button class="btn reject" onclick="rejectWithdraw('${w.id}')">Reject</button>
+          </div>
+        </div></div>`).join('');
+    }
+    function renderUsers() {
+      const users = getUsers();
+      const el = document.getElementById('userList');
+      if (!users.length) { el.innerHTML = '<div class="empty">No users yet</div>'; return; }
+      el.innerHTML = users.map((u,i) => `
+        <div class="user-item">
+          <div class="name">${u.name}</div>
+          <div class="meta">${u.email}<br>Plan: <strong>${u.plan}</strong> • Balance: ₦${Number(u.balance||0).toLocaleString()}</div>
+          <div class="form-row">
+            <select id="plan_${i}">
+              <option value="free" ${u.plan==='free'?'selected':''}>Free</option>
+              <option value="beginner" ${u.plan==='beginner'?'selected':''}>Beginner</option>
+              <option value="pro" ${u.plan==='pro'?'selected':''}>Pro</option>
+              <option value="master" ${u.plan==='master'?'selected':''}>Master</option>
+            </select>
+            <button class="btn primary" onclick="changeUserPlan(${i})">Set Plan</button>
+          </div>
+          <div class="form-row">
+            <input type="number" id="credit_${i}" placeholder="Credit amount" />
+            <button class="btn ghost" onclick="creditUser(${i})">Credit ₦</button>
+          </div>
+        </div>`).join('');
+    }
+    function renderMessages() {
+      const list = getMessages().reverse();
+      const el = document.getElementById('messageList');
+      if (!list.length) { el.innerHTML = '<div class="empty">No messages</div>'; return; }
+      el.innerHTML = list.map(m => `
+        <div class="card"><div class="card-body">
+          <div class="card-row"><span class="label">From</span><span class="value">${m.userName} ${m.status==='unread'?'<span class="badge unread">New</span>':''}</span></div>
+          <div class="card-row"><span class="label">Subject</span><span class="value">${m.subject}</span></div>
+          <div class="card-row"><span class="label">Date</span><span class="value">${m.date}</span></div>
+          <div style="margin-top:10px;font-size:13px;background:#f8fafc;padding:12px;border-radius:8px;">${m.message}</div>
+          ${m.status==='unread'?`<div class="actions"><button class="btn ghost" onclick="markRead('${m.id}')">Mark Read</button></div>`:''}
+        </div></div>`).join('');
+    }
+
+    function approveDeposit(id) {
+      const list = getDeposits();
+      const item = list.find(d => d.id === id);
+      if (!item) return;
+      item.status = 'approved';
+      saveDeposits(list);
+      const users = getUsers();
+      let user = users.find(u => u.email === item.email);
+      const planKey = item.planKey || (item.plan || '').toLowerCase();
+      if (user) {
+        user.plan = planKey;
+        user.hasDeposited = true;
+      } else {
+        users.push({ name: item.userName, email: item.email, plan: planKey, balance: 0, hasDeposited: true });
+      }
+      saveUsers(users);
+      // Push activation so user dashboard can pick it up
+      const activations = JSON.parse(localStorage.getItem('lt_plan_activations') || '{}');
+      activations[item.email] = { plan: planKey, amount: item.amount, date: new Date().toLocaleString() };
+      localStorage.setItem('lt_plan_activations', JSON.stringify(activations));
+      alert('Approved! Plan activated for ' + item.userName);
+      loadAll();
+    }
+    function rejectDeposit(id) {
+      const list = getDeposits();
+      const item = list.find(d => d.id === id);
+      if (item) { item.status = 'rejected'; saveDeposits(list); }
+      alert('Rejected');
+      loadAll();
+    }
+    function approveWithdraw(id) {
+      const list = getWithdrawals();
+      const item = list.find(w => w.id === id);
+      if (item) { item.status = 'approved'; saveWithdrawals(list); }
+      alert('Marked as Paid. Send the money to the user.');
+      loadAll();
+    }
+    function rejectWithdraw(id) {
+      const list = getWithdrawals();
+      const item = list.find(w => w.id === id);
+      if (item) { item.status = 'rejected'; saveWithdrawals(list); }
+      alert('Rejected');
+      loadAll();
+    }
+    function changeUserPlan(i) {
+      const users = getUsers();
+      const plan = document.getElementById('plan_' + i).value;
+      users[i].plan = plan;
+      users[i].hasDeposited = plan !== 'free';
+      saveUsers(users);
+      const activations = JSON.parse(localStorage.getItem('lt_plan_activations') || '{}');
+      activations[users[i].email] = { plan, date: new Date().toLocaleString() };
+      localStorage.setItem('lt_plan_activations', JSON.stringify(activations));
+      alert('Plan set to ' + plan);
+      loadAll();
+    }
+    function creditUser(i) {
+      const users = getUsers();
+      const amount = Number(document.getElementById('credit_' + i).value);
+      if (!amount || amount <= 0) return alert('Enter valid amount');
+      users[i].balance = (Number(users[i].balance) || 0) + amount;
+      saveUsers(users);
+      const credits = JSON.parse(localStorage.getItem('lt_balance_credits') || '{}');
+      credits[users[i].email] = (credits[users[i].email] || 0) + amount;
+      localStorage.setItem('lt_balance_credits', JSON.stringify(credits));
+      alert('₦' + amount.toLocaleString() + ' credited');
+      loadAll();
+    }
+    function markRead(id) {
+      const list = getMessages();
+      const item = list.find(m => m.id === id);
+      if (item) { item.status = 'read'; saveMessages(list); loadAll(); }
+    }
+    function seedDemoData() {
+      saveUsers([
+        { name: 'Chinedu Okoro', email: 'chinedu@mail.com', plan: 'beginner', balance: 2450, hasDeposited: true },
+        { name: 'Amina Bello', email: 'amina@mail.com', plan: 'free', balance: 120, hasDeposited: false },
+        { name: 'Tunde Okafor', email: 'tunde@mail.com', plan: 'pro', balance: 8900, hasDeposited: true }
+      ]);
+      saveDeposits([
+        { id: 'dep1', userName: 'Amina Bello', email: 'amina@mail.com', plan: 'Beginner', planKey: 'beginner', amount: 1000, date: new Date().toLocaleString(), status: 'pending' },
+        { id: 'dep2', userName: 'New User', email: 'new@mail.com', plan: 'Pro', planKey: 'pro', amount: 5000, date: new Date().toLocaleString(), status: 'pending' }
+      ]);
+      saveWithdrawals([
+        { id: 'wd1', userName: 'Chinedu Okoro', type: 'Main Balance', amount: 1500, bank: 'OPay', account: '9033527049', date: new Date().toLocaleString(), status: 'pending' },
+        { id: 'wd2', userName: 'Tunde Okafor', type: 'Referral', amount: 600, bank: 'GTBank', account: '0123456789', date: new Date().toLocaleString(), status: 'pending' }
+      ]);
+      alert('Demo data loaded');
+      loadAll();
+    }
+  </script>
+</body>
+</html>

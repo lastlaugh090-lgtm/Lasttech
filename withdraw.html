@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>Withdraw — Last Tech</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #f8f8f8;
+      color: #111;
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+    header {
+      background: #fff;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #eee;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .back { font-size: 20px; text-decoration: none; color: #111; }
+    .header-title { font-size: 17px; font-weight: 700; }
+
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .balance-box {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 16px;
+      border: 1px solid #eee;
+    }
+    .balance-box .label { font-size: 13px; color: #666; margin-bottom: 4px; }
+    .balance-box .amount { font-size: 28px; font-weight: 800; color: #e11d48; }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid #eee;
+      margin-bottom: 16px;
+    }
+    .card h3 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .status-box {
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+    .status-box.open {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .status-box.closed {
+      background: #fef2f2;
+      color: #be123c;
+    }
+
+    .account-info {
+      background: #f8f8f8;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    .account-info div { margin-bottom: 4px; }
+
+    .form-group { margin-bottom: 14px; }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    input {
+      width: 100%;
+      padding: 13px 14px;
+      border: 1px solid #e5e5e5;
+      border-radius: 11px;
+      font-size: 15px;
+      background: #fafafa;
+      outline: none;
+    }
+    input:focus { border-color: #e11d48; background: #fff; }
+
+    .btn {
+      width: 100%;
+      background: #e11d48;
+      color: white;
+      border: none;
+      padding: 15px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .note {
+      font-size: 12px;
+      color: #888;
+      text-align: center;
+      margin-top: 12px;
+      line-height: 1.5;
+    }
+
+    .rules {
+      font-size: 12px;
+      color: #555;
+      line-height: 1.6;
+    }
+    .rules li { margin-bottom: 6px; margin-left: 16px; }
+
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: #fff; border-top: 1px solid #eee;
+      display: flex; justify-content: space-around;
+      padding: 10px 0 14px; z-index: 100;
+    }
+    .nav-item {
+      text-align: center; text-decoration: none;
+      color: #999; font-size: 11px; font-weight: 600;
+    }
+    .nav-item.active { color: #e11d48; }
+    .nav-item .nav-icon { font-size: 20px; display: block; margin-bottom: 2px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="dashboard.html" class="back">←</a>
+    <div class="header-title">Withdraw</div>
+  </header>
+
+  <div class="container">
+    <div class="balance-box">
+      <div class="label">Available Balance</div>
+      <div class="amount" id="balance">₦0.00</div>
+    </div>
+
+    <!-- Main Withdraw -->
+    <div class="card">
+      <h3>Main Balance Withdraw</h3>
+      <div class="status-box" id="mainStatus">Checking...</div>
+
+      <div class="account-info" id="accountInfo">Loading...</div>
+
+      <div class="form-group">
+        <label>Amount (₦)</label>
+        <input type="number" id="mainAmount" placeholder="Minimum ₦500" min="500" />
+      </div>
+
+      <button class="btn" id="mainBtn" onclick="requestMainWithdraw()" disabled>Request Withdrawal</button>
+      <p class="note">Main withdrawals are only available from the <strong>30th to the 6th</strong> of every month.</p>
+    </div>
+
+    <!-- Referral Withdraw -->
+    <div class="card">
+      <h3>Referral Earnings Withdraw</h3>
+      <div class="status-box" id="refStatus">Checking...</div>
+
+      <div class="form-group">
+        <label>Referral Balance</label>
+        <input type="text" id="refBalance" value="₦0" readonly style="background:#eee;" />
+      </div>
+
+      <div class="form-group">
+        <label>Amount (₦)</label>
+        <input type="number" id="refAmount" placeholder="Minimum ₦200" min="200" />
+      </div>
+
+      <button class="btn" id="refBtn" onclick="requestRefWithdraw()" disabled>Withdraw Referral</button>
+      <p class="note">Referral withdrawals are open <strong>daily from 9:00 AM – 10:00 AM</strong> only.</p>
+    </div>
+
+    <div class="card">
+      <h3>Withdrawal Rules</h3>
+      <ul class="rules">
+        <li>Main balance withdraw: only open from <strong>30th – 6th</strong> of each month</li>
+        <li>Referral withdraw: daily between <strong>9:00 AM – 10:00 AM</strong></li>
+        <li>Referral earnings only credited when your friend signs up <strong>and deposits</strong></li>
+        <li>Minimum main withdraw: ₦500</li>
+        <li>Minimum referral withdraw: ₦200</li>
+      </ul>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="dashboard.html" class="nav-item">
+      <span class="nav-icon">🏠</span> Home
+    </a>
+    <a href="tasks.html" class="nav-item">
+      <span class="nav-icon">✅</span> Tasks
+    </a>
+    <a href="referral.html" class="nav-item">
+      <span class="nav-icon">👥</span> Invite
+    </a>
+    <a href="withdraw.html" class="nav-item active">
+      <span class="nav-icon">💰</span> Wallet
+    </a>
+  </nav>
+
+  <script>
+    if (localStorage.getItem('lt_logged_in') !== 'true') {
+      window.location.href = 'login.html';
+    }
+
+    // Balances
+    const mainBal = Number(localStorage.getItem('lt_balance') || 0);
+    const refBal = Number(localStorage.getItem('lt_ref_balance') || 0);
+
+    document.getElementById('balance').textContent = '₦' + mainBal.toLocaleString() + '.00';
+    document.getElementById('refBalance').value = '₦' + refBal.toLocaleString();
+
+    // Bank info
+    const bankNames = {
+      access: 'Access Bank', gtb: 'GTBank', zenith: 'Zenith Bank',
+      firstbank: 'First Bank', uba: 'UBA', kuda: 'Kuda', opay: 'OPay',
+      palmpay: 'PalmPay', fidelity: 'Fidelity', stanbic: 'Stanbic IBTC',
+      union: 'Union Bank', wema: 'Wema', eco: 'Ecobank', polaris: 'Polaris',
+      sterling: 'Sterling'
+    };
+    const bank = localStorage.getItem('lt_bank') || '';
+    const acc = localStorage.getItem('lt_account') || 'Not set';
+    const name = localStorage.getItem('lt_account_name') || 'Not verified';
+
+    document.getElementById('accountInfo').innerHTML = `
+      <div><strong>Bank:</strong> ${bankNames[bank] || 'Not selected'}</div>
+      <div><strong>Account:</strong> ${acc}</div>
+      <div><strong>Name:</strong> ${name}</div>
+    `;
+
+    // Date & time checks
+    const now = new Date();
+    const day = now.getDate();          // 1-31
+    const hour = now.getHours();        // 0-23
+
+    // Main withdraw: open 30th to 6th
+    // (30, 31, 1, 2, 3, 4, 5, 6)
+    const mainOpen = (day >= 30 || day <= 6);
+    const mainStatus = document.getElementById('mainStatus');
+    const mainBtn = document.getElementById('mainBtn');
+
+    if (mainOpen) {
+      mainStatus.className = 'status-box open';
+      mainStatus.textContent = '✓ Main withdraw is OPEN (30th – 6th)';
+      mainBtn.disabled = false;
+    } else {
+      mainStatus.className = 'status-box closed';
+      mainStatus.textContent = '✗ Main withdraw is CLOSED. Opens 30th – 6th of the month.';
+      mainBtn.disabled = true;
+    }
+
+    // Referral withdraw: 9am – 10am daily
+    const refOpen = (hour === 9); // 9:00 – 9:59
+    const refStatus = document.getElementById('refStatus');
+    const refBtn = document.getElementById('refBtn');
+
+    if (refOpen) {
+      refStatus.className = 'status-box open';
+      refStatus.textContent = '✓ Referral withdraw is OPEN (9:00 AM – 10:00 AM)';
+      refBtn.disabled = false;
+    } else {
+      refStatus.className = 'status-box closed';
+      refStatus.textContent = '✗ Referral withdraw is CLOSED. Only open 9:00 AM – 10:00 AM daily.';
+      refBtn.disabled = true;
+    }
+
+    function requestMainWithdraw() {
+      const amount = Number(document.getElementById('mainAmount').value);
+      if (!amount || amount < 500) {
+        alert('Minimum withdrawal is ₦500');
+        return;
+      }
+      if (amount > mainBal) {
+        alert('Insufficient balance');
+        return;
+      }
+      if (!mainOpen) {
+        alert('Main withdraw is only available from 30th to 6th of the month');
+        return;
+      }
+
+      // Send to admin
+      const list = JSON.parse(localStorage.getItem('lt_admin_withdrawals') || '[]');
+      list.push({
+        id: 'wd_' + Date.now(),
+        userName: localStorage.getItem('lt_user_name') || 'User',
+        type: 'Main Balance',
+        amount: amount,
+        bank: bankNames[bank] || bank || 'Unknown',
+        account: acc,
+        date: new Date().toLocaleString(),
+        status: 'pending'
+      });
+      localStorage.setItem('lt_admin_withdrawals', JSON.stringify(list));
+
+      // Deduct balance (pending)
+      localStorage.setItem('lt_balance', mainBal - amount);
+      document.getElementById('balance').textContent = '₦' + (mainBal - amount).toLocaleString() + '.00';
+
+      // History
+      const history = JSON.parse(localStorage.getItem('lt_history') || '[]');
+      history.push({
+        type: 'withdrawal',
+        title: 'Main balance withdrawal',
+        amount: amount,
+        status: 'pending',
+        date: new Date().toLocaleString()
+      });
+      localStorage.setItem('lt_history', JSON.stringify(history));
+
+      alert(`Main withdrawal of ₦${amount.toLocaleString()} requested!\nWaiting for admin approval.`);
+      document.getElementById('mainAmount').value = '';
+    }
+
+    function requestRefWithdraw() {
+      const amount = Number(document.getElementById('refAmount').value);
+      if (!amount || amount < 200) {
+        alert('Minimum referral withdrawal is ₦200');
+        return;
+      }
+      if (amount > refBal) {
+        alert('Insufficient referral balance');
+        return;
+      }
+      if (!refOpen) {
+        alert('Referral withdraw is only available from 9:00 AM to 10:00 AM');
+        return;
+      }
+
+      // Send to admin
+      const list = JSON.parse(localStorage.getItem('lt_admin_withdrawals') || '[]');
+      list.push({
+        id: 'wd_' + Date.now(),
+        userName: localStorage.getItem('lt_user_name') || 'User',
+        type: 'Referral',
+        amount: amount,
+        bank: bankNames[bank] || bank || 'Unknown',
+        account: acc,
+        date: new Date().toLocaleString(),
+        status: 'pending'
+      });
+      localStorage.setItem('lt_admin_withdrawals', JSON.stringify(list));
+
+      // Deduct referral balance
+      localStorage.setItem('lt_ref_balance', refBal - amount);
+      document.getElementById('refBalance').value = '₦' + (refBal - amount).toLocaleString();
+
+      alert(`Referral withdrawal of ₦${amount.toLocaleString()} requested!\nWaiting for admin approval.`);
+      document.getElementById('refAmount').value = '';
+    }
+  </script>
+</body>
+</html>

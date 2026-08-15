@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>Deposit — Last Tech</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #f8f8f8;
+      color: #111;
+      min-height: 100vh;
+      padding-bottom: 40px;
+    }
+    header {
+      background: #fff;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #eee;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .back { font-size: 20px; text-decoration: none; color: #111; }
+    .header-title { font-size: 17px; font-weight: 700; }
+
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .amount-card {
+      background: linear-gradient(135deg, #111, #2a2a2a);
+      color: white;
+      border-radius: 18px;
+      padding: 24px 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .amount-card .label {
+      font-size: 13px;
+      opacity: 0.8;
+      margin-bottom: 4px;
+    }
+    .amount-card .amount {
+      font-size: 36px;
+      font-weight: 800;
+    }
+    .amount-card .plan-name {
+      font-size: 14px;
+      margin-top: 6px;
+      opacity: 0.9;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid #eee;
+      margin-bottom: 16px;
+    }
+    .card h3 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .bank-details {
+      background: #f8f8f8;
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row .label { color: #666; }
+    .detail-row .value {
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .copy-btn {
+      background: #e11d48;
+      color: white;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .steps {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.7;
+    }
+    .steps li { margin-bottom: 6px; margin-left: 18px; }
+
+    .btn {
+      width: 100%;
+      background: #e11d48;
+      color: white;
+      border: none;
+      padding: 16px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .btn.success {
+      background: #16a34a;
+    }
+
+    .note {
+      font-size: 12px;
+      color: #888;
+      text-align: center;
+      margin-top: 14px;
+      line-height: 1.5;
+    }
+
+    .status {
+      text-align: center;
+      padding: 16px;
+      border-radius: 12px;
+      margin-top: 16px;
+      display: none;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .status.pending {
+      display: block;
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .status.confirmed {
+      display: block;
+      background: #dcfce7;
+      color: #166534;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="plans.html" class="back">←</a>
+    <div class="header-title">Make Payment</div>
+  </header>
+
+  <div class="container">
+    <div class="amount-card">
+      <div class="label">Amount to Pay</div>
+      <div class="amount" id="payAmount">₦0</div>
+      <div class="plan-name" id="planName">—</div>
+    </div>
+
+    <div class="card">
+      <h3>Transfer to this account</h3>
+      <div class="bank-details">
+        <div class="detail-row">
+          <span class="label">Bank</span>
+          <span class="value">OPay</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Account Number</span>
+          <span class="value">
+            9033527049
+            <button class="copy-btn" onclick="copyText('9033527049')">Copy</button>
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Account Name</span>
+          <span class="value">Last Tech</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>How to pay</h3>
+      <ol class="steps">
+        <li>Open your bank or OPay app</li>
+        <li>Transfer the exact amount shown above</li>
+        <li>Use the account number <strong>9033527049</strong> (OPay)</li>
+        <li>After payment, come back and tap <strong>“I have paid”</strong></li>
+      </ol>
+    </div>
+
+    <button class="btn" id="paidBtn" onclick="confirmPayment()">I have paid</button>
+    <p class="note">Your plan will be activated after we confirm your payment (usually within a few minutes).</p>
+
+    <div class="status" id="statusBox"></div>
+  </div>
+
+  <script>
+    if (localStorage.getItem('lt_logged_in') !== 'true') {
+      window.location.href = 'login.html';
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const planKey = params.get('plan') || 'beginner';
+
+    const planData = {
+      beginner: { name: 'Beginner', price: 1000 },
+      pro:      { name: 'Pro',      price: 5000 },
+      master:   { name: 'Master',   price: 15000 }
+    };
+
+    const plan = planData[planKey] || planData.beginner;
+
+    document.getElementById('payAmount').textContent = '₦' + plan.price.toLocaleString();
+    document.getElementById('planName').textContent = plan.name + ' Plan';
+
+    // Save pending plan
+    localStorage.setItem('lt_pending_plan', planKey);
+    localStorage.setItem('lt_pending_amount', plan.price);
+
+    function copyText(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Account number copied!');
+      }).catch(() => {
+        prompt('Copy this number:', text);
+      });
+    }
+
+    function confirmPayment() {
+      const btn = document.getElementById('paidBtn');
+      const status = document.getElementById('statusBox');
+
+      btn.disabled = true;
+      btn.textContent = 'Submitting...';
+
+      // Create pending deposit for admin
+      const deposits = JSON.parse(localStorage.getItem('lt_admin_deposits') || '[]');
+      const newDep = {
+        id: 'dep_' + Date.now(),
+        userName: localStorage.getItem('lt_user_name') || 'User',
+        email: localStorage.getItem('lt_email') || '',
+        plan: plan.name,
+        planKey: planKey,
+        amount: plan.price,
+        date: new Date().toLocaleString(),
+        status: 'pending'
+      };
+      deposits.push(newDep);
+      localStorage.setItem('lt_admin_deposits', JSON.stringify(deposits));
+
+      // History
+      const history = JSON.parse(localStorage.getItem('lt_history') || '[]');
+      history.push({
+        type: 'deposit',
+        title: plan.name + ' Plan payment',
+        amount: plan.price,
+        status: 'pending',
+        date: new Date().toLocaleString()
+      });
+      localStorage.setItem('lt_history', JSON.stringify(history));
+
+      // Also register user in admin users list if not exists
+      const users = JSON.parse(localStorage.getItem('lt_admin_users') || '[]');
+      const email = localStorage.getItem('lt_email') || '';
+      if (email && !users.find(u => u.email === email)) {
+        users.push({
+          name: localStorage.getItem('lt_user_name') || 'User',
+          email: email,
+          plan: localStorage.getItem('lt_plan') || 'free',
+          balance: Number(localStorage.getItem('lt_balance') || 0),
+          hasDeposited: false
+        });
+        localStorage.setItem('lt_admin_users', JSON.stringify(users));
+      }
+
+      setTimeout(() => {
+        btn.textContent = 'Submitted ✓';
+        btn.classList.add('success');
+
+        status.className = 'status pending';
+        status.style.display = 'block';
+        status.textContent = 'Payment submitted! Waiting for admin approval. You will be upgraded once confirmed.';
+
+        // Keep pending flags
+        localStorage.setItem('lt_pending_plan', planKey);
+        localStorage.setItem('lt_pending_amount', plan.price);
+      }, 800);
+    }
+  </script>
+</body>
+</html>

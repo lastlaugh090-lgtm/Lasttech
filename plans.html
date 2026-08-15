@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>Plans — Last Tech</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #f8f8f8;
+      color: #111;
+      min-height: 100vh;
+      padding-bottom: 40px;
+    }
+    header {
+      background: #fff;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #eee;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .back { font-size: 20px; text-decoration: none; color: #111; }
+    .header-title { font-size: 17px; font-weight: 700; }
+
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .current {
+      background: #fff;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      border: 1px solid #eee;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .current strong { color: #e11d48; }
+
+    .plan {
+      background: #fff;
+      border-radius: 18px;
+      padding: 22px 18px;
+      margin-bottom: 16px;
+      border: 2px solid #eee;
+      position: relative;
+    }
+    .plan.active {
+      border-color: #e11d48;
+    }
+    .plan.recommended {
+      border-color: #e11d48;
+    }
+    .plan .badge {
+      position: absolute;
+      top: -10px;
+      right: 16px;
+      background: #e11d48;
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+    .plan h3 {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .plan .price {
+      font-size: 24px;
+      font-weight: 800;
+      color: #e11d48;
+      margin-bottom: 8px;
+    }
+    .plan .price span {
+      font-size: 13px;
+      font-weight: 500;
+      color: #666;
+    }
+    .plan .earn {
+      background: #fef2f2;
+      color: #be123c;
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+    .plan ul {
+      list-style: none;
+      margin-bottom: 16px;
+    }
+    .plan li {
+      font-size: 13px;
+      color: #444;
+      margin-bottom: 6px;
+      padding-left: 18px;
+      position: relative;
+    }
+    .plan li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #16a34a;
+      font-weight: 700;
+    }
+    .plan-btn {
+      width: 100%;
+      background: #111;
+      color: white;
+      border: none;
+      padding: 13px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      display: block;
+      text-align: center;
+    }
+    .plan-btn.primary {
+      background: #e11d48;
+    }
+    .plan-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="dashboard.html" class="back">←</a>
+    <div class="header-title">Upgrade Plan</div>
+  </header>
+
+  <div class="container">
+    <div class="current">
+      <span>Current plan</span>
+      <strong id="currentPlan">Free</strong>
+    </div>
+
+    <!-- Free -->
+    <div class="plan" id="plan-free">
+      <h3>Free</h3>
+      <div class="price">₦0 <span>/ forever</span></div>
+      <div class="earn">Earn ₦0 – ₦50 per task</div>
+      <ul>
+        <li>Limited tasks per day</li>
+        <li>Basic support</li>
+        <li>Start earning immediately</li>
+      </ul>
+      <button class="plan-btn" disabled id="btn-free">Current Plan</button>
+    </div>
+
+    <!-- Beginner -->
+    <div class="plan recommended" id="plan-beginner">
+      <div class="badge">Popular</div>
+      <h3>Beginner</h3>
+      <div class="price">₦1,000 <span>/ one-time</span></div>
+      <div class="earn">Earn ₦400 – ₦500 per task</div>
+      <ul>
+        <li>More tasks unlocked</li>
+        <li>Faster withdrawals</li>
+        <li>Higher daily limits</li>
+      </ul>
+      <a href="deposit.html?plan=beginner" class="plan-btn primary" id="btn-beginner">Upgrade – ₦1,000</a>
+    </div>
+
+    <!-- Pro -->
+    <div class="plan" id="plan-pro">
+      <h3>Pro</h3>
+      <div class="price">₦5,000 <span>/ one-time</span></div>
+      <div class="earn">Earn ₦900 – ₦1,000 per task</div>
+      <ul>
+        <li>Maximum tasks per day</li>
+        <li>Priority support</li>
+        <li>Bonus referral rates</li>
+      </ul>
+      <a href="deposit.html?plan=pro" class="plan-btn primary" id="btn-pro">Upgrade – ₦5,000</a>
+    </div>
+
+    <!-- Master -->
+    <div class="plan" id="plan-master">
+      <h3>Master</h3>
+      <div class="price">₦15,000 <span>/ one-time</span></div>
+      <div class="earn">Earn ₦2,000 – ₦3,000 per task</div>
+      <ul>
+        <li>Highest earning tier</li>
+        <li>Unlimited tasks</li>
+        <li>VIP support + early withdraw</li>
+      </ul>
+      <a href="deposit.html?plan=master" class="plan-btn primary" id="btn-master">Upgrade – ₦15,000</a>
+    </div>
+  </div>
+
+  <script>
+    if (localStorage.getItem('lt_logged_in') !== 'true') {
+      window.location.href = 'login.html';
+    }
+
+    const current = localStorage.getItem('lt_plan') || 'free';
+    document.getElementById('currentPlan').textContent = current.charAt(0).toUpperCase() + current.slice(1);
+
+    // Mark current plan
+    const planEl = document.getElementById('plan-' + current);
+    if (planEl) planEl.classList.add('active');
+
+    // Disable buttons for current and lower plans
+    const order = ['free', 'beginner', 'pro', 'master'];
+    const idx = order.indexOf(current);
+
+    order.forEach((p, i) => {
+      const btn = document.getElementById('btn-' + p);
+      if (!btn) return;
+      if (i <= idx) {
+        if (i === idx) {
+          btn.textContent = 'Current Plan';
+          btn.disabled = true;
+          btn.classList.remove('primary');
+          if (btn.tagName === 'A') {
+            btn.removeAttribute('href');
+            btn.style.pointerEvents = 'none';
+            btn.style.background = '#ccc';
+          }
+        } else {
+          btn.style.display = 'none';
+        }
+      }
+    });
+  </script>
+</body>
+</html>

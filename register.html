@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>Create Account — Last Tech</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #ffffff;
+      color: #111;
+      min-height: 100vh;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: #e11d48;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+      font-size: 18px;
+    }
+    .logo-text {
+      font-size: 20px;
+      font-weight: 800;
+    }
+    .logo-text .black { color: #111; }
+    .logo-text span { color: #e11d48; }
+
+    .container {
+      padding: 30px 20px 50px;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .subtitle {
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 28px;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #333;
+    }
+    input, select {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      font-size: 15px;
+      outline: none;
+      background: #fafafa;
+      appearance: none;
+    }
+    input:focus, select:focus {
+      border-color: #e11d48;
+      background: #fff;
+    }
+    .btn {
+      width: 100%;
+      background: #e11d48;
+      color: white;
+      border: none;
+      padding: 15px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .btn:active { opacity: 0.9; }
+    .btn-secondary {
+      background: #111;
+    }
+    .links {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 14px;
+    }
+    .links a {
+      color: #e11d48;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    /* Verification result */
+    .name-box {
+      margin-top: 12px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 12px;
+      padding: 14px;
+      display: none;
+    }
+    .name-box.show { display: block; }
+    .name-box .label {
+      font-size: 12px;
+      color: #166534;
+      margin-bottom: 2px;
+    }
+    .name-box .name {
+      font-size: 17px;
+      font-weight: 700;
+      color: #15803d;
+    }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin: 24px 0 12px;
+      color: #111;
+      border-top: 1px solid #eee;
+      padding-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="lasttech.html" class="logo">
+      <div class="logo-icon">L</div>
+      <div class="logo-text"><span class="black">Last</span><span>Tech</span></div>
+    </a>
+  </header>
+
+  <div class="container">
+    <h1>Create free account</h1>
+    <p class="subtitle">Join thousands earning with Last Tech</p>
+
+    <form onsubmit="register(event)">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="fullname" placeholder="Your full name" required />
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="email" placeholder="you@example.com" required />
+      </div>
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="tel" id="phone" placeholder="08012345678" required />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="Create a password" required minlength="6" />
+      </div>
+
+      <div class="section-title">Bank Verification</div>
+      <p style="font-size:13px;color:#666;margin-bottom:14px;">Enter your account details so we can pay you.</p>
+
+      <div class="form-group">
+        <label>Select Bank</label>
+        <select id="bank" required>
+          <option value="">Choose your bank</option>
+          <option value="access">Access Bank</option>
+          <option value="gtb">Guaranty Trust Bank (GTBank)</option>
+          <option value="zenith">Zenith Bank</option>
+          <option value="firstbank">First Bank of Nigeria</option>
+          <option value="uba">United Bank for Africa (UBA)</option>
+          <option value="kuda">Kuda Bank</option>
+          <option value="opay">OPay</option>
+          <option value="palmpay">PalmPay</option>
+          <option value="fidelity">Fidelity Bank</option>
+          <option value="stanbic">Stanbic IBTC</option>
+          <option value="union">Union Bank</option>
+          <option value="wema">Wema Bank</option>
+          <option value="eco">Ecobank</option>
+          <option value="polaris">Polaris Bank</option>
+          <option value="sterling">Sterling Bank</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Account Number</label>
+        <input type="text" id="accountNumber" placeholder="10-digit account number" maxlength="10" inputmode="numeric" required />
+      </div>
+
+      <button type="button" class="btn btn-secondary" onclick="verifyAccount()">Verify Account</button>
+
+      <div class="name-box" id="nameBox">
+        <div class="label">Account Name Found</div>
+        <div class="name" id="accountName">—</div>
+      </div>
+
+      <button type="submit" class="btn" style="margin-top:20px;">Create Account</button>
+    </form>
+
+    <div class="links">
+      Already have an account? <a href="login.html">Sign in</a>
+    </div>
+  </div>
+
+  <script>
+    const fakeNames = [
+      "CHINEDU OKORO", "ADEOLA BALOGUN", "FATIMA ABDULLAHI", "EMMANUEL NWANKWO",
+      "BLESSING ADEYEMI", "IBRAHIM MUSA", "CHIOMA EZE", "OLUWASEUN ADEKUNLE",
+      "AMINA BELLO", "TUNDE OKAFOR", "Ngozi Okafor".toUpperCase(), "YUSUF DANJUMA"
+    ];
+
+    function verifyAccount() {
+      const bank = document.getElementById('bank').value;
+      const acc = document.getElementById('accountNumber').value.trim();
+      const box = document.getElementById('nameBox');
+      const nameEl = document.getElementById('accountName');
+
+      if (!bank) {
+        alert('Please select a bank first');
+        return;
+      }
+      if (acc.length !== 10) {
+        alert('Please enter a valid 10-digit account number');
+        return;
+      }
+
+      nameEl.textContent = "Checking...";
+      box.classList.add('show');
+
+      setTimeout(() => {
+        let hash = 0;
+        for (let i = 0; i < acc.length; i++) {
+          hash = (hash + acc.charCodeAt(i) * (i + 1)) % fakeNames.length;
+        }
+        nameEl.textContent = fakeNames[hash];
+        localStorage.setItem('lt_account_name', fakeNames[hash]);
+        localStorage.setItem('lt_bank', bank);
+        localStorage.setItem('lt_account', acc);
+      }, 900);
+    }
+
+    function register(e) {
+      e.preventDefault();
+      const name = document.getElementById('fullname').value;
+      const email = document.getElementById('email').value;
+
+      if (!document.getElementById('nameBox').classList.contains('show')) {
+        alert('Please verify your bank account first');
+        return;
+      }
+
+      localStorage.setItem('lt_logged_in', 'true');
+      localStorage.setItem('lt_user_name', name);
+      localStorage.setItem('lt_email', email);
+      localStorage.setItem('lt_balance', '0');
+      localStorage.setItem('lt_ref_balance', '0');
+      localStorage.setItem('lt_trust', '1');
+      localStorage.setItem('lt_plan', 'free');
+      localStorage.setItem('lt_has_deposited', 'false');
+
+      window.location.href = 'dashboard.html';
+    }
+  </script>
+</body>
+</html>
