@@ -62,21 +62,11 @@ const taskSchema = new mongoose.Schema({
   id: { type: String, default: () => uuidv4() },
   user_id: { type: String, required: true, index: true },
   task_id: { type: Number, required: true },
+  day_key: { type: String, required: true, index: true },
   reward: { type: Number, required: true },
-  date: { type: String, required: true }, // YYYY-MM-DD for daily reset at midnight
   created_at: { type: Date, default: Date.now }
 });
-taskSchema.index({ user_id: 1, task_id: 1, date: 1 }, { unique: true });
-
-function todayDateStr() {
-  // Africa/Lagos (WAT, UTC+1) — tasks refresh at 12:00 AM local
-  try {
-    return new Date().toLocaleDateString('en-CA', { timeZone: 'Africa/Lagos' }); // YYYY-MM-DD
-  } catch {
-    const d = new Date(Date.now() + 60 * 60 * 1000);
-    return d.toISOString().slice(0, 10);
-  }
-}
+taskSchema.index({ user_id: 1, task_id: 1, day_key: 1 }, { unique: true });
 
 const historySchema = new mongoose.Schema({
   id: { type: String, default: () => uuidv4() },
@@ -214,21 +204,21 @@ app.get('/api/me', auth, async (req, res) => {
 });
 
 // ========== DEPOSITS ==========
-const PLAN_RANK = { free: 0, beginner: 1, pro: 2, master: 3 };
-
 app.post('/api/deposits', auth, async (req, res) => {
-  const { plan, amount } = req.body;
-  const user = await User.findOne({ id: req.user.id });
-  if (!user) return res.status(404).json({ error: 'User not found' });
-  const curRank = PLAN_RANK[user.plan] ?? 0;
-  const newRank = PLAN_RANK[plan] ?? -1;
-  if (newRank <= curRank) {
-    return res.status(400).json({ error: 'You can only upgrade to a higher plan than your current one' });
+  try {
+    const { plan, amount } = req.body;
+    if (!plan || !amount) return res.status(400).json({ error: 'Plan and amount required' });
+    const id = uuidv4();
+    await Deposit.create({ id, user_id: req.user.id, plan, amount, status: 'pending' });
+    await History.create({
+      id: uuidv4(), user_id: req.user.id, type: 'deposit',
+      title: plan + ' Plan payment', amount, status: 'pending'
+    });
+    res.json({ id, status: 'pending' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Could not create deposit' });
   }
-  const id = uuidv4();
-  await Deposit.create({ id, user_id: req.user.id, plan, amount, status: 'pending' });
-  await History.create({ id: uuidv4(), user_id: req.user.id, type: 'deposit', title: plan + ' Plan payment', amount, status: 'pending' });
-  res.json({ id, status: 'pending' });
 });
 
 // ========== WITHDRAWALS ==========
@@ -263,74 +253,48 @@ app.post('/api/withdrawals', auth, async (req, res) => {
   res.json({ id, status: 'pending' });
 });
 
-// ========== TASKS (daily reset at 12:00 AM WAT) ==========
+// ========== TASKS ==========
+function todayKey() {
+  // Africa/Lagos midnight boundary (UTC+1)
+  const d = new Date(Date.now() + 60 * 60 * 1000);
+  return d.toISOString().slice(0, 10);
+}
+
 app.post('/api/tasks/complete', auth, async (req, res) => {
   try {
     const { task_id, reward } = req.body;
-    if (task_id == null || reward == null) {
-      return res.status(400).json({ error: 'Missing task or reward' });
-    }
+    const day = todayKey();
+    const exists = await TaskDone.findOne({ user_id: req.user.id, task_id, day_key: day });
+    if (exists) return res.status(400).json({ error: 'Task already completed today' });
 
-    const date = todayDateStr();
-    const exists = await TaskDone.findOne({ user_id: req.user.id, task_id: Number(task_id), date });
-    if (exists) {
-      return res.status(400).json({ error: 'Task already completed today' });
-    }
-
-    try {
-      await TaskDone.create({
-        id: uuidv4(),
-        user_id: req.user.id,
-        task_id: Number(task_id),
-        reward: Number(reward),
-        date
-      });
-    } catch (createErr) {
-      // Handle old unique index or duplicate key
-      if (createErr.code === 11000) {
-        return res.status(400).json({ error: 'Task already completed today' });
-      }
-      throw createErr;
-    }
-
+    await TaskDone.create({ id: uuidv4(), user_id: req.user.id, task_id, day_key: day, reward });
     const user = await User.findOne({ id: req.user.id });
-    if (!user) return res.status(404).json({ error: 'User not found' });
-
-    user.balance = (user.balance || 0) + Number(reward);
+    user.balance += Number(reward) || 0;
     await user.save();
-
-    await History.create({
-      id: uuidv4(),
-      user_id: req.user.id,
-      type: 'earning',
-      title: 'Task #' + task_id,
-      amount: Number(reward)
-    });
-
-    res.json({ reward: Number(reward), balance: user.balance });
+    await History.create({ id: uuidv4(), user_id: req.user.id, type: 'earning', title: 'Task #' + task_id, amount: reward });
+    res.json({ reward, balance: user.balance, day });
   } catch (e) {
-    console.error('Task complete error:', e.message);
-    res.status(500).json({ error: 'Could not complete task. Please try again.' });
+    if (e.code === 11000) return res.status(400).json({ error: 'Task already completed today' });
+    console.error(e);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
 app.get('/api/tasks/completed', auth, async (req, res) => {
-  const date = todayDateStr();
-  const rows = await TaskDone.find({ user_id: req.user.id, date });
+  const day = todayKey();
+  const rows = await TaskDone.find({ user_id: req.user.id, day_key: day });
   res.json(rows.map(r => r.task_id));
 });
 
-// ========== REFERRALS ==========
+// Referral list with deposit progress
 app.get('/api/referrals', auth, async (req, res) => {
-  const refs = await User.find({ referred_by: req.user.id })
-    .select('name email plan has_deposited created_at')
-    .sort({ created_at: -1 });
-  res.json(refs.map(u => ({
+  const list = await User.find({ referred_by: req.user.id }).select('id name email plan has_deposited created_at');
+  res.json(list.map(u => ({
+    id: u.id,
     name: u.name,
-    email: u.email,
     plan: u.plan || 'free',
     has_deposited: !!u.has_deposited,
-    created_at: u.created_at
+    joined: u.created_at
   })));
 });
 
@@ -544,165 +508,11 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-app.get('/privacy', (req, res) => {
-  res.send(`<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>LastTech – Privacy Policy</title>
-  <style>
-    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;max-width:720px;margin:0 auto;padding:24px 16px;line-height:1.6;color:#1a1a2e;background:#f5f6fa}
-    h1{font-size:24px;margin-bottom:8px}
-    h2{font-size:17px;margin-top:28px;margin-bottom:8px;color:#e11d48}
-    p,li{font-size:15px;color:#374151}
-    ul{padding-left:20px}
-    a{color:#e11d48}
-    .back{display:inline-block;margin-bottom:20px;color:#e11d48;font-weight:600;text-decoration:none}
-  </style>
-</head>
-<body>
-  <a class="back" href="/">← Back to LastTech</a>
-  <h1>LastTech Privacy Policy</h1>
-  <p><strong>Last updated:</strong> August 14, 2026</p>
-
-  <h2>1. Information We Collect</h2>
-  <p>When you use LastTech, we may collect:</p>
-  <ul>
-    <li>Name, email address, and phone number</li>
-    <li>Bank account details (for withdrawals)</li>
-    <li>Referral information</li>
-    <li>Task completion and transaction history</li>
-    <li>Device and usage information</li>
-  </ul>
-
-  <h2>2. How We Use Your Information</h2>
-  <p>We use your information to:</p>
-  <ul>
-    <li>Create and manage your account</li>
-    <li>Process deposits and withdrawals</li>
-    <li>Track tasks and earnings</li>
-    <li>Manage the referral system</li>
-    <li>Provide customer support</li>
-    <li>Improve our services</li>
-  </ul>
-
-  <h2>3. Sharing of Information</h2>
-  <p>We do <strong>not</strong> sell your personal information. We only share data when necessary with payment providers, administrators, or if required by law.</p>
-
-  <h2>4. Data Security</h2>
-  <p>We take reasonable steps to protect your information. However, no method of transmission over the internet is 100% secure.</p>
-
-  <h2>5. Bank Details</h2>
-  <p>Your bank account information is used only for processing withdrawals. We do not store full sensitive banking credentials beyond what is needed for payouts.</p>
-
-  <h2>6. Your Rights</h2>
-  <p>You may request to view, correct, or delete your information (subject to pending transactions).</p>
-
-  <h2>7. Contact Us</h2>
-  <p>
-    Email: <a href="mailto:support@lasttech.com.ng">support@lasttech.com.ng</a><br/>
-    Support Bot: <a href="https://t.me/LastTechNigeriaBot">@LastTechNigeriaBot</a><br/>
-    Channel: <a href="https://t.me/LASTTECHNIGERIA">@LASTTECHNIGERIA</a>
-  </p>
-</body>
-</html>`);
-});
-
 app.get('*', (req, res) => {
   const index = path.join(__dirname, 'index.html');
   if (fs.existsSync(index)) res.sendFile(index);
   else res.json({ message: 'Last Tech API is running', health: '/api/health' });
 });
-
-// ========== TELEGRAM BOT ==========
-function startTelegramBot() {
-  const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-  if (!TELEGRAM_BOT_TOKEN) {
-    console.log('TELEGRAM_BOT_TOKEN not set – Telegram bot disabled');
-    return;
-  }
-
-  let TelegramBot;
-  try {
-    TelegramBot = require('node-telegram-bot-api');
-  } catch (e) {
-    console.error('node-telegram-bot-api not installed');
-    return;
-  }
-
-  const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
-
-  bot.onText(/\/start/, (msg) => {
-    const chatId = msg.chat.id;
-    const name = msg.from.first_name || 'there';
-
-    bot.sendMessage(chatId,
-`👋 Hello ${name}!
-
-Welcome to *LastTech Support Bot*.
-
-I can help you with:
-• How to deposit
-• How to withdraw
-• Tasks & daily reset
-• Referral system
-• Contact support
-
-Choose an option below:`, {
-      parse_mode: 'Markdown',
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: '💰 How to Deposit', callback_data: 'deposit' }],
-          [{ text: '💸 How to Withdraw', callback_data: 'withdraw' }],
-          [{ text: '✅ Tasks Info', callback_data: 'tasks' }],
-          [{ text: '👥 Referrals', callback_data: 'referral' }],
-          [{ text: '📞 Contact Support', callback_data: 'support' }],
-          [{ text: '🌐 Open LastTech Website', url: 'https://lasttech.onrender.com' }]
-        ]
-      }
-    }).catch(err => console.log('TG send error:', err.message));
-  });
-
-  bot.on('callback_query', (query) => {
-    const chatId = query.message.chat.id;
-    const data = query.data;
-    let text = '';
-
-    if (data === 'deposit') {
-      text = `💰 *How to Deposit / Upgrade Plan*\n\n1. Open the LastTech app\n2. Go to *Plans*\n3. Choose a higher plan than your current one\n4. Transfer the exact amount to the account shown\n5. Tap *I have paid*\n6. Wait for admin approval\n\nYou can only upgrade to a *higher* plan.`;
-    } else if (data === 'withdraw') {
-      text = `💸 *Withdrawal Rules*\n\n*Main Balance:*\n• Minimum ₦500\n• Only open from 30th – 6th of every month\n\n*Referral Balance:*\n• Minimum ₦200\n• Only open 9AM – 10AM daily\n\nMake sure your bank details are correct in the app.`;
-    } else if (data === 'tasks') {
-      text = `✅ *Tasks Info*\n\n• Tasks refresh every day at *12:00 AM*\n• You can complete the same tasks again every day\n• Higher plans earn more per task\n• Always leave genuine reviews`;
-    } else if (data === 'referral') {
-      text = `👥 *Referral System*\n\n• Share your invite link\n• When your friend signs up *and deposits*, you earn ₦200\n• You can see your referrals and their progress inside the app (Invite page)`;
-    } else if (data === 'support') {
-      text = `📞 *Contact Support*\n\n• Support Bot: https://t.me/LastTechNigeriaBot\n• Channel: https://t.me/LASTTECHNIGERIA\n• Email: support@lasttech.com.ng\n\nOr just type your question here and an admin will reply as soon as possible.`;
-    }
-
-    bot.answerCallbackQuery(query.id).catch(() => {});
-    if (text) {
-      bot.sendMessage(chatId, text, { parse_mode: 'Markdown' }).catch(err => console.log('TG send error:', err.message));
-    }
-  });
-
-  bot.on('message', (msg) => {
-    if (msg.text && !msg.text.startsWith('/')) {
-      bot.sendMessage(msg.chat.id,
-`Thanks for your message. An admin will reply soon.
-
-Meanwhile you can use the menu:
-/start`).catch(() => {});
-    }
-  });
-
-  bot.on('polling_error', (err) => {
-    console.log('Telegram polling error:', err.message);
-  });
-
-  console.log('LastTech Telegram Support Bot started');
-}
 
 // ========== START ==========
 async function start() {
@@ -714,10 +524,7 @@ async function start() {
   try {
     await mongoose.connect(MONGODB_URI);
     console.log('MongoDB connected');
-    app.listen(PORT, () => {
-      console.log('Last Tech API on port ' + PORT);
-      startTelegramBot();
-    });
+    app.listen(PORT, () => console.log('Last Tech API on port ' + PORT));
   } catch (e) {
     console.error('MongoDB connection failed:', e.message);
     process.exit(1);

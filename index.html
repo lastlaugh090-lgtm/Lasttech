@@ -3,25 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<title>LastTech – Earn Money Online with Simple Tasks in Nigeria</title>
-<meta name="description" content="LastTech lets you earn money online in Nigeria by completing simple tasks, Google reviews, and website visits. Start free, upgrade plans for higher earnings, and withdraw to your bank."/>
-<meta name="keywords" content="LastTech, earn money online Nigeria, paid tasks Nigeria, Google review jobs, make money online, referral earnings, Last Tech app"/>
-<meta name="author" content="LastTech"/>
-<meta name="robots" content="index, follow"/>
-<link rel="canonical" href="https://lasttech.onrender.com/"/>
-
-<!-- Open Graph / Social -->
-<meta property="og:type" content="website"/>
-<meta property="og:url" content="https://lasttech.onrender.com/"/>
-<meta property="og:title" content="LastTech – Earn Money Online with Simple Tasks"/>
-<meta property="og:description" content="Complete simple tasks, earn daily, and withdraw to your bank. Start free on LastTech."/>
-<meta property="og:site_name" content="LastTech"/>
-
-<!-- Twitter -->
-<meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="LastTech – Earn Money Online with Simple Tasks"/>
-<meta name="twitter:description" content="Complete simple tasks, earn daily, and withdraw to your bank. Start free on LastTech."/>
-
+<title>Last Tech</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#f5f6fa;color:#1a1a2e;min-height:100vh}
@@ -449,9 +431,6 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
       <p style="font-size:13px;margin-bottom:12px">Upgrade to earn up to ₦3,000 per task</p>
       <button class="btn sm" onclick="go('plans')">View Plans</button>
     </div>
-    <div class="card" style="background:#f0fdf4;border:1px solid #bbf7d0;padding:12px 14px;margin-bottom:12px">
-      <p style="font-size:12px;color:#166534;margin:0">↻ Tasks refresh automatically every day at <strong>12:00 AM</strong>. Complete them again tomorrow for more rewards.</p>
-    </div>
     <div class="section-title">Available Tasks</div>
     <div id="taskList"></div>
   </div>
@@ -496,7 +475,6 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
   <header><button class="back-btn" onclick="go('dashboard')">←</button><div class="header-title">Upgrade Plan</div></header>
   <div class="container">
     <div class="card" style="display:flex;justify-content:space-between"><span>Current plan</span><strong style="color:#e11d48" id="plansCurrent">Free</strong></div>
-    <p style="font-size:12px;color:#6b7280;margin-bottom:12px">You can only upgrade to a higher plan. Previous plans stay locked.</p>
     <div class="plan-card" id="planCard-free"><h3>Free</h3><div class="price">₦0</div><div class="earn">₦0 – ₦50 / task</div><button class="btn" id="planBtn-free" disabled>Current Plan</button></div>
     <div class="plan-card" id="planCard-beginner"><div class="badge">Popular</div><h3>Beginner</h3><div class="price">₦1,000</div><div class="earn">₦400 – ₦500 / task</div><button class="btn" id="planBtn-beginner" onclick="startDeposit('beginner',1000)">Upgrade – ₦1,000</button></div>
     <div class="plan-card" id="planCard-pro"><h3>Pro</h3><div class="price">₦5,000</div><div class="earn">₦900 – ₦1,000 / task</div><button class="btn" id="planBtn-pro" onclick="startDeposit('pro',5000)">Upgrade – ₦5,000</button></div>
@@ -515,10 +493,11 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
     <div class="card">
       <h3 style="font-size:15px;font-weight:700;margin-bottom:12px">Transfer to this account</h3>
       <div class="bank-details">
-        <div class="detail-row"><span>Bank</span><strong>OPay</strong></div>
-        <div class="detail-row"><span>Account</span><strong>9033527049 <button class="copy-btn" onclick="copyText('9033527049')">Copy</button></strong></div>
-        <div class="detail-row"><span>Name</span><strong>Last Tech</strong></div>
+        <div class="detail-row"><span>Bank</span><strong>UBA</strong></div>
+        <div class="detail-row"><span>Account</span><strong>0232034481 <button class="copy-btn" onclick="copyText('0232034481')">Copy</button></strong></div>
+        <div class="detail-row"><span>Name</span><strong>Florence</strong></div>
       </div>
+      <p style="text-align:center;margin-top:12px;font-size:12px;color:#6b7280">Transfer the exact amount, then tap “I have paid”</p>
     </div>
     <button class="btn" id="paidBtn" onclick="confirmPaid()">I have paid</button>
     <p id="depStatus" style="text-align:center;margin-top:14px;font-size:13px;display:none"></p>
@@ -567,12 +546,10 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
       <h3 style="font-size:15px;font-weight:700;margin-bottom:10px">Your Invite Link</h3>
       <div style="background:#f9fafb;border-radius:12px;padding:14px;font-size:13px;word-break:break-all;margin-bottom:12px;border:1px dashed #e5e7eb" id="inviteLink">—</div>
       <button class="btn" onclick="copyInvite()">Copy Link</button>
-      <button class="btn dark" style="margin-top:8px" onclick="shareWhatsApp()">Share on WhatsApp</button>
+      <button class="btn dark" style="margin-top:8px" onclick="shareTelegram()">Share on Telegram</button>
     </div>
-    <div class="card">
-      <h3 style="font-size:15px;font-weight:700;margin-bottom:12px">Your Referrals</h3>
-      <div id="referralList"><div class="empty">Loading...</div></div>
-    </div>
+    <div class="section-title">Your referrals</div>
+    <div id="refList"><div class="empty">Loading…</div></div>
   </div>
   <nav class="bottom-nav">
     <button class="nav-item" onclick="go('dashboard')"><span class="icon">🏠</span>Home</button>
@@ -591,9 +568,10 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
   <header><button class="back-btn" onclick="go('dashboard')">←</button><div class="header-title">Support</div></header>
   <div class="container">
     <div class="card">
-      <p style="font-size:14px;margin-bottom:8px">Support Bot: <a href="https://t.me/LastTechNigeriaBot" target="_blank" rel="noopener" style="color:#e11d48;font-weight:700">@LastTechNigeriaBot</a></p>
-      <p style="font-size:14px;margin-bottom:8px">Channel: <a href="https://t.me/LASTTECHNIGERIA" target="_blank" rel="noopener" style="color:#e11d48;font-weight:700">@LASTTECHNIGERIA</a></p>
-      <p style="font-size:14px;margin-bottom:10px"><a href="https://t.me/LastTechNigeriaBot" target="_blank" rel="noopener" class="btn" style="display:inline-block;padding:10px 18px;font-size:14px;text-decoration:none">Chat with Support Bot</a></p>
+      <a href="https://t.me/LASTTECHNIGERIA" target="_blank" style="display:block;text-decoration:none;color:inherit;margin-bottom:12px">
+        <strong style="color:#e11d48">Telegram</strong>
+        <p style="font-size:13px;color:#6b7280;margin-top:2px">t.me/LASTTECHNIGERIA — fastest support</p>
+      </a>
       <p style="font-size:14px">Email: support@lasttech.com.ng</p>
     </div>
     <div class="card">
@@ -672,7 +650,6 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
 <script>
 const API = window.location.origin;
 const plans = {free:{name:'Free',min:0,max:50},beginner:{name:'Beginner',min:400,max:500},pro:{name:'Pro',min:900,max:1000},master:{name:'Master',min:2000,max:3000}};
-const planRank = {free:0, beginner:1, pro:2, master:3};
 let token = localStorage.getItem('lt_token')||'';
 let adminToken = sessionStorage.getItem('lt_admin_token')||'';
 let currentUser=null, pendingPlan=null, currentTask=null, taskTimer=null, taskTimeLeft=0, taskPhase='ready', completedTasks=[];
@@ -704,14 +681,9 @@ async function api(path, opts={}) {
   const headers={'Content-Type':'application/json',...(opts.headers||{})};
   if(token&&!opts.admin) headers.Authorization='Bearer '+token;
   if(opts.admin&&adminToken) headers.Authorization='Bearer '+adminToken;
-  let res;
-  try {
-    res = await fetch(API+path,{...opts,headers});
-  } catch (err) {
-    throw new Error('Network error. Check your internet and try again.');
-  }
-  const data = await res.json().catch(()=>({}));
-  if(!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+  const res=await fetch(API+path,{...opts,headers});
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error||'Request failed');
   return data;
 }
 
@@ -840,73 +812,60 @@ function taskAction(){
     const reward=Math.floor(Math.random()*(p.max-p.min+1))+p.min;
     $('tdActionBtn').disabled=true; $('tdActionBtn').textContent='Submitting...';
     api('/api/tasks/complete',{method:'POST',body:JSON.stringify({task_id:currentTask.id,reward})})
-      .then(data=>{
-        $('tdActionBtn').textContent='✓ Earned ₦'+data.reward;
-        $('tdActionBtn').className='btn dark';
-        $('tdStatus').style.display='block';
-        $('tdStatus').style.color='#16a34a';
-        $('tdStatus').textContent='Reward added to your wallet!';
-        showToast('Earned ₦'+data.reward,'success');
-        setTimeout(()=>go('tasks'),1500);
-      })
-      .catch(e=>{
-        const msg = e.message || 'Something went wrong. Please try again.';
-        $('tdActionBtn').disabled=false;
-        $('tdActionBtn').textContent='I have completed this task';
-        $('tdStatus').style.display='block';
-        $('tdStatus').style.color='#e11d48';
-        $('tdStatus').textContent=msg;
-        showToast(msg,'error');
-      });
+      .then(data=>{$('tdActionBtn').textContent='✓ Earned ₦'+data.reward; $('tdActionBtn').className='btn dark'; setTimeout(()=>go('tasks'),1500);})
+      .catch(e=>{alert(e.message);$('tdActionBtn').disabled=false;$('tdActionBtn').textContent='I have completed this task';});
   }
 }
 
 function loadPlans(){
-  const cur = currentUser?.plan || 'free';
-  const rank = planRank[cur] ?? 0;
-  $('plansCurrent').textContent = (plans[cur]||plans.free).name;
-  ['free','beginner','pro','master'].forEach(key=>{
-    const btn = $('planBtn-'+key);
+  const order=['free','beginner','pro','master'];
+  const cur=currentUser?.plan||'free';
+  const idx=order.indexOf(cur);
+  $('plansCurrent').textContent=(plans[cur]||plans.free).name;
+  order.forEach(function(key,i){
+    const btn=$('planBtn-'+key);
     if(!btn) return;
-    const r = planRank[key];
-    if(r < rank){
-      btn.disabled = true;
-      btn.textContent = 'Locked (lower plan)';
-      btn.className = 'btn dark';
-      btn.onclick = null;
-    } else if(r === rank){
-      btn.disabled = true;
-      btn.textContent = 'Current Plan';
-      btn.className = 'btn dark';
-      btn.onclick = null;
+    if(i<idx){
+      btn.disabled=true;
+      btn.textContent='Already passed';
+      btn.onclick=null;
+    } else if(i===idx){
+      btn.disabled=true;
+      btn.textContent='Current Plan';
+      btn.onclick=null;
     } else {
-      const prices = {beginner:1000, pro:5000, master:15000};
-      btn.disabled = false;
-      btn.textContent = 'Upgrade – ₦'+(prices[key]||0).toLocaleString();
-      btn.className = 'btn';
-      btn.onclick = function(){ startDeposit(key, prices[key]); };
+      btn.disabled=false;
+      const prices={beginner:1000,pro:5000,master:15000};
+      btn.textContent='Upgrade – ₦'+(prices[key]||0).toLocaleString();
+      btn.onclick=function(){ startDeposit(key, prices[key]); };
     }
   });
 }
 function startDeposit(key,price){
-  const cur = currentUser?.plan || 'free';
-  if((planRank[key]??0) <= (planRank[cur]??0)){
-    return alert('You can only upgrade to a higher plan than your current one.');
-  }
   pendingPlan={key,price,name:plans[key].name};
   $('depAmount').textContent='₦'+price.toLocaleString();
   $('depPlanName').textContent=plans[key].name+' Plan';
-  $('paidBtn').disabled=false;$('paidBtn').textContent='I have paid';$('depStatus').style.display='none';
+  $('paidBtn').disabled=false;
+  $('paidBtn').textContent='I have paid';
+  $('depStatus').style.display='none';
   go('deposit');
 }
 async function confirmPaid(){
   if(!pendingPlan) return;
-  $('paidBtn').disabled=true; $('paidBtn').textContent='Submitting...';
+  $('paidBtn').disabled=true;
+  $('paidBtn').textContent='Submitting...';
   try{
     await api('/api/deposits',{method:'POST',body:JSON.stringify({plan:pendingPlan.key,amount:pendingPlan.price})});
-    $('paidBtn').textContent='Submitted ✓'; $('depStatus').style.display='block'; $('depStatus').style.color='#d97706';
-    $('depStatus').textContent='Waiting for admin approval.';
-  }catch(e){alert(e.message);$('paidBtn').disabled=false;$('paidBtn').textContent='I have paid';}
+    $('paidBtn').textContent='Submitted ✓';
+    $('depStatus').style.display='block';
+    $('depStatus').style.color='#d97706';
+    $('depStatus').textContent='Waiting for admin approval. Your plan will activate after confirmation.';
+    showToast('Payment submitted','success');
+  }catch(e){
+    showToast(e.message||'Failed','error');
+    $('paidBtn').disabled=false;
+    $('paidBtn').textContent='I have paid';
+  }
 }
 
 function loadWithdraw(){
@@ -933,38 +892,27 @@ async function doRefWithdraw(){
   catch(e){alert(e.message);}
 }
 
-async function loadReferral(){
+function loadReferral(){
   $('inviteLink').textContent=API+'/?ref='+(currentUser?.referral_code||'USER');
-  const listEl = $('referralList');
-  if(!listEl) return;
-  listEl.innerHTML = '<div class="empty">Loading...</div>';
-  try{
-    const refs = await api('/api/referrals');
-    if(!refs.length){
-      listEl.innerHTML = '<div class="empty">No referrals yet. Share your link!</div>';
-      return;
-    }
-    listEl.innerHTML = refs.map(r=>{
-      const planName = (plans[r.plan]||plans.free).name;
-      const paid = r.has_deposited;
-      return `<div class="item" style="align-items:center">
-        <div class="item-left">
-          <h4>${r.name||'User'}</h4>
-          <p>${planName} plan · ${new Date(r.created_at).toLocaleDateString()}</p>
-        </div>
-        <div class="item-right" style="text-align:right">
-          ${paid
-            ? '<span style="background:#dcfce7;color:#166534;font-size:12px;font-weight:700;padding:5px 10px;border-radius:999px">✓ Paid plan</span>'
-            : '<span style="background:#f3f4f6;color:#6b7280;font-size:12px;font-weight:600;padding:5px 10px;border-radius:999px">No deposit</span>'}
-        </div>
-      </div>`;
+  const list=$('refList');
+  if(!list) return;
+  list.innerHTML='<div class="empty">Loading…</div>';
+  api('/api/referrals').then(function(rows){
+    if(!rows.length){ list.innerHTML='<div class="empty">No referrals yet. Share your link!</div>'; return; }
+    list.innerHTML=rows.map(function(r){
+      const paid=r.has_deposited;
+      const planLabel=(plans[r.plan]||plans.free).name;
+      return '<div class="item"><div class="item-left"><h4>'+ (r.name||'User') +'</h4><p>'+planLabel+(paid?' · deposited':' · signed up only')+'</p></div>'+
+        '<div class="item-right">'+(paid?'<span style="background:#dcfce7;color:#166534;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700">✓ Paid plan</span>':'<span style="background:#f3f4f6;color:#6b7280;padding:4px 10px;border-radius:999px;font-size:12px">Pending</span>')+'</div></div>';
     }).join('');
-  }catch(e){
-    listEl.innerHTML = '<div class="empty">Could not load referrals</div>';
-  }
+  }).catch(function(){ list.innerHTML='<div class="empty">Could not load referrals</div>'; });
+}
+function shareTelegram(){
+  const t=encodeURIComponent('Join Last Tech and earn money! '+$('inviteLink').textContent);
+  window.open('https://t.me/share/url?url='+encodeURIComponent($('inviteLink').textContent)+'&text='+t,'_blank');
 }
 function copyInvite(){navigator.clipboard.writeText($('inviteLink').textContent).then(function(){showToast('Invite link copied','success');}).catch(function(){prompt('Copy:',$('inviteLink').textContent);});}
-function shareWhatsApp(){const t=encodeURIComponent('Join Last Tech and earn money! '+$('inviteLink').textContent); window.open('https://wa.me/?text='+t,'_blank');}
+
 
 async function loadHistory(){
   try{
