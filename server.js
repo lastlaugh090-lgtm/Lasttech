@@ -63,10 +63,11 @@ const taskSchema = new mongoose.Schema({
   user_id: { type: String, required: true, index: true },
   task_id: { type: Number, required: true },
   day_key: { type: String, required: true, index: true },
+  // unique per user + task + calendar day (allows same task next day)
+  completion_key: { type: String, required: true, unique: true },
   reward: { type: Number, required: true },
   created_at: { type: Date, default: Date.now }
 });
-taskSchema.index({ user_id: 1, task_id: 1, day_key: 1 }, { unique: true });
 
 const historySchema = new mongoose.Schema({
   id: { type: String, default: () => uuidv4() },
@@ -255,26 +256,39 @@ app.post('/api/withdrawals', auth, async (req, res) => {
 
 // ========== TASKS ==========
 function todayKey() {
-  // Africa/Lagos midnight boundary (UTC+1)
-  const d = new Date(Date.now() + 60 * 60 * 1000);
-  return d.toISOString().slice(0, 10);
+  // Nigeria (Africa/Lagos) calendar date YYYY-MM-DD
+  try {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Lagos', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  } catch {
+    const d = new Date(Date.now() + 3600000);
+    return d.toISOString().slice(0, 10);
+  }
 }
 
 app.post('/api/tasks/complete', auth, async (req, res) => {
   try {
     const { task_id, reward } = req.body;
     const day = todayKey();
-    const exists = await TaskDone.findOne({ user_id: req.user.id, task_id, day_key: day });
-    if (exists) return res.status(400).json({ error: 'Task already completed today' });
+    const completion_key = req.user.id + '_' + task_id + '_' + day;
 
-    await TaskDone.create({ id: uuidv4(), user_id: req.user.id, task_id, day_key: day, reward });
+    const exists = await TaskDone.findOne({ completion_key });
+    if (exists) return res.status(400).json({ error: 'Task already completed today. Come back after 12:00 AM.' });
+
+    await TaskDone.create({
+      id: uuidv4(),
+      user_id: req.user.id,
+      task_id,
+      day_key: day,
+      completion_key,
+      reward: Number(reward) || 0
+    });
     const user = await User.findOne({ id: req.user.id });
     user.balance += Number(reward) || 0;
     await user.save();
     await History.create({ id: uuidv4(), user_id: req.user.id, type: 'earning', title: 'Task #' + task_id, amount: reward });
     res.json({ reward, balance: user.balance, day });
   } catch (e) {
-    if (e.code === 11000) return res.status(400).json({ error: 'Task already completed today' });
+    if (e.code === 11000) return res.status(400).json({ error: 'Task already completed today. Come back after 12:00 AM.' });
     console.error(e);
     res.status(500).json({ error: 'Server error' });
   }
