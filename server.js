@@ -280,8 +280,8 @@ app.post('/api/tasks/complete', auth, async (req, res) => {
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     // Cap by plan
-    const planCaps = { free: 50, beginner: 500, pro: 1000, master: 3000 };
-    const planMins = { free: 0, beginner: 400, pro: 900, master: 2000 };
+    const planCaps = { free: 30, beginner: 100, pro: 500, master: 1500 };
+    const planMins = { free: 10, beginner: 80, pro: 400, master: 1200 };
     const cap = planCaps[user.plan] || 50;
     const floor = planMins[user.plan] || 0;
     if (reward > cap) reward = cap;
@@ -485,9 +485,18 @@ app.post('/api/admin/deposits/:id/approve', adminAuth, async (req, res) => {
     if (user.referred_by) {
       const ref = await User.findOne({ id: user.referred_by });
       if (ref) {
-        ref.ref_balance = (ref.ref_balance || 0) + 200;
-        await ref.save();
-        await History.create({ id: uuidv4(), user_id: ref.id, type: 'earning', title: 'Referral bonus', amount: 200 });
+        const bonus = Math.floor(Number(dep.amount || 0) * 0.30); // 30% of deposit
+        if (bonus > 0) {
+          ref.ref_balance = Number(ref.ref_balance || 0) + bonus;
+          await ref.save();
+          await History.create({
+            id: uuidv4(),
+            user_id: ref.id,
+            type: 'earning',
+            title: 'Referral 30% of deposit',
+            amount: bonus
+          });
+        }
       }
     }
   }

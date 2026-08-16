@@ -428,7 +428,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
       <div style="font-weight:800;color:#e11d48;font-size:16px" id="taskEarnRange">₦0–50</div>
     </div>
     <div id="upgradeBanner" class="card" style="background:linear-gradient(135deg,#1f2937,#374151);color:#fff;text-align:center">
-      <p style="font-size:13px;margin-bottom:12px">Upgrade to earn up to ₦3,000 per task</p>
+      <p style="font-size:13px;margin-bottom:12px">Upgrade to earn up to ₦1,500 per task</p>
       <button class="btn sm" onclick="go('plans')">View Plans</button>
     </div>
     <div class="section-title">Available Tasks</div>
@@ -475,10 +475,10 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
   <header><button class="back-btn" onclick="go('dashboard')">←</button><div class="header-title">Upgrade Plan</div></header>
   <div class="container">
     <div class="card" style="display:flex;justify-content:space-between"><span>Current plan</span><strong style="color:#e11d48" id="plansCurrent">Free</strong></div>
-    <div class="plan-card" id="planCard-free"><h3>Free</h3><div class="price">₦0</div><div class="earn">₦0 – ₦50 / task</div><button class="btn" id="planBtn-free" disabled>Current Plan</button></div>
-    <div class="plan-card" id="planCard-beginner"><div class="badge">Popular</div><h3>Beginner</h3><div class="price">₦1,000</div><div class="earn">₦400 – ₦500 / task</div><button class="btn" id="planBtn-beginner" onclick="startDeposit('beginner',1000)">Upgrade – ₦1,000</button></div>
-    <div class="plan-card" id="planCard-pro"><h3>Pro</h3><div class="price">₦5,000</div><div class="earn">₦900 – ₦1,000 / task</div><button class="btn" id="planBtn-pro" onclick="startDeposit('pro',5000)">Upgrade – ₦5,000</button></div>
-    <div class="plan-card" id="planCard-master"><h3>Master</h3><div class="price">₦15,000</div><div class="earn">₦2,000 – ₦3,000 / task</div><button class="btn" id="planBtn-master" onclick="startDeposit('master',15000)">Upgrade – ₦15,000</button></div>
+    <div class="plan-card" id="planCard-free"><h3>Free</h3><div class="price">₦0</div><div class="earn">₦10 – ₦30 / task</div><button class="btn" id="planBtn-free" disabled>Current Plan</button></div>
+    <div class="plan-card" id="planCard-beginner"><div class="badge">Popular</div><h3>Beginner</h3><div class="price">₦1,000</div><div class="earn">₦80 – ₦100 / task</div><button class="btn" id="planBtn-beginner" onclick="startDeposit('beginner',1000)">Upgrade – ₦1,000</button></div>
+    <div class="plan-card" id="planCard-pro"><h3>Pro</h3><div class="price">₦5,000</div><div class="earn">₦400 – ₦500 / task</div><button class="btn" id="planBtn-pro" onclick="startDeposit('pro',5000)">Upgrade – ₦5,000</button></div>
+    <div class="plan-card" id="planCard-master"><h3>Master</h3><div class="price">₦15,000</div><div class="earn">₦1,200 – ₦1,500 / task</div><button class="btn" id="planBtn-master" onclick="startDeposit('master',15000)">Upgrade – ₦15,000</button></div>
   </div>
 </div>
 
@@ -539,8 +539,8 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
   <header><button class="back-btn" onclick="go('dashboard')">←</button><div class="header-title">Invite & Earn</div></header>
   <div class="container">
     <div class="card" style="background:linear-gradient(135deg,#e11d48,#be123c);color:#fff;text-align:center;border:none">
-      <h2 style="font-size:22px;font-weight:800;margin-bottom:6px">Earn ₦200 per friend</h2>
-      <p style="font-size:13px;opacity:.9">When they sign up AND deposit</p>
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:6px">Earn 30% of every deposit</h2>
+      <p style="font-size:13px;opacity:.9">When your referral upgrades a plan</p>
     </div>
     <div class="card">
       <h3 style="font-size:15px;font-weight:700;margin-bottom:10px">Your Invite Link</h3>
@@ -649,7 +649,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
 
 <script>
 const API = window.location.origin;
-const plans = {free:{name:'Free',min:0,max:50},beginner:{name:'Beginner',min:400,max:500},pro:{name:'Pro',min:900,max:1000},master:{name:'Master',min:2000,max:3000}};
+const plans={free:{name:'Free',min:10,max:30},beginner:{name:'Beginner',min:80,max:100},pro:{name:'Pro',min:400,max:500},master:{name:'Master',min:1200,max:1500}}
 let token = localStorage.getItem('lt_token')||'';
 let adminToken = sessionStorage.getItem('lt_admin_token')||'';
 let currentUser=null, pendingPlan=null, currentTask=null, taskTimer=null, taskTimeLeft=0, taskPhase='ready', completedTasks=[];
