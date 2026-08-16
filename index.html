@@ -6,8 +6,8 @@
 <title>Last Tech</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#f5f6fa;color:#1a1a2e;min-height:100vh}
-.page{display:none;min-height:100vh;padding-bottom:90px;background:#f5f6fa}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(165deg,#fff5f7 0%,#f8fafc 40%,#eef2ff 100%);background-attachment:fixed;color:#1a1a2e;min-height:100vh}
+.page{display:none;min-height:100vh;padding-bottom:90px;background:transparent}
 .page.active{display:block}
 
 /* ===== ANIMATIONS ===== */
@@ -110,7 +110,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
   }
 }
 
-header{background:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;position:sticky;top:0;z-index:50;box-shadow:0 1px 8px rgba(0,0,0,.04)}
+header{background:rgba(255,255,255,.88);padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,.6);position:sticky;top:0;z-index:50;box-shadow:0 2px 12px rgba(225,29,72,.05);backdrop-filter:blur(12px)}
 .logo{display:flex;align-items:center;gap:9px;cursor:pointer}
 .logo-icon{width:38px;height:38px;background:linear-gradient(135deg,#e11d48,#f43f5e);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:17px;box-shadow:0 3px 12px rgba(225,29,72,.3)}
 .logo-text{font-size:19px;font-weight:800;letter-spacing:-.3px}.logo-text span{color:#e11d48}
@@ -127,8 +127,8 @@ input:focus,select:focus,textarea:focus{border-color:#e11d48;box-shadow:0 0 0 3p
 label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#374151}
 .form-group{margin-bottom:14px}
 .container{max-width:480px;margin:0 auto;padding:20px}
-.card{background:#fff;border-radius:18px;padding:18px;border:1px solid #f0f0f0;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,.03)}
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;display:flex;justify-content:space-around;padding:10px 0 16px;z-index:100;box-shadow:0 -2px 12px rgba(0,0,0,.04)}
+.card{background:rgba(255,255,255,.92);border-radius:18px;padding:18px;border:1px solid rgba(255,255,255,.8);margin-bottom:14px;box-shadow:0 4px 20px rgba(225,29,72,.06),0 2px 8px rgba(0,0,0,.03);backdrop-filter:blur(8px)}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.92);border-top:1px solid rgba(241,245,249,.9);display:flex;justify-content:space-around;padding:10px 0 16px;z-index:100;box-shadow:0 -4px 20px rgba(0,0,0,.06);backdrop-filter:blur(12px)}
 .nav-item{text-align:center;color:#9ca3af;font-size:11px;font-weight:600;background:none;border:none;cursor:pointer}
 .nav-item.active{color:#e11d48}
 .nav-item .icon{font-size:22px;display:block;margin-bottom:2px}
@@ -140,17 +140,17 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
 .balance-actions{display:flex;gap:10px}
 .balance-actions .btn{flex:1}
 .quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
-.quick-item{background:#fff;border-radius:18px;padding:20px 14px;text-align:center;border:1px solid #f0f0f0;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.03);transition:transform .12s}
+.quick-item{background:rgba(255,255,255,.95);border-radius:18px;padding:20px 14px;text-align:center;border:1px solid rgba(255,255,255,.9);cursor:pointer;box-shadow:0 4px 16px rgba(225,29,72,.07);transition:transform .12s}
 .quick-item:active{transform:scale(.96)}
 .quick-item .qicon{font-size:28px;margin-bottom:8px}
 .quick-item .qlabel{font-size:13px;font-weight:700;color:#374151}
 .section-title{font-size:17px;font-weight:800;margin-bottom:14px;color:#1a1a2e}
-.task{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;border:1px solid #f0f0f0;box-shadow:0 2px 10px rgba(0,0,0,.03)}
+.task{background:rgba(255,255,255,.95);border-radius:16px;padding:16px;margin-bottom:12px;border:1px solid rgba(255,255,255,.9);box-shadow:0 4px 14px rgba(0,0,0,.04)}
 .task-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
 .task-info h4{font-size:14px;font-weight:700;margin-bottom:3px}
 .task-info p{font-size:12px;color:#6b7280}
 .task-reward{background:linear-gradient(135deg,#fef2f2,#ffe4e6);color:#e11d48;font-weight:700;font-size:13px;padding:6px 12px;border-radius:10px;border:1px solid #fecdd3;white-space:nowrap}
-.plan-card{background:#fff;border-radius:20px;padding:22px;margin-bottom:14px;border:2px solid #f0f0f0;position:relative;box-shadow:0 2px 12px rgba(0,0,0,.03)}
+.plan-card{background:rgba(255,255,255,.96);border-radius:20px;padding:22px;margin-bottom:14px;border:2px solid rgba(254,226,226,.8);position:relative;box-shadow:0 6px 20px rgba(225,29,72,.08)}
 .plan-card .badge{position:absolute;top:-11px;right:16px;background:linear-gradient(135deg,#e11d48,#f97316);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:999px;box-shadow:0 2px 10px rgba(225,29,72,.3)}
 .plan-card h3{font-size:18px;font-weight:800}
 .plan-card .price{font-size:26px;font-weight:800;color:#e11d48;margin:6px 0}
@@ -160,7 +160,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
 .status-box{border-radius:12px;padding:14px;font-size:13px;margin-bottom:14px;font-weight:600}
 .status-box.open{background:#dcfce7;color:#166534}
 .status-box.closed{background:#fef2f2;color:#be123c}
-.hero{text-align:center;padding:48px 20px 28px;background:linear-gradient(180deg,#fff 0%,#fef2f2 100%)}
+.hero{text-align:center;padding:48px 20px 28px;background:linear-gradient(180deg,rgba(255,255,255,.9) 0%,rgba(254,242,242,.85) 50%,transparent 100%)}
 .hero h1{font-size:30px;font-weight:900;margin-bottom:10px;letter-spacing:-.5px}
 .hero h1 span{color:#e11d48}
 .hero p{color:#6b7280;font-size:15px;max-width:300px;margin:0 auto 8px;line-height:1.5}
@@ -185,7 +185,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
 .item-right .amount.plus{color:#16a34a;font-weight:800}
 .item-right .amount.minus{color:#e11d48;font-weight:800}
 .empty{text-align:center;padding:40px;color:#9ca3af}
-.admin-login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#f5f6fa}
+.admin-login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:transparent}
 .admin-box{background:#fff;padding:32px 28px;border-radius:20px;width:100%;max-width:360px;box-shadow:0 8px 30px rgba(0,0,0,.08)}
 .admin-header{background:linear-gradient(135deg,#1f2937,#374151);color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center}
 .admin-tabs{display:flex;background:#fff;border-bottom:1px solid #eee;overflow-x:auto}
@@ -529,8 +529,16 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
     </div>
     <div class="card">
       <strong style="font-size:14px">Need help?</strong>
-      <p style="font-size:12px;color:#6b7280;margin-top:4px">Telegram support · Terms &amp; Privacy in the footer on Home (logged out).</p>
-      <button class="btn sm" style="margin-top:10px;width:auto" onclick="window.open('https://t.me/LASTTECHNIGERIA','_blank')">Open Telegram</button>
+      <p style="font-size:12px;color:#6b7280;margin-top:4px;line-height:1.5">Chat with us on Telegram or send a message in Support. You can also read Terms &amp; Privacy anytime.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
+        <button class="btn sm" style="width:auto" onclick="window.open('https://t.me/LASTTECHNIGERIA','_blank')">Telegram</button>
+        <button class="btn sm dark" style="width:auto" onclick="go('support')">Support page</button>
+      </div>
+      <p style="font-size:12px;margin-top:12px;color:#6b7280">
+        <a href="#" onclick="go('terms');return false" style="color:#e11d48;font-weight:600">Terms</a> ·
+        <a href="#" onclick="go('privacy');return false" style="color:#e11d48;font-weight:600">Privacy</a> ·
+        <a href="#" onclick="go('regulations');return false" style="color:#e11d48;font-weight:600">Regulations</a>
+      </p>
     </div>
   </div>
   <nav class="bottom-nav">
