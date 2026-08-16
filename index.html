@@ -518,6 +518,10 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
       <div class="quick-item" onclick="go('history')"><div class="qicon">📊</div><div class="qlabel">History</div></div>
       <div class="quick-item" onclick="go('support')"><div class="qicon">💬</div><div class="qlabel">Support</div></div>
     </div>
+    <div class="card" onclick="go('posttask')" style="cursor:pointer">
+      <strong style="font-size:14px">📢 Post a task</strong>
+      <p style="font-size:12px;color:#6b7280;margin-top:4px">Pay ₦300 per person. Get completions from Last Tech users.</p>
+    </div>
     <div class="section-title">Today</div>
     <div class="card" onclick="go('tasks')" style="cursor:pointer">
       <strong style="font-size:14px">Complete tasks to earn</strong>
@@ -563,7 +567,10 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
       <p style="font-size:13px;margin-bottom:12px">Upgrade to earn up to ₦1,500 per task</p>
       <button class="btn sm" onclick="go('plans')">View Plans</button>
     </div>
-    <div class="section-title">Available Tasks</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="section-title" style="margin:0">Available Tasks</div>
+      <button class="btn sm" style="width:auto" onclick="go('posttask')">+ Post task</button>
+    </div>
     <div id="taskList"></div>
   </div>
   <nav class="bottom-nav">
@@ -694,6 +701,52 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
 <div class="page" id="page-history">
   <header><button class="back-btn" onclick="go('dashboard')">←</button><div class="header-title">History</div></header>
   <div class="container"><div id="historyList"></div></div>
+</div>
+
+
+<div class="page" id="page-posttask">
+  <header><button class="back-btn" onclick="go('tasks')">←</button><div class="header-title">Post a Task</div></header>
+  <div class="container">
+    <div class="card" style="background:linear-gradient(135deg,#1f2937,#374151);color:#fff;border:none">
+      <strong style="font-size:15px">Get real people to complete your task</strong>
+      <p style="font-size:13px;opacity:.85;margin-top:6px;line-height:1.5">₦300 per person who completes it. Set how many completions you need — total is calculated instantly.</p>
+    </div>
+    <div class="card">
+      <div class="form-group"><label>Task title</label><input type="text" id="ptTitle" placeholder="e.g. Visit my Instagram page"/></div>
+      <div class="form-group"><label>Description / instructions</label><textarea id="ptDesc" rows="3" placeholder="What should people do?"></textarea></div>
+      <div class="form-group"><label>Link (optional)</label><input type="url" id="ptLink" placeholder="https://..."/></div>
+      <div class="form-group"><label>Icon</label>
+        <select id="ptIcon">
+          <option value="📋">📋 General</option>
+          <option value="📱">📱 Social / App</option>
+          <option value="🛒">🛒 Shop</option>
+          <option value="🗺️">🗺️ Maps / Location</option>
+          <option value="⭐">⭐ Review</option>
+          <option value="🎬">🎬 Video</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Completions needed (people)</label><input type="number" id="ptCompletions" min="1" max="5000" value="10" oninput="calcPostTotal()"/></div>
+      <div class="form-group"><label>Target views (optional)</label><input type="number" id="ptViews" min="0" value="0" oninput="calcPostTotal()"/></div>
+      <div class="card" style="background:#fef2f2;border-color:#fecdd3;margin:0">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span>Price per person</span><strong>₦300</strong></div>
+        <div style="display:flex;justify-content:space-between;font-size:15px"><span>Total to pay</span><strong style="color:#e11d48;font-size:20px" id="ptTotal">₦3,000</strong></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:12px">Pay with</h3>
+      <label style="display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:14px;cursor:pointer">
+        <input type="radio" name="ptPay" value="balance" checked onchange="calcPostTotal()"/> Wallet balance
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:14px;cursor:pointer">
+        <input type="radio" name="ptPay" value="transfer" onchange="calcPostTotal()"/> Bank transfer (UBA 0232034481)
+      </label>
+      <p style="font-size:12px;color:#6b7280" id="ptPayHint">Will deduct from your Last Tech wallet if balance is enough.</p>
+    </div>
+    <button class="btn" id="ptSubmit" onclick="submitPostTask()">Pay &amp; publish task</button>
+    <p id="ptStatus" style="text-align:center;margin-top:12px;font-size:13px;display:none"></p>
+    <div class="section-title" style="margin-top:24px">Your posted tasks</div>
+    <div id="ptMyList"><div class="empty">None yet</div></div>
+  </div>
 </div>
 
 <div class="page" id="page-support">
@@ -961,25 +1014,26 @@ const $=id=>document.getElementById(id);
 
 // Real task links - open actual Google Maps / websites
 const allTasks = [
-  {id:1, title:'Google Review – Restaurant', desc:'Leave an honest review for a local restaurant on Google Maps.', type:'review',
+  {id:1, icon:'🍽️', title:'Google Review – Restaurant', desc:'Leave an honest review for a local restaurant on Google Maps.', type:'review',
    link:'https://www.google.com/maps/search/restaurant+near+me', linkLabel:'Open Google Maps – Restaurants',
    steps:['Tap “Open Google Maps” below','Pick a restaurant you know or visit','Tap Write a review','Write at least 15 honest words','Submit the review','Return here and confirm']},
-  {id:2, title:'Google Review – Salon', desc:'Review a nearby beauty salon on Google Maps.', type:'review',
+  {id:2, icon:'💇', title:'Google Review – Salon', desc:'Review a nearby beauty salon on Google Maps.', type:'review',
    link:'https://www.google.com/maps/search/beauty+salon+near+me', linkLabel:'Open Google Maps – Salons',
    steps:['Tap “Open Google Maps” below','Find a salon','Write a genuine review','Submit','Return and confirm']},
-  {id:3, title:'Visit Jumia', desc:'Browse Jumia for at least 20 seconds.', type:'visit',
+  {id:3, icon:'🛒', title:'Visit Jumia', desc:'Browse Jumia for at least 20 seconds.', type:'visit',
    link:'https://www.jumia.com.ng', linkLabel:'Open Jumia.com.ng',
    steps:['Tap Open Jumia below','Browse products for 20+ seconds','Return here','Confirm completion']},
-  {id:4, title:'Google Review – Pharmacy', desc:'Leave a genuine review for a pharmacy.', type:'review',
+  {id:4, icon:'💊', title:'Google Review – Pharmacy', desc:'Leave a genuine review for a pharmacy.', type:'review',
    link:'https://www.google.com/maps/search/pharmacy+near+me', linkLabel:'Open Google Maps – Pharmacies',
    steps:['Tap Open Google Maps','Search or pick a pharmacy','Write an honest review','Submit','Return here']},
-  {id:5, title:'Visit Konga', desc:'Explore Konga website for 30 seconds.', type:'visit',
+  {id:5, icon:'🛍️', title:'Visit Konga', desc:'Explore Konga website for 30 seconds.', type:'visit',
    link:'https://www.konga.com', linkLabel:'Open Konga.com',
    steps:['Tap Open Konga','Browse the site fully','Stay for the timer','Return and confirm']},
-  {id:6, title:'Google Review – Fashion Store', desc:'Review a clothing store on Google Maps.', type:'review',
+  {id:6, icon:'👗', title:'Google Review – Fashion Store', desc:'Review a clothing store on Google Maps.', type:'review',
    link:'https://www.google.com/maps/search/clothing+store+near+me', linkLabel:'Open Google Maps – Fashion',
    steps:['Tap Open Google Maps','Find a fashion/clothing store','Write a genuine review','Submit','Confirm here']}
 ];
+let sponsoredTasks = [];
 
 async function api(path, opts={}) {
   const headers={'Content-Type':'application/json',...(opts.headers||{})};
@@ -1001,6 +1055,7 @@ function go(page){
   if(page==='withdraw') loadWithdraw();
   if(page==='referral') loadReferral();
   if(page==='history') loadHistory();
+  if(page==='posttask'){ calcPostTotal(); loadMySponsored(); }
   if(page==='admin'){
     if(adminToken){$('adminLoginScreen').style.display='none';$('adminPanel').style.display='block';loadAdmin();}
     else{$('adminLoginScreen').style.display='flex';$('adminPanel').style.display='none';}
@@ -1061,32 +1116,42 @@ async function loadTasks(){
   try{
     currentUser=await api('/api/me');
     const raw=await api('/api/tasks/completed');
-    completedTasks=(Array.isArray(raw)?raw:[]).map(Number);
-  }catch(e){ completedTasks=[]; }
+    completedTasks=(Array.isArray(raw)?raw:[]);
+    try{ sponsoredTasks=await api('/api/tasks/feed'); }catch(e2){ sponsoredTasks=[]; }
+  }catch(e){ completedTasks=[]; sponsoredTasks=[]; }
   const p=plans[currentUser?.plan]||plans.free;
   $('taskPlanBadge').textContent=p.name;
   $('taskEarnRange').textContent='₦'+p.min+'–'+p.max;
   $('taskPlanDesc').textContent=p.name+' plan';
   $('upgradeBanner').style.display=(currentUser?.plan||'free')==='free'?'block':'none';
   const list=$('taskList'); list.innerHTML='';
-  allTasks.forEach(t=>{
-    const done=completedTasks.includes(Number(t.id));
-    list.innerHTML+=`<div class="task"><div class="task-top"><div class="task-info"><h4>${t.title}</h4><p>${t.desc}</p></div>
-      <div class="task-reward">${done?'Done':'₦'+p.min+'–'+p.max}</div></div>
-      <button class="btn ${done?'dark':''}" ${done?'disabled':''} onclick="openTask(${t.id})">${done?'✓ Completed':'View Task'}</button></div>`;
+  const combined = allTasks.concat(sponsoredTasks||[]);
+  combined.forEach(t=>{
+    const tid = t.id;
+    const done = completedTasks.map(Number).indexOf(Number(tid))!==-1 || completedTasks.indexOf(tid)!==-1;
+    const icon = t.icon || '📋';
+    const rewardLabel = done ? 'Done' : ('₦'+p.min+'–'+p.max);
+    list.innerHTML += `<div class="task"><div class="task-top"><div style="display:flex;gap:12px;align-items:flex-start;flex:1">
+      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#fef2f2,#ffe4e6);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${icon}</div>
+      <div class="task-info"><h4>${t.title}</h4><p>${t.desc||''}</p></div></div>
+      <div class="task-reward">${rewardLabel}</div></div>
+      <button class="btn ${done?'dark':''}" ${done?'disabled':''} onclick="openTask(${typeof tid==='number'?tid:('\''+tid+'\'')})">${done?'✓ Completed':'View Task'}</button></div>`;
   });
 }
 
 function openTask(id){
-  const t=allTasks.find(x=>x.id===id); if(!t) return;
-  if(completedTasks.map(Number).indexOf(Number(id))!==-1){ showToast('Already completed today. Resets at 12:00 AM.','error'); return; }
+  let t=allTasks.find(x=>x.id===id);
+  if(!t && typeof id==='string') t=(sponsoredTasks||[]).find(x=>x.id===id);
+  if(!t){ showToast('Task not found','error'); return; }
+  if(completedTasks.indexOf(id)!==-1 || completedTasks.map(Number).indexOf(Number(id))!==-1){ showToast('Already completed today. Resets at 12:00 AM.','error'); return; }
   currentTask=t; taskPhase='ready'; if(taskTimer){clearInterval(taskTimer);taskTimer=null;}
   const p=plans[currentUser?.plan]||plans.free;
-  $('tdName').textContent=t.title; $('tdDesc').textContent=t.desc; $('tdReward').textContent='Earn ₦'+p.min+' – ₦'+p.max;
-  $('tdSteps').innerHTML=t.steps.map(s=>'<li>'+s+'</li>').join('');
-  $('tdTimer').textContent='00:30'; $('tdTimerCard').style.display='block'; $('tdProofCard').style.display='none';
+  $('tdName').textContent=t.title; $('tdDesc').textContent=t.desc||''; $('tdReward').textContent='Earn ₦'+p.min+' – ₦'+p.max;
+  var steps=t.steps||['Open the link below','Complete the instructions','Return here','Claim your reward'];
+  $('tdSteps').innerHTML=steps.map(function(s){return '<li>'+s+'</li>';}).join('');
+  $('tdTimer').textContent='00:20'; $('tdTimerCard').style.display='block'; $('tdProofCard').style.display='none';
   $('tdLinkBox').style.display='none';
-  $('tdOpenBtn').textContent=t.linkLabel||'Open Link';
+  $('tdOpenBtn').textContent=t.linkLabel||(t.link?'Open link':'Open Link');
   $('tdActionBtn').disabled=false; $('tdActionBtn').textContent='Start Task'; $('tdActionBtn').className='btn'; $('tdStatus').style.display='none';
   go('taskdetail');
 }
@@ -1376,6 +1441,60 @@ async function doReset(){
     go('login');
   }catch(e){$('resetError').textContent=e.message;$('resetError').style.display='block';}
   $('resetBtn').disabled=false;
+}
+
+
+function calcPostTotal(){
+  var n=Math.max(1, Number($('ptCompletions')&&$('ptCompletions').value||0));
+  var total=n*300;
+  if($('ptTotal')) $('ptTotal').textContent='₦'+total.toLocaleString();
+  var method=(document.querySelector('input[name="ptPay"]:checked')||{}).value||'balance';
+  if($('ptPayHint')){
+    $('ptPayHint').textContent=method==='balance'
+      ? 'Will deduct ₦'+total.toLocaleString()+' from your wallet if balance is enough.'
+      : 'Transfer ₦'+total.toLocaleString()+' to UBA 0232034481 (Florence), then admin activates the task.';
+  }
+}
+async function submitPostTask(){
+  var title=$('ptTitle').value.trim();
+  var completions=Number($('ptCompletions').value);
+  var method=(document.querySelector('input[name="ptPay"]:checked')||{}).value||'balance';
+  if(!title) return showToast('Enter a title','error');
+  if(!completions||completions<1) return showToast('Enter completions needed','error');
+  $('ptSubmit').disabled=true; $('ptSubmit').textContent='Submitting...';
+  try{
+    var data=await api('/api/tasks/sponsor',{method:'POST',body:JSON.stringify({
+      title:title,
+      description:$('ptDesc').value.trim(),
+      link:$('ptLink').value.trim(),
+      icon:$('ptIcon').value,
+      completions_wanted:completions,
+      views_wanted:Number($('ptViews').value)||0,
+      pay_method:method
+    })});
+    showToast(data.message||'Submitted','success');
+    $('ptStatus').style.display='block';
+    $('ptStatus').style.color='#16a34a';
+    $('ptStatus').textContent=data.message||'OK';
+    if(currentUser&&data.status==='active'){ try{ currentUser=await api('/api/me'); }catch(e){} }
+    loadMySponsored();
+  }catch(e){
+    showToast(e.message||'Failed','error');
+    $('ptStatus').style.display='block';
+    $('ptStatus').style.color='#be123c';
+    $('ptStatus').textContent=e.message||'Failed';
+  }
+  $('ptSubmit').disabled=false; $('ptSubmit').textContent='Pay & publish task';
+}
+async function loadMySponsored(){
+  var el=$('ptMyList'); if(!el) return;
+  try{
+    var rows=await api('/api/tasks/my-sponsored');
+    if(!rows.length){ el.innerHTML='<div class="empty">No posted tasks yet</div>'; return; }
+    el.innerHTML=rows.map(function(t){
+      return '<div class="item"><div class="item-left"><h4>'+(t.icon||'')+' '+(t.title||'')+'</h4><p>'+(t.completions_done||0)+'/'+(t.completions_wanted||0)+' done · ₦'+Number(t.total_paid||0).toLocaleString()+' · '+t.status+'</p></div></div>';
+    }).join('');
+  }catch(e){ el.innerHTML='<div class="empty">Could not load</div>'; }
 }
 
 function checkSecretAdmin(){if(location.hash==='#lt-admin-x9k2') go('admin');}

@@ -96,6 +96,25 @@ const TaskDone = mongoose.model('TaskCompletion', taskSchema);
 const History = mongoose.model('History', historySchema);
 const Message = mongoose.model('Message', messageSchema);
 
+const sponsoredSchema = new mongoose.Schema({
+  id: { type: String, default: () => uuidv4(), unique: true },
+  owner_id: { type: String, required: true, index: true },
+  owner_name: { type: String, default: '' },
+  title: { type: String, required: true },
+  description: { type: String, default: '' },
+  link: { type: String, default: '' },
+  icon: { type: String, default: '📋' },
+  completions_wanted: { type: Number, required: true },
+  completions_done: { type: Number, default: 0 },
+  views_wanted: { type: Number, default: 0 },
+  price_per: { type: Number, default: 300 },
+  total_paid: { type: Number, default: 0 },
+  pay_method: { type: String, default: 'transfer' }, // balance | transfer
+  status: { type: String, default: 'pending' }, // pending | active | paused | done | rejected
+  created_at: { type: Date, default: Date.now }
+});
+const SponsoredTask = mongoose.model('SponsoredTask', sponsoredSchema);
+
 // ========== AUTH HELPERS ==========
 function auth(req, res, next) {
   const header = req.headers.authorization;
@@ -582,6 +601,127 @@ app.get('/api/resolve-account', async (req, res) => {
     res.status(500).json({ error: 'Resolve failed' });
   }
 });
+
+
+// ========== SPONSORED TASKS (post a task) ==========
+const TASK_PRICE_PER = 300;
+
+app.get('/api/tasks/feed', auth, async (req, res) => {
+  try {
+    const sponsored = await SponsoredTask.find({
+      status: 'active',
+      $expr: { $lt: ['$completions_done', '$completions_wanted'] }
+    }).sort({ created_at: -1 }).limit(50).lean();
+    res.json(sponsored.map(t => ({
+      id: 's_' + t.id,
+      sid: t.id,
+      title: t.title,
+      desc: t.description,
+      link: t.link,
+      icon: t.icon || '📋',
+      type: 'sponsored',
+      completions_left: Math.max(0, (t.completions_wanted || 0) - (t.completions_done || 0))
+    })));
+  } catch (e) {
+    res.json([]);
+  }
+});
+
+app.post('/api/tasks/sponsor', auth, async (req, res) => {
+  try {
+    const { title, description, link, icon, completions_wanted, views_wanted, pay_method } = req.body;
+    const completions = Math.max(1, Math.min(5000, Number(completions_wanted) || 0));
+    const views = Math.max(0, Number(views_wanted) || 0);
+    if (!title || !title.trim()) return res.status(400).json({ error: 'Title required' });
+    const total = completions * TASK_PRICE_PER;
+    const user = await User.findOne({ id: req.user.id });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const method = pay_method === 'balance' ? 'balance' : 'transfer';
+    let status = 'pending';
+
+    if (method === 'balance') {
+      if (Number(user.balance || 0) < total) {
+        return res.status(400).json({ error: 'Insufficient balance. Need ₦' + total.toLocaleString() });
+      }
+      user.balance = Number(user.balance) - total;
+      await user.save();
+      status = 'active'; // paid from wallet — go live
+      await History.create({
+        id: uuidv4(), user_id: user.id, type: 'withdrawal',
+        title: 'Posted task: ' + title.trim().slice(0, 40), amount: total, status: 'paid'
+      });
+    }
+
+    const id = uuidv4();
+    await SponsoredTask.create({
+      id,
+      owner_id: user.id,
+      owner_name: user.name || '',
+      title: title.trim().slice(0, 80),
+      description: (description || '').trim().slice(0, 300),
+      link: (link || '').trim().slice(0, 500),
+      icon: (icon || '📋').slice(0, 8),
+      completions_wanted: completions,
+      views_wanted: views,
+      price_per: TASK_PRICE_PER,
+      total_paid: total,
+      pay_method: method,
+      status
+    });
+
+    if (method === 'transfer') {
+      await Deposit.create({
+        id: uuidv4(),
+        user_id: user.id,
+        plan: 'task_sponsor',
+        amount: total,
+        status: 'pending'
+      });
+      await History.create({
+        id: uuidv4(), user_id: user.id, type: 'deposit',
+        title: 'Task post payment', amount: total, status: 'pending'
+      });
+    }
+
+    res.json({
+      ok: true,
+      id,
+      total,
+      status,
+      message: status === 'active'
+        ? 'Task is live. ₦' + total.toLocaleString() + ' deducted from balance.'
+        : 'Transfer ₦' + total.toLocaleString() + ' then wait for admin approval.'
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message || 'Could not create task' });
+  }
+});
+
+app.get('/api/tasks/my-sponsored', auth, async (req, res) => {
+  const list = await SponsoredTask.find({ owner_id: req.user.id }).sort({ created_at: -1 }).lean();
+  res.json(list);
+});
+
+app.get('/api/admin/sponsored', adminAuth, async (req, res) => {
+  const list = await SponsoredTask.find({ status: 'pending' }).sort({ created_at: -1 }).lean();
+  res.json(list);
+});
+
+app.post('/api/admin/sponsored/:id/approve', adminAuth, async (req, res) => {
+  const t = await SponsoredTask.findOne({ id: req.params.id });
+  if (!t || t.status !== 'pending') return res.status(400).json({ error: 'Invalid' });
+  t.status = 'active';
+  await t.save();
+  res.json({ ok: true });
+});
+
+app.post('/api/admin/sponsored/:id/reject', adminAuth, async (req, res) => {
+  await SponsoredTask.updateOne({ id: req.params.id }, { status: 'rejected' });
+  res.json({ ok: true });
+});
+
 
 app.get('/api/health', (req, res) => {
   res.json({
