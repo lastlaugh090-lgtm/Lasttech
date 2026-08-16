@@ -1006,6 +1006,15 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
 
 <script>
 const API = window.location.origin;
+// Capture referral code from URL (?ref=CODE)
+(function(){
+  try {
+    var q = new URLSearchParams(window.location.search);
+    var r = q.get('ref');
+    if (r) localStorage.setItem('lt_ref', r.trim().toUpperCase());
+  } catch (e) {}
+})();
+
 const plans={free:{name:'Free',min:10,max:30},beginner:{name:'Beginner',min:80,max:100},pro:{name:'Pro',min:400,max:500},master:{name:'Master',min:1200,max:1500}}
 let token = localStorage.getItem('lt_token')||'';
 let adminToken = sessionStorage.getItem('lt_admin_token')||'';
@@ -1092,8 +1101,11 @@ async function doRegister(){
   if(!$('nameBox').classList.contains('show')||!account_name||account_name==='—'||account_name==='Checking...'||account_name==='Could not resolve') return alert('Verify bank first');
   $('regBtn').disabled=true;
   try{
-    const data=await api('/api/register',{method:'POST',body:JSON.stringify({name,email,phone,password,bank,account_number,account_name})});
-    token=data.token; localStorage.setItem('lt_token',token); currentUser=data.user; go('dashboard');
+    const referral_code=(localStorage.getItem('lt_ref')||'').trim();
+    const data=await api('/api/register',{method:'POST',body:JSON.stringify({name,email,phone,password,bank,account_number,account_name,referral_code:referral_code||undefined})});
+    token=data.token; localStorage.setItem('lt_token',token); currentUser=data.user;
+    if(referral_code) localStorage.removeItem('lt_ref');
+    go('dashboard');
   }catch(e){$('regError').textContent=e.message;$('regError').style.display='block';}
   $('regBtn').disabled=false;
 }
@@ -1318,20 +1330,32 @@ async function doRefWithdraw(){
   catch(e){alert(e.message);}
 }
 
-function loadReferral(){
-  $('inviteLink').textContent=API+'/?ref='+(currentUser?.referral_code||'USER');
-  const list=$('refList');
+async function loadReferral(){
+  try{ if(!currentUser) currentUser=await api('/api/me'); }catch(e){}
+  var code=(currentUser&&currentUser.referral_code)||'USER';
+  $('inviteLink').textContent=API+'/?ref='+code;
+  var list=$('refList');
   if(!list) return;
   list.innerHTML='<div class="empty">Loading…</div>';
-  api('/api/referrals').then(function(rows){
-    if(!rows.length){ list.innerHTML='<div class="empty">No referrals yet. Share your link!</div>'; return; }
-    list.innerHTML=rows.map(function(r){
-      const paid=r.has_deposited;
-      const planLabel=(plans[r.plan]||plans.free).name;
-      return '<div class="item"><div class="item-left"><h4>'+ (r.name||'User') +'</h4><p>'+planLabel+(paid?' · deposited':' · signed up only')+'</p></div>'+
-        '<div class="item-right">'+(paid?'<span style="background:#dcfce7;color:#166534;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700">✓ Paid plan</span>':'<span style="background:#f3f4f6;color:#6b7280;padding:4px 10px;border-radius:999px;font-size:12px">Pending</span>')+'</div></div>';
+  // show referral wallet
+  var bal=Number((currentUser&&currentUser.ref_balance)||0);
+  var balHtml='<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><strong style="font-size:13px">Referral balance</strong><p style="font-size:12px;color:#6b7280">30% of friends\' deposits</p></div><strong style="color:#e11d48;font-size:18px">₦'+bal.toLocaleString()+'</strong></div>';
+  try{
+    var rows=await api('/api/referrals');
+    if(!rows.length){
+      list.innerHTML=balHtml+'<div class="empty">No referrals yet. Share your link — friends must open it before signing up.</div>';
+      return;
+    }
+    list.innerHTML=balHtml+rows.map(function(r){
+      var paid=!!r.has_deposited;
+      var planLabel=(plans[r.plan]||plans.free).name;
+      var bonus=Number(r.your_bonus||0);
+      return '<div class="item"><div class="item-left"><h4>'+(r.name||'User')+'</h4><p>'+planLabel+(paid?' · deposited':' · signed up only')+(bonus?(' · you earned ₦'+bonus.toLocaleString()):'')+'</p></div>'+
+        '<div class="item-right">'+(paid?'<span style="background:#dcfce7;color:#166534;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700">✓ Paid</span>':'<span style="background:#f3f4f6;color:#6b7280;padding:4px 10px;border-radius:999px;font-size:12px">Pending</span>')+'</div></div>';
     }).join('');
-  }).catch(function(){ list.innerHTML='<div class="empty">Could not load referrals</div>'; });
+  }catch(e){
+    list.innerHTML=balHtml+'<div class="empty">Could not load referrals</div>';
+  }
 }
 function shareTelegram(){
   const t=encodeURIComponent('Join Last Tech and earn money! '+$('inviteLink').textContent);

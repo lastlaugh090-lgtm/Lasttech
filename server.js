@@ -152,11 +152,16 @@ app.post('/api/register', async (req, res) => {
       return res.status(400).json({ error: 'This bank account is already linked to another Last Tech account' });
     }
 
-    const myCode = (name.replace(/\s+/g, '').substring(0, 6) + Math.floor(Math.random() * 90 + 10)).toUpperCase();
+    const myCode = (String(name).replace(/\s+/g, '').substring(0, 6) + Math.floor(Math.random() * 90 + 10)).toUpperCase();
     let referredBy = null;
     if (referral_code) {
-      const ref = await User.findOne({ referral_code });
-      if (ref) referredBy = ref.id;
+      const code = String(referral_code).trim().toUpperCase();
+      const ref = await User.findOne({
+        $expr: { $eq: [{ $toUpper: '$referral_code' }, code] }
+      });
+      // fallback exact
+      const ref2 = ref || await User.findOne({ referral_code: code }) || await User.findOne({ referral_code: String(referral_code).trim() });
+      if (ref2) referredBy = ref2.id;
     }
 
     const user = await User.create({
@@ -381,14 +386,38 @@ app.get('/api/tasks/completed', auth, async (req, res) => {
 
 // Referral list with deposit progress
 app.get('/api/referrals', auth, async (req, res) => {
-  const list = await User.find({ referred_by: req.user.id }).select('id name email plan has_deposited created_at');
-  res.json(list.map(u => ({
-    id: u.id,
-    name: u.name,
-    plan: u.plan || 'free',
-    has_deposited: !!u.has_deposited,
-    joined: u.created_at
-  })));
+  try {
+    const list = await User.find({ referred_by: String(req.user.id) })
+      .select('id name email plan has_deposited created_at')
+      .sort({ created_at: -1 })
+      .lean();
+    // Also match if referred_by stored differently
+    if (!list.length) {
+      const all = await User.find({ referred_by: { $ne: null } }).select('id name email plan has_deposited created_at referred_by').lean();
+      const filtered = all.filter(u => String(u.referred_by) === String(req.user.id));
+      const me = await User.findOne({ id: req.user.id });
+      const hist = await History.find({ user_id: req.user.id, title: /Referral/i }).lean();
+      return res.json(filtered.map(u => ({
+        id: u.id,
+        name: u.name,
+        plan: u.plan || 'free',
+        has_deposited: !!u.has_deposited,
+        joined: u.created_at,
+        your_bonus: 0
+      })));
+    }
+    res.json(list.map(u => ({
+      id: u.id,
+      name: u.name,
+      plan: u.plan || 'free',
+      has_deposited: !!u.has_deposited,
+      joined: u.created_at,
+      your_bonus: 0
+    })));
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Could not load referrals' });
+  }
 });
 
 // ========== HISTORY ==========
