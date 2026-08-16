@@ -298,6 +298,28 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
 #toast.success { background: #166534; }
 #toast.error { background: #be123c; }
 
+
+/* Legal / footer */
+.site-footer{background:#0f172a;color:#94a3b8;padding:36px 20px 100px;margin-top:20px}
+.site-footer a{color:#e2e8f0;text-decoration:none;font-size:13px}
+.site-footer a:hover{color:#e11d48}
+.footer-grid{max-width:480px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.footer-brand{grid-column:1/-1;margin-bottom:8px}
+.footer-brand .logo-text{color:#fff;font-size:18px}
+.footer-brand p{font-size:12px;margin-top:8px;line-height:1.5;color:#94a3b8}
+.footer-col h4{color:#fff;font-size:13px;margin-bottom:10px;font-weight:700}
+.footer-col a{display:block;margin-bottom:8px}
+.footer-bottom{max-width:480px;margin:24px auto 0;padding-top:16px;border-top:1px solid #1e293b;font-size:11px;text-align:center;line-height:1.6}
+.legal-wrap{max-width:480px;margin:0 auto;padding:20px 20px 40px}
+.legal-wrap h1{font-size:24px;font-weight:800;margin-bottom:8px}
+.legal-wrap .updated{font-size:12px;color:#6b7280;margin-bottom:20px}
+.legal-wrap h2{font-size:16px;font-weight:700;margin:22px 0 10px;color:#1a1a2e}
+.legal-wrap p,.legal-wrap li{font-size:13px;color:#374151;line-height:1.7;margin-bottom:10px}
+.legal-wrap ul{padding-left:18px;margin-bottom:12px}
+.legal-card{background:#fff;border-radius:16px;padding:18px;border:1px solid #f0f0f0;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.03)}
+.badge-row{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.legal-badge{background:#f8fafc;border:1px solid #e2e8f0;border-radius:999px;padding:6px 12px;font-size:11px;font-weight:600;color:#475569}
+
 </style>
 </head>
 <body>
@@ -319,7 +341,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
   </header>
   <div class="hero">
     <h1>Earn with <span>Last Tech</span></h1>
-    <p>Complete real tasks, leave genuine reviews, and get paid into your wallet.</p>
+    <p>Complete real mobile tasks, grow with optional plans, and withdraw on clear schedules — built for Nigeria.</p>
   </div>
   <div class="stats-row">
     <div class="stat"><strong>12K+</strong><span>Reviewers</span></div>
@@ -328,12 +350,100 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
   </div>
   <div class="container">
     <div class="section-title" style="text-align:center">How it works</div>
-    <div class="step"><div class="step-num">01</div><div><strong style="font-size:14px">Open a real task</strong><p style="font-size:12px;color:#6b7280">We open Google Maps or the business site for you</p></div></div>
-    <div class="step"><div class="step-num">02</div><div><strong style="font-size:14px">Leave a genuine review</strong><p style="font-size:12px;color:#6b7280">Share an honest experience</p></div></div>
-    <div class="step"><div class="step-num">03</div><div><strong style="font-size:14px">Get paid</strong><p style="font-size:12px;color:#6b7280">Reward goes straight to your wallet</p></div></div>
-    <button class="btn" style="margin-top:18px" onclick="go('register')">Create free account</button>
-    <button class="btn dark" style="margin-top:10px" onclick="go('login')">Sign in</button>
+    <div class="step"><div class="step-num">01</div><div><strong style="font-size:14px">Create a free account</strong><p style="font-size:12px;color:#6b7280">Register, verify your bank, and start on the Free plan</p></div></div>
+    <div class="step"><div class="step-num">02</div><div><strong style="font-size:14px">Open a real task</strong><p style="font-size:12px;color:#6b7280">We open Google Maps or a partner site for you</p></div></div>
+    <div class="step"><div class="step-num">03</div><div><strong style="font-size:14px">Complete &amp; claim</strong><p style="font-size:12px;color:#6b7280">Finish the steps, wait for the timer, claim your reward</p></div></div>
+    <div class="step"><div class="step-num">04</div><div><strong style="font-size:14px">Withdraw on schedule</strong><p style="font-size:12px;color:#6b7280">Main wallet: 30th–6th · Referral: 9–10 AM daily</p></div></div>
+
+    <div class="section-title" style="text-align:center;margin-top:28px">Why Last Tech</div>
+    <div class="card">
+      <strong style="font-size:14px">📱 Built for mobile</strong>
+      <p style="font-size:13px;color:#6b7280;margin-top:6px;line-height:1.5">Clean, fast interface designed for Nigerian smartphones and data-friendly use.</p>
+    </div>
+    <div class="card">
+      <strong style="font-size:14px">✅ Real task flow</strong>
+      <p style="font-size:13px;color:#6b7280;margin-top:6px;line-height:1.5">Tasks open real links (Maps, Jumia, Konga). No blind “tap and earn” buttons.</p>
+    </div>
+    <div class="card">
+      <strong style="font-size:14px">👥 Referral share</strong>
+      <p style="font-size:13px;color:#6b7280;margin-top:6px;line-height:1.5">Earn <strong>30% of every plan deposit</strong> your invited friends make after approval.</p>
+    </div>
+    <div class="card">
+      <strong style="font-size:14px">🔒 Account security</strong>
+      <p style="font-size:13px;color:#6b7280;margin-top:6px;line-height:1.5">One bank account per user, password recovery, and data handled under NDPA principles.</p>
+    </div>
+
+    <div class="section-title" style="text-align:center;margin-top:28px">Plans overview</div>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+      <div><strong>Free</strong><p style="font-size:12px;color:#6b7280">₦10 – ₦30 / task</p></div>
+      <span style="font-weight:800;color:#e11d48">₦0</span>
+    </div>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+      <div><strong>Beginner</strong><p style="font-size:12px;color:#6b7280">₦80 – ₦100 / task</p></div>
+      <span style="font-weight:800;color:#e11d48">₦1,000</span>
+    </div>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+      <div><strong>Pro</strong><p style="font-size:12px;color:#6b7280">₦400 – ₦500 / task</p></div>
+      <span style="font-weight:800;color:#e11d48">₦5,000</span>
+    </div>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+      <div><strong>Master</strong><p style="font-size:12px;color:#6b7280">₦1,200 – ₦1,500 / task</p></div>
+      <span style="font-weight:800;color:#e11d48">₦15,000</span>
+    </div>
+
+    <div class="section-title" style="text-align:center;margin-top:28px">FAQ</div>
+    <div class="card">
+      <strong style="font-size:14px">Is Last Tech a bank?</strong>
+      <p style="font-size:13px;color:#6b7280;margin-top:6px;line-height:1.5">No. We are a task rewards platform. Plan payments are service fees, not bank deposits.</p>
+    </div>
+    <div class="card">
+      <strong style="font-size:14px">When can I withdraw?</strong>
+      <p style="font-size:13px;color:#6b7280;margin-top:6px;line-height:1.5">Main balance: 30th–6th of each month. Referral earnings: 9:00–10:00 AM daily.</p>
+    </div>
+    <div class="card">
+      <strong style="font-size:14px">How do referrals work?</strong>
+      <p style="font-size:13px;color:#6b7280;margin-top:6px;line-height:1.5">Share your link. When a friend signs up and their plan deposit is approved, you get 30% of that deposit.</p>
+    </div>
+    <div class="card">
+      <strong style="font-size:14px">Do tasks reset?</strong>
+      <p style="font-size:13px;color:#6b7280;margin-top:6px;line-height:1.5">Yes. Completed tasks unlock again after midnight (Lagos time).</p>
+    </div>
+
+    <div class="card" style="background:linear-gradient(135deg,#e11d48,#be123c);color:#fff;border:none;text-align:center;margin-top:8px">
+      <strong style="font-size:16px">Ready to start?</strong>
+      <p style="font-size:13px;opacity:.9;margin:8px 0 14px">Join free — upgrade only when you want higher task rates.</p>
+      <button class="btn" style="background:#fff;color:#e11d48;box-shadow:none" onclick="go('register')">Create free account</button>
+      <button class="btn outline" style="margin-top:10px" onclick="go('login')">Sign in</button>
+    </div>
   </div>
+
+  <footer class="site-footer">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="logo"><div class="logo-icon">L</div><div class="logo-text">Last<span>Tech</span></div></div>
+        <p>A digital task &amp; rewards platform for Nigeria. Complete tasks, upgrade plans, and withdraw on schedule.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <a href="#" onclick="go('terms');return false">Terms of Service</a>
+        <a href="#" onclick="go('privacy');return false">Privacy Policy</a>
+        <a href="#" onclick="go('regulations');return false">Regulations</a>
+        <a href="#" onclick="go('copyright');return false">Copyright</a>
+      </div>
+      <div class="footer-col">
+        <h4>Support</h4>
+        <a href="https://t.me/LASTTECHNIGERIA" target="_blank">Telegram</a>
+        <a href="#" onclick="go('login');return false">Sign in</a>
+        <a href="#" onclick="go('register');return false">Create account</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2024–2026 Last Tech. All rights reserved.<br>
+      Not a bank · Not CBN-insured deposits · Subject to our Terms<br>
+      Operated in accordance with applicable Nigerian laws including the Nigeria Data Protection Act, 2023
+    </div>
+  </footer>
+
 </div>
 
 <div class="page" id="page-login">
@@ -407,6 +517,20 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
       <div class="quick-item" onclick="go('plans')"><div class="qicon">🚀</div><div class="qlabel">Upgrade</div></div>
       <div class="quick-item" onclick="go('history')"><div class="qicon">📊</div><div class="qlabel">History</div></div>
       <div class="quick-item" onclick="go('support')"><div class="qicon">💬</div><div class="qlabel">Support</div></div>
+    </div>
+    <div class="section-title">Today</div>
+    <div class="card" onclick="go('tasks')" style="cursor:pointer">
+      <strong style="font-size:14px">Complete tasks to earn</strong>
+      <p style="font-size:12px;color:#6b7280;margin-top:4px">Open Tasks, finish instructions, claim reward into your wallet. Resets at midnight.</p>
+    </div>
+    <div class="card" onclick="go('referral')" style="cursor:pointer">
+      <strong style="font-size:14px">Invite friends · 30% commission</strong>
+      <p style="font-size:12px;color:#6b7280;margin-top:4px">Share your link. Earn 30% when they deposit on a plan.</p>
+    </div>
+    <div class="card">
+      <strong style="font-size:14px">Need help?</strong>
+      <p style="font-size:12px;color:#6b7280;margin-top:4px">Telegram support · Terms &amp; Privacy in the footer on Home (logged out).</p>
+      <button class="btn sm" style="margin-top:10px;width:auto" onclick="window.open('https://t.me/LASTTECHNIGERIA','_blank')">Open Telegram</button>
     </div>
   </div>
   <nav class="bottom-nav">
@@ -573,6 +697,11 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
         <p style="font-size:13px;color:#6b7280;margin-top:2px">t.me/LASTTECHNIGERIA — fastest support</p>
       </a>
       <p style="font-size:14px">Email: support@lasttech.com.ng</p>
+      <p style="font-size:12px;margin-top:12px;color:#6b7280">
+        <a href="#" onclick="go('terms');return false" style="color:#e11d48">Terms</a> ·
+        <a href="#" onclick="go('privacy');return false" style="color:#e11d48">Privacy</a> ·
+        <a href="#" onclick="go('regulations');return false" style="color:#e11d48">Regulations</a>
+      </p>
     </div>
     <div class="card">
       <div class="form-group"><label>Subject</label>
@@ -612,6 +741,173 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
     <p style="text-align:center;margin-top:18px;font-size:14px"><a href="#" onclick="go('login')" style="color:#e11d48;font-weight:600">Back to sign in</a></p>
   </div>
 </div>
+
+
+<div class="page" id="page-terms">
+  <header><button class="back-btn" onclick="go('landing')">←</button><div class="header-title">Terms of Service</div></header>
+  <div class="legal-wrap">
+    <h1>Terms of Service</h1>
+    <p class="updated">Last updated: 16 August 2026 · Effective from 2024 onward</p>
+    <div class="legal-card">
+      <h2>1. Acceptance</h2>
+      <p>By creating an account or using Last Tech (“the Platform”, “we”, “us”), you agree to these Terms of Service and our Privacy Policy. If you do not agree, do not use the Platform.</p>
+      <h2>2. Eligibility</h2>
+      <ul>
+        <li>You must be at least 18 years old.</li>
+        <li>You must provide accurate registration and bank details.</li>
+        <li>One person may hold only one account. Duplicate or fraudulent accounts may be suspended.</li>
+      </ul>
+      <h2>3. Nature of the service</h2>
+      <p>Last Tech is a digital task and rewards platform. Users may complete assigned tasks (such as reviews or site visits) and, subject to plan rules, receive rewards credited to an in-app wallet. <strong>Last Tech is not a bank, microfinance bank, investment scheme, or cooperative society.</strong> Rewards are promotional payments for completed tasks, not interest, dividends, or guaranteed returns.</p>
+      <h2>4. Plans and payments</h2>
+      <ul>
+        <li>Free users may earn within free-tier limits.</li>
+        <li>Paid plans are optional upgrades paid to the account details shown on the deposit page.</li>
+        <li>Plan activation is subject to payment confirmation by the Platform.</li>
+        <li>Fees for plans are generally non-refundable once the plan is activated, except where required by law or at our discretion in clear error cases.</li>
+      </ul>
+      <h2>5. Tasks and rewards</h2>
+      <ul>
+        <li>Task availability and reward ranges depend on your plan.</li>
+        <li>Rewards are only due after valid completion according to task instructions.</li>
+        <li>We may withhold, reverse, or limit rewards for fraud, abuse, automated activity, or false completions.</li>
+        <li>Daily task limits reset according to Platform rules (typically at midnight West Africa Time).</li>
+      </ul>
+      <h2>6. Withdrawals</h2>
+      <ul>
+        <li>Main balance withdrawals are only available from the <strong>30th to the 6th</strong> of each month.</li>
+        <li>Referral balance withdrawals are only available daily from <strong>9:00 AM to 10:00 AM</strong> (West Africa Time).</li>
+        <li>Minimum amounts and processing times apply as shown in the app.</li>
+        <li>Withdrawals are paid to the verified bank account linked to your profile.</li>
+      </ul>
+      <h2>7. Referrals</h2>
+      <p>Referral rewards (currently 30% of a referred user’s confirmed plan deposit) are credited only after the referred user signs up using your link and their qualifying deposit is approved. Abuse of the referral system is prohibited.</p>
+      <h2>8. Prohibited conduct</h2>
+      <ul>
+        <li>Fake reviews, bots, multiple accounts, or misrepresentation.</li>
+        <li>Money laundering, fraud, or illegal activity of any kind.</li>
+        <li>Attempting to attack, scrape, or disrupt the Platform.</li>
+      </ul>
+      <h2>9. Suspension</h2>
+      <p>We may suspend or terminate accounts that breach these Terms, with or without notice, and may freeze pending balances while investigating.</p>
+      <h2>10. Disclaimers</h2>
+      <p>The Platform is provided “as is”. We do not guarantee uninterrupted access, specific daily earnings, or that any business listed in tasks endorses Last Tech. Task partners and third-party sites have their own terms.</p>
+      <h2>11. Limitation of liability</h2>
+      <p>To the fullest extent permitted by Nigerian law, Last Tech and its operators shall not be liable for indirect, incidental, or consequential losses arising from use of the Platform. Our total liability for any claim shall not exceed the fees you paid to us in the three months before the claim.</p>
+      <h2>12. Governing law</h2>
+      <p>These Terms are governed by the laws of the Federal Republic of Nigeria. Disputes shall first be addressed through our support channel; unresolved disputes may be submitted to courts of competent jurisdiction in Nigeria.</p>
+      <h2>13. Changes</h2>
+      <p>We may update these Terms. Continued use after changes constitutes acceptance. Material changes will be indicated by updating the “Last updated” date above.</p>
+      <h2>14. Contact</h2>
+      <p>Support: <a href="https://t.me/LASTTECHNIGERIA" target="_blank">Telegram @LASTTECHNIGERIA</a> · Email: support@lasttech.com.ng</p>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-privacy">
+  <header><button class="back-btn" onclick="go('landing')">←</button><div class="header-title">Privacy Policy</div></header>
+  <div class="legal-wrap">
+    <h1>Privacy Policy</h1>
+    <p class="updated">Last updated: 16 August 2026 · Aligned with the Nigeria Data Protection Act, 2023 (NDPA) and NDPR principles</p>
+    <div class="legal-card">
+      <h2>1. Who we are</h2>
+      <p>Last Tech operates the website and app at lasttech.onrender.com. This Policy explains how we collect, use, and protect personal data.</p>
+      <h2>2. Data we collect</h2>
+      <ul>
+        <li><strong>Account data:</strong> name, email, phone number, password (stored hashed).</li>
+        <li><strong>Payout data:</strong> bank name, account number, account name for withdrawals.</li>
+        <li><strong>Usage data:</strong> tasks completed, deposits, withdrawals, device/browser information, IP address, and logs needed for security.</li>
+        <li><strong>Support messages</strong> you send to us.</li>
+      </ul>
+      <h2>3. Purpose of processing</h2>
+      <ul>
+        <li>To create and manage your account.</li>
+        <li>To process rewards, deposits, and withdrawals.</li>
+        <li>To prevent fraud and enforce our Terms.</li>
+        <li>To respond to support requests.</li>
+        <li>To improve the Platform and comply with legal obligations.</li>
+      </ul>
+      <h2>4. Legal basis</h2>
+      <p>We process data based on your consent (registration), performance of a contract (providing the service), and legitimate interests (security, fraud prevention), consistent with the Nigeria Data Protection Act, 2023.</p>
+      <h2>5. Sharing</h2>
+      <p>We do not sell your personal data. We may share limited data with:</p>
+      <ul>
+        <li>Payment and infrastructure providers (e.g. hosting, database) under confidentiality obligations.</li>
+        <li>Authorities when required by Nigerian law or a valid legal order.</li>
+      </ul>
+      <h2>6. Retention</h2>
+      <p>We keep account and transaction records for as long as your account is active and for a reasonable period afterward for audit, dispute, and legal compliance purposes.</p>
+      <h2>7. Security</h2>
+      <p>We use industry-standard measures including encrypted transport (HTTPS), hashed passwords, and access controls. No method of transmission is 100% secure.</p>
+      <h2>8. Your rights</h2>
+      <p>Subject to the NDPA, you may request access, correction, or deletion of your personal data, or withdraw consent where processing is consent-based, by contacting support. You may also lodge a complaint with the Nigeria Data Protection Commission (NDPC).</p>
+      <h2>9. Children</h2>
+      <p>The Platform is not directed at persons under 18. We do not knowingly collect data from minors.</p>
+      <h2>10. Contact</h2>
+      <p>Privacy requests: support@lasttech.com.ng · Telegram: t.me/LASTTECHNIGERIA</p>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-regulations">
+  <header><button class="back-btn" onclick="go('landing')">←</button><div class="header-title">Regulations &amp; Compliance</div></header>
+  <div class="legal-wrap">
+    <h1>Regulations &amp; Compliance</h1>
+    <p class="updated">Information for users · Updated August 2026</p>
+    <div class="badge-row">
+      <span class="legal-badge">NDPA 2023</span>
+      <span class="legal-badge">NDPR principles</span>
+      <span class="legal-badge">Cybercrimes Act</span>
+      <span class="legal-badge">Consumer rights</span>
+    </div>
+    <div class="legal-card">
+      <h2>Important notice</h2>
+      <p>Last Tech is a <strong>private digital rewards platform</strong>. We are <strong>not</strong> a deposit-taking bank, payment service bank, or investment manager licensed by the Central Bank of Nigeria (CBN). Funds paid for plan upgrades are platform service fees, not bank deposits and are not covered by deposit insurance.</p>
+      <h2>Data protection (2023–2026)</h2>
+      <p>We process personal data in line with the <strong>Nigeria Data Protection Act, 2023</strong> and the spirit of the Nigeria Data Protection Regulation (NDPR). Users may exercise access and correction rights through support.</p>
+      <h2>Anti-fraud &amp; cybercrime</h2>
+      <p>Use of the Platform for fraud, identity theft, or unauthorised access may violate the <strong>Cybercrimes (Prohibition, Prevention, Etc.) Act</strong> and other Nigerian laws. We cooperate with lawful investigations.</p>
+      <h2>Consumer fair dealing</h2>
+      <ul>
+        <li>Plan prices and task reward ranges are displayed before you pay or start a task.</li>
+        <li>Withdrawal windows are stated in the app (main balance: 30th–6th; referral: 9–10 AM daily).</li>
+        <li>Support is available via Telegram and email.</li>
+      </ul>
+      <h2>Tax</h2>
+      <p>You are responsible for any taxes that may apply to rewards you receive under Nigerian tax law.</p>
+      <h2>Intellectual property</h2>
+      <p>See our Copyright notice. Platform content, branding, and software are protected.</p>
+      <h2>Contact for compliance</h2>
+      <p>support@lasttech.com.ng · <a href="https://t.me/LASTTECHNIGERIA" target="_blank">t.me/LASTTECHNIGERIA</a></p>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-copyright">
+  <header><button class="back-btn" onclick="go('landing')">←</button><div class="header-title">Copyright</div></header>
+  <div class="legal-wrap">
+    <h1>Copyright Notice</h1>
+    <p class="updated">© 2024–2026 Last Tech. All rights reserved.</p>
+    <div class="legal-card">
+      <h2>Ownership</h2>
+      <p>All content on this Platform—including the Last Tech name and logo, text, graphics, layout, and software—is the property of Last Tech or its licensors and is protected under the Copyright Act (Nigeria) and international copyright treaties.</p>
+      <h2>Licence to use</h2>
+      <p>We grant you a limited, non-exclusive, non-transferable licence to access and use the Platform for personal, lawful purposes in accordance with our Terms of Service.</p>
+      <h2>Restrictions</h2>
+      <ul>
+        <li>You may not copy, modify, distribute, sell, or reverse-engineer the Platform or its content without prior written permission.</li>
+        <li>You may not use Last Tech branding in a way that suggests false partnership or endorsement.</li>
+      </ul>
+      <h2>User content</h2>
+      <p>Reviews or materials you submit on third-party sites remain subject to those sites’ rules. Feedback you send to Last Tech may be used to improve our services.</p>
+      <h2>DMCA / takedown style requests</h2>
+      <p>If you believe content on the Platform infringes your copyright, contact support@lasttech.com.ng with details of the work, the URL, and your contact information.</p>
+      <h2>Trademark</h2>
+      <p>“Last Tech” and the L logo are used as brand identifiers of the Platform. Unauthorised commercial use is prohibited.</p>
+    </div>
+  </div>
+</div>
+
 
 <div class="page" id="page-admin">
   <div id="adminLoginScreen" class="admin-login">
