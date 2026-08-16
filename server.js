@@ -252,13 +252,13 @@ app.post('/api/withdrawals', auth, async (req, res) => {
   if (!user) return res.status(404).json({ error: 'User not found' });
 
   if (type === 'main') {
-    if (amount < 500) return res.status(400).json({ error: 'Minimum ₦500' });
+    if (amount < 5000) return res.status(400).json({ error: 'Minimum main withdraw is ₦5,000' });
     if (amount > user.balance) return res.status(400).json({ error: 'Insufficient balance' });
     const day = new Date().getDate();
     if (!(day >= 30 || day <= 6)) return res.status(400).json({ error: 'Main withdraw only open 30th–6th' });
     user.balance -= amount;
   } else {
-    if (amount < 200) return res.status(400).json({ error: 'Minimum ₦200' });
+    if (type === 'referral' && amount < 500) return res.status(400).json({ error: 'Minimum referral withdraw is ₦500' });
     if (amount > user.ref_balance) return res.status(400).json({ error: 'Insufficient referral balance' });
     if (new Date().getHours() !== 9) return res.status(400).json({ error: 'Referral withdraw only 9AM–10AM' });
     user.ref_balance -= amount;

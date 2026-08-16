@@ -653,7 +653,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
     <div class="card">
       <h3 style="font-size:15px;font-weight:700;margin-bottom:10px">Main Withdraw</h3>
       <div class="status-box" id="mainStatus">...</div>
-      <div class="form-group"><label>Amount (₦)</label><input type="number" id="mainAmount" placeholder="Min ₦500"/></div>
+      <div class="form-group"><label>Amount (₦)</label><input type="number" id="mainAmount" placeholder="Min ₦5,000"/></div>
       <button class="btn" id="mainBtn" onclick="doMainWithdraw()" disabled>Request Withdrawal</button>
       <p style="font-size:12px;color:#9ca3af;margin-top:8px;text-align:center">Only open 30th – 6th of every month</p>
     </div>
@@ -661,7 +661,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
       <h3 style="font-size:15px;font-weight:700;margin-bottom:10px">Referral Withdraw</h3>
       <div class="status-box" id="refStatus">...</div>
       <div class="form-group"><label>Referral Balance</label><input type="text" id="refBalDisplay" readonly style="background:#f3f4f6"/></div>
-      <div class="form-group"><label>Amount (₦)</label><input type="number" id="refAmount" placeholder="Min ₦200"/></div>
+      <div class="form-group"><label>Amount (₦)</label><input type="number" id="refAmount" placeholder="Min ₦500"/></div>
       <button class="btn" id="refBtn" onclick="doRefWithdraw()" disabled>Withdraw Referral</button>
       <p style="font-size:12px;color:#9ca3af;margin-top:8px;text-align:center">Only open 9AM – 10AM daily</p>
     </div>
@@ -1320,12 +1320,12 @@ function loadWithdraw(){
   $('refBtn').disabled=!refOpen;
 }
 async function doMainWithdraw(){
-  const amount=Number($('mainAmount').value); if(!amount||amount<500) return alert('Min ₦500');
+  const amount=Number($('mainAmount').value); if(!amount||amount<5000) return alert('Min ₦5,000');
   try{await api('/api/withdrawals',{method:'POST',body:JSON.stringify({type:'main',amount})}); alert('Requested!'); currentUser=await api('/api/me'); loadWithdraw(); $('mainAmount').value='';}
   catch(e){alert(e.message);}
 }
 async function doRefWithdraw(){
-  const amount=Number($('refAmount').value); if(!amount||amount<200) return alert('Min ₦200');
+  const amount=Number($('refAmount').value); if(!amount||amount<500) return alert('Min ₦500 — about 2 successful referrals');
   try{await api('/api/withdrawals',{method:'POST',body:JSON.stringify({type:'referral',amount})}); alert('Requested!'); currentUser=await api('/api/me'); loadWithdraw(); $('refAmount').value='';}
   catch(e){alert(e.message);}
 }
