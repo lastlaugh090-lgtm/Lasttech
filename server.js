@@ -252,7 +252,20 @@ app.post('/api/withdrawals', auth, async (req, res) => {
   if (!user) return res.status(404).json({ error: 'User not found' });
 
   if (type === 'main') {
-    if (amount < 5000) return res.status(400).json({ error: 'Minimum main withdraw is ₦5,000' });
+    const mainMins = { free: 10000, beginner: 10000, pro: 50000, master: 150000 };
+    const mainMaxs = { free: 20000, beginner: 20000, pro: 100000, master: 300000 };
+    const minMain = mainMins[user.plan] || 10000;
+    const maxMain = mainMaxs[user.plan] || 20000;
+    if (amount < minMain) {
+      return res.status(400).json({
+        error: 'Minimum main withdraw for ' + (user.plan || 'your') + ' plan is ₦' + minMain.toLocaleString()
+      });
+    }
+    if (amount > maxMain) {
+      return res.status(400).json({
+        error: 'Maximum main withdraw for ' + (user.plan || 'your') + ' plan is ₦' + maxMain.toLocaleString()
+      });
+    }
     if (amount > user.balance) return res.status(400).json({ error: 'Insufficient balance' });
     const day = new Date().getDate();
     if (!(day >= 30 || day <= 6)) return res.status(400).json({ error: 'Main withdraw only open 30th–6th' });

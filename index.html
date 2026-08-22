@@ -653,9 +653,10 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
     <div class="card">
       <h3 style="font-size:15px;font-weight:700;margin-bottom:10px">Main Withdraw</h3>
       <div class="status-box" id="mainStatus">...</div>
-      <div class="form-group"><label>Amount (₦)</label><input type="number" id="mainAmount" placeholder="Min ₦5,000"/></div>
+      <div class="form-group"><label>Amount (₦)</label><input type="number" id="mainAmount" placeholder="Min depends on plan"/></div>
+      <p id="mainMinHint" style="font-size:12px;color:#e11d48;font-weight:600;margin-bottom:10px">Minimum depends on your plan</p>
       <button class="btn" id="mainBtn" onclick="doMainWithdraw()" disabled>Request Withdrawal</button>
-      <p style="font-size:12px;color:#9ca3af;margin-top:8px;text-align:center">Only open 30th – 6th of every month</p>
+      <p style="font-size:12px;color:#9ca3af;margin-top:8px;text-align:center">Only open 30th – 6th of every month<br>Beginner ₦10k–20k · Pro ₦50k–100k · Master ₦150k–300k</p>
     </div>
     <div class="card">
       <h3 style="font-size:15px;font-weight:700;margin-bottom:10px">Referral Withdraw</h3>
@@ -1309,6 +1310,13 @@ async function confirmPaid(){
 function loadWithdraw(){
   if(!currentUser) return go('login');
   $('wdBalance').textContent='₦'+Number(currentUser.balance||0).toLocaleString();
+    var mainMins={free:10000,beginner:10000,pro:50000,master:150000};
+    var mainMaxs={free:20000,beginner:20000,pro:100000,master:300000};
+    var pk=currentUser.plan||'free';
+    var minMain=mainMins[pk]||10000;
+    var maxMain=mainMaxs[pk]||20000;
+    if($('mainAmount')) $('mainAmount').placeholder='₦'+minMain.toLocaleString()+' – ₦'+maxMain.toLocaleString();
+    if($('mainMinHint')) $('mainMinHint').textContent='Your limit: ₦'+minMain.toLocaleString()+' min · ₦'+maxMain.toLocaleString()+' max';
   $('refBalDisplay').value='₦'+Number(currentUser.ref_balance||0).toLocaleString();
   const day=new Date().getDate(), hour=new Date().getHours();
   const mainOpen=(day>=30||day<=6), refOpen=(hour===9);
@@ -1320,8 +1328,15 @@ function loadWithdraw(){
   $('refBtn').disabled=!refOpen;
 }
 async function doMainWithdraw(){
-  const amount=Number($('mainAmount').value); if(!amount||amount<5000) return alert('Min ₦5,000');
-  try{await api('/api/withdrawals',{method:'POST',body:JSON.stringify({type:'main',amount})}); alert('Requested!'); currentUser=await api('/api/me'); loadWithdraw(); $('mainAmount').value='';}
+  const amount=Number($('mainAmount').value);
+  const mainMins={free:10000,beginner:10000,pro:50000,master:150000};
+  const mainMaxs={free:20000,beginner:20000,pro:100000,master:300000};
+  const planKey=(currentUser&&currentUser.plan)||'free';
+  const minMain=mainMins[planKey]||10000;
+  const maxMain=mainMaxs[planKey]||20000;
+  if(!amount||amount<minMain) return showToast('Min ₦'+minMain.toLocaleString()+' for your plan','error');
+  if(amount>maxMain) return showToast('Max ₦'+maxMain.toLocaleString()+' for your plan','error');
+  try{await api('/api/withdrawals',{method:'POST',body:JSON.stringify({type:'main',amount})}); showToast('Withdrawal requested','success'); currentUser=await api('/api/me'); loadWithdraw(); $('mainAmount').value='';}
   catch(e){alert(e.message);}
 }
 async function doRefWithdraw(){
