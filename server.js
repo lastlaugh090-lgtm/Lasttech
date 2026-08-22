@@ -115,6 +115,21 @@ const sponsoredSchema = new mongoose.Schema({
 });
 const SponsoredTask = mongoose.model('SponsoredTask', sponsoredSchema);
 
+const submissionSchema = new mongoose.Schema({
+  id: { type: String, default: () => uuidv4(), unique: true },
+  sponsored_id: { type: String, required: true, index: true },
+  worker_id: { type: String, required: true, index: true },
+  worker_name: { type: String, default: '' },
+  screenshot: { type: String, required: true }, // data URL or https image
+  note: { type: String, default: '' },
+  reward: { type: Number, default: 0 },
+  status: { type: String, default: 'pending' }, // pending | approved | rejected
+  created_at: { type: Date, default: Date.now },
+  reviewed_at: { type: Date, default: null }
+});
+submissionSchema.index({ sponsored_id: 1, worker_id: 1 }, { unique: true });
+const TaskSubmission = mongoose.model('TaskSubmission', submissionSchema);
+
 // ========== AUTH HELPERS ==========
 function auth(req, res, next) {
   const header = req.headers.authorization;
@@ -762,6 +777,125 @@ app.post('/api/admin/sponsored/:id/approve', adminAuth, async (req, res) => {
 app.post('/api/admin/sponsored/:id/reject', adminAuth, async (req, res) => {
   await SponsoredTask.updateOne({ id: req.params.id }, { status: 'rejected' });
   res.json({ ok: true });
+});
+
+
+
+// ========== TASK PROOFS (sponsored) ==========
+app.post('/api/tasks/submit-proof', auth, async (req, res) => {
+  try {
+    const { sponsored_id, screenshot, note, reward } = req.body;
+    if (!sponsored_id) return res.status(400).json({ error: 'Task required' });
+    if (!screenshot || String(screenshot).length < 20) {
+      return res.status(400).json({ error: 'Screenshot required' });
+    }
+    // Limit ~700KB base64
+    if (String(screenshot).length > 900000) {
+      return res.status(400).json({ error: 'Screenshot too large. Use a smaller image.' });
+    }
+    const task = await SponsoredTask.findOne({ id: sponsored_id, status: 'active' });
+    if (!task) return res.status(404).json({ error: 'Task not available' });
+    if ((task.completions_done || 0) >= (task.completions_wanted || 0)) {
+      return res.status(400).json({ error: 'This task is already full' });
+    }
+    const user = await User.findOne({ id: req.user.id });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const planCaps = { free: 30, beginner: 100, pro: 500, master: 1500 };
+    const planMins = { free: 10, beginner: 80, pro: 400, master: 1200 };
+    let pay = Number(reward) || 0;
+    const cap = planCaps[user.plan] || 30;
+    const floor = planMins[user.plan] || 10;
+    if (pay > cap) pay = cap;
+    if (pay < floor) pay = floor;
+
+    try {
+      await TaskSubmission.create({
+        id: uuidv4(),
+        sponsored_id,
+        worker_id: user.id,
+        worker_name: user.name || '',
+        screenshot: String(screenshot),
+        note: (note || '').slice(0, 200),
+        reward: pay,
+        status: 'pending'
+      });
+    } catch (ce) {
+      if (ce.code === 11000) return res.status(400).json({ error: 'You already submitted proof for this task' });
+      throw ce;
+    }
+    res.json({ ok: true, status: 'pending', message: 'Screenshot submitted. Waiting for poster to verify.' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message || 'Submit failed' });
+  }
+});
+
+app.get('/api/sponsor/queue', auth, async (req, res) => {
+  try {
+    const myTasks = await SponsoredTask.find({ owner_id: req.user.id }).select('id title').lean();
+    const ids = myTasks.map(t => t.id);
+    const titleMap = {};
+    myTasks.forEach(t => { titleMap[t.id] = t.title; });
+    const rows = await TaskSubmission.find({ sponsored_id: { $in: ids }, status: 'pending' })
+      .sort({ created_at: -1 }).lean();
+    res.json(rows.map(r => ({
+      id: r.id,
+      sponsored_id: r.sponsored_id,
+      task_title: titleMap[r.sponsored_id] || 'Task',
+      worker_name: r.worker_name,
+      note: r.note,
+      reward: r.reward,
+      screenshot: r.screenshot,
+      created_at: r.created_at
+    })));
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Could not load queue' });
+  }
+});
+
+app.post('/api/sponsor/review/:id', auth, async (req, res) => {
+  try {
+    const { action } = req.body; // approve | reject
+    const sub = await TaskSubmission.findOne({ id: req.params.id });
+    if (!sub || sub.status !== 'pending') return res.status(400).json({ error: 'Invalid submission' });
+    const task = await SponsoredTask.findOne({ id: sub.sponsored_id });
+    if (!task || task.owner_id !== req.user.id) {
+      return res.status(403).json({ error: 'Not your task' });
+    }
+    if (action === 'reject') {
+      sub.status = 'rejected';
+      sub.reviewed_at = new Date();
+      await sub.save();
+      return res.json({ ok: true, status: 'rejected' });
+    }
+    if (action !== 'approve') return res.status(400).json({ error: 'Invalid action' });
+
+    // Approve: pay worker + count completion
+    const worker = await User.findOne({ id: sub.worker_id });
+    if (worker) {
+      worker.balance = Number(worker.balance || 0) + Number(sub.reward || 0);
+      await worker.save();
+      await History.create({
+        id: uuidv4(),
+        user_id: worker.id,
+        type: 'earning',
+        title: 'Sponsored task approved',
+        amount: sub.reward
+      });
+    }
+    sub.status = 'approved';
+    sub.reviewed_at = new Date();
+    await sub.save();
+    task.completions_done = Number(task.completions_done || 0) + 1;
+    if (task.completions_done >= task.completions_wanted) task.status = 'done';
+    await task.save();
+    res.json({ ok: true, status: 'approved', paid: sub.reward });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message || 'Review failed' });
+  }
 });
 
 
