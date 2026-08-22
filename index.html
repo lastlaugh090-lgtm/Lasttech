@@ -1157,16 +1157,23 @@ async function loadTasks(){
   $('upgradeBanner').style.display=(currentUser?.plan||'free')==='free'?'block':'none';
   const list=$('taskList'); list.innerHTML='';
   const combined = allTasks.concat(sponsoredTasks||[]);
-  combined.forEach(t=>{
-    const tid = t.id;
-    const done = completedTasks.map(Number).indexOf(Number(tid))!==-1 || completedTasks.indexOf(tid)!==-1;
-    const icon = t.icon || '📋';
-    const rewardLabel = done ? 'Done' : ('₦'+p.min+'–'+p.max);
-    list.innerHTML += `<div class="task"><div class="task-top"><div style="display:flex;gap:12px;align-items:flex-start;flex:1">
-      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#fef2f2,#ffe4e6);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${icon}</div>
-      <div class="task-info"><h4>${t.title}</h4><p>${t.desc||''}</p></div></div>
-      <div class="task-reward">${rewardLabel}</div></div>
-      <button class="btn ${done?'dark':''}" ${done?'disabled':''} onclick="openTask(${typeof tid==='number'?tid:('\''+tid+'\'')})">${done?'✓ Completed':'View Task'}</button></div>`;
+  combined.forEach(function(t){
+    var tid = t.id;
+    var done = completedTasks.indexOf(tid)!==-1 || completedTasks.map(Number).indexOf(Number(tid))!==-1;
+    var icon = t.icon || '📋';
+    var rewardLabel = done ? 'Done' : ('₦'+p.min+'-'+p.max);
+    var btn = document.createElement('div');
+    btn.className = 'task';
+    btn.innerHTML = '<div class="task-top"><div style="display:flex;gap:12px;align-items:flex-start;flex:1">'+
+      '<div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#fef2f2,#ffe4e6);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">'+icon+'</div>'+
+      '<div class="task-info"><h4></h4><p></p></div></div>'+
+      '<div class="task-reward">'+rewardLabel+'</div></div>'+
+      '<button class="btn '+(done?'dark':'')+'" '+(done?'disabled':'')+'>'+(done?'✓ Completed':'View Task')+'</button>';
+    btn.querySelector('h4').textContent = t.title || '';
+    btn.querySelector('p').textContent = t.desc || '';
+    var b = btn.querySelector('button');
+    if (!done) b.onclick = function(){ openTask(tid); };
+    list.appendChild(btn);
   });
 }
 
@@ -1409,7 +1416,7 @@ async function loadReferral(){
   list.innerHTML='<div class="empty">Loading…</div>';
   // show referral wallet
   var bal=Number((currentUser&&currentUser.ref_balance)||0);
-  var balHtml='<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><strong style="font-size:13px">Referral balance</strong><p style="font-size:12px;color:#6b7280">30% of friends\' deposits</p></div><strong style="color:#e11d48;font-size:18px">₦'+bal.toLocaleString()+'</strong></div>';
+  var balHtml='<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><strong style="font-size:13px">Referral balance</strong><p style="font-size:12px;color:#6b7280">30% of friends deposits</p></div><strong style="color:#e11d48;font-size:18px">₦'+bal.toLocaleString()+'</strong></div>';
   try{
     var rows=await api('/api/referrals');
     if(!rows.length){
@@ -1546,9 +1553,12 @@ async function loadSponsorQueue(){
     var rows=await api('/api/sponsor/queue');
     if(!rows.length){ el.innerHTML='<div class="empty">No pending screenshots</div>'; return; }
     el.innerHTML=rows.map(function(r){
-      return '<div class="item" style="cursor:pointer" onclick="openVerify(\\''+r.id+'\\')"><div class="item-left"><h4>'+(r.task_title||'Task')+'</h4><p>By '+(r.worker_name||'User')+' · ₦'+Number(r.reward||0).toLocaleString()+'</p></div><div class="item-right"><span style="background:#fef3c7;color:#92400e;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700">Review</span></div></div>';
+      return '<div class="item" style="cursor:pointer" data-sid="'+r.id+'"><div class="item-left"><h4>'+(r.task_title||'Task')+'</h4><p>By '+(r.worker_name||'User')+' · ₦'+Number(r.reward||0).toLocaleString()+'</p></div><div class="item-right"><span style="background:#fef3c7;color:#92400e;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700">Review</span></div></div>';
     }).join('');
     window._sponsorQueue=rows;
+    el.querySelectorAll('[data-sid]').forEach(function(node){
+      node.onclick=function(){ openVerify(node.getAttribute('data-sid')); };
+    });
   }catch(e){ el.innerHTML='<div class="empty">Could not load queue</div>'; }
 }
 function openVerify(id){
