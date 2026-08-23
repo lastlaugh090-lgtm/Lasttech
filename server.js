@@ -105,6 +105,7 @@ const sponsoredSchema = new mongoose.Schema({
   description: { type: String, default: '' },
   link: { type: String, default: '' },
   icon: { type: String, default: '📋' },
+  example_screenshot: { type: String, default: '' },
   completions_wanted: { type: Number, required: true },
   completions_done: { type: Number, default: 0 },
   views_wanted: { type: Number, default: 0 },
@@ -332,6 +333,14 @@ app.post('/api/tasks/complete', auth, async (req, res) => {
 
     const user = await User.findOne({ id: req.user.id });
     if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const dailyLimits = { free: 3, beginner: 5, pro: 5, master: 6 };
+    const maxDaily = dailyLimits[user.plan] || 3;
+    const dayCheck = todayKey();
+    const doneToday = await TaskDone.countDocuments({ user_id: String(req.user.id), day_key: dayCheck });
+    if (doneToday >= maxDaily) {
+      return res.status(400).json({ error: 'Daily task limit reached (' + maxDaily + ' for your plan). Resets at midnight.' });
+    }
 
     // Cap by plan
     const planCaps = { free: 30, beginner: 100, pro: 500, master: 1500 };
@@ -699,7 +708,8 @@ app.get('/api/tasks/feed', auth, async (req, res) => {
       link: t.link,
       icon: t.icon || '📋',
       type: 'sponsored',
-      completions_left: Math.max(0, (t.completions_wanted || 0) - (t.completions_done || 0))
+      completions_left: Math.max(0, (t.completions_wanted || 0) - (t.completions_done || 0)),
+      example_screenshot: t.example_screenshot || ''
     })));
   } catch (e) {
     res.json([]);
@@ -708,7 +718,7 @@ app.get('/api/tasks/feed', auth, async (req, res) => {
 
 app.post('/api/tasks/sponsor', auth, async (req, res) => {
   try {
-    const { title, description, link, icon, completions_wanted, views_wanted, pay_method } = req.body;
+    const { title, description, link, icon, completions_wanted, views_wanted, pay_method, example_screenshot } = req.body;
     const completions = Math.max(1, Math.min(5000, Number(completions_wanted) || 0));
     const views = Math.max(0, Number(views_wanted) || 0);
     if (!title || !title.trim()) return res.status(400).json({ error: 'Title required' });
@@ -741,6 +751,7 @@ app.post('/api/tasks/sponsor', auth, async (req, res) => {
       description: (description || '').trim().slice(0, 300),
       link: (link || '').trim().slice(0, 500),
       icon: (icon || '📋').slice(0, 8),
+      example_screenshot: (example_screenshot && String(example_screenshot).length < 900000) ? String(example_screenshot) : '',
       completions_wanted: completions,
       views_wanted: views,
       price_per: TASK_PRICE_PER,
@@ -811,7 +822,6 @@ app.post('/api/tasks/submit-proof', auth, async (req, res) => {
     if (!screenshot || String(screenshot).length < 20) {
       return res.status(400).json({ error: 'Screenshot required' });
     }
-    // Limit ~700KB base64
     if (String(screenshot).length > 900000) {
       return res.status(400).json({ error: 'Screenshot too large. Use a smaller image.' });
     }
@@ -822,6 +832,28 @@ app.post('/api/tasks/submit-proof', auth, async (req, res) => {
     }
     const user = await User.findOne({ id: req.user.id });
     if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // Daily posted-task limit by plan
+    const postedLimits = { free: 0, beginner: 1, pro: 1, master: 2 };
+    const maxPosted = postedLimits[user.plan] || 0;
+    if (maxPosted <= 0) {
+      return res.status(400).json({ error: 'Upgrade your plan to do posted tasks' });
+    }
+    let day;
+    try {
+      day = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Lagos', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+    } catch (e) {
+      day = new Date().toISOString().slice(0, 10);
+    }
+    const start = new Date(day + 'T00:00:00+01:00');
+    const todayCount = await TaskSubmission.countDocuments({
+      worker_id: user.id,
+      created_at: { $gte: start },
+      status: { $in: ['pending', 'approved'] }
+    });
+    if (todayCount >= maxPosted) {
+      return res.status(400).json({ error: 'Daily posted-task limit reached (' + maxPosted + ' for your plan)' });
+    }
 
     const planCaps = { free: 30, beginner: 100, pro: 500, master: 1500 };
     const planMins = { free: 10, beginner: 80, pro: 400, master: 1200 };

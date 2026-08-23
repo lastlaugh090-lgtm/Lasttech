@@ -568,10 +568,12 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
       <button class="btn sm" onclick="go('plans')">View Plans</button>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <div class="section-title" style="margin:0">Available Tasks</div>
-      <button class="btn sm" style="width:auto" onclick="go('posttask')">+ Post task</button>
+      <div class="section-title" style="margin:0">Daily Tasks</div>
+      <button class="btn sm dark" style="width:auto" onclick="go('posted')">Posted</button>
     </div>
+    <p id="taskLimitHint" style="font-size:12px;color:#6b7280;margin-bottom:12px"></p>
     <div id="taskList"></div>
+    <button class="btn outline" style="margin-top:8px" onclick="go('posttask')">+ Post a task for others</button>
   </div>
   <nav class="bottom-nav">
     <button class="nav-item" onclick="go('dashboard')"><span class="icon">🏠</span>Home</button>
@@ -705,6 +707,20 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
 </div>
 
 
+
+<div class="page" id="page-posted">
+  <header><button class="back-btn" onclick="go('tasks')">←</button><div class="header-title">Posted Tasks</div></header>
+  <div class="container">
+    <div class="card" style="background:linear-gradient(135deg,#1f2937,#374151);color:#fff;border:none">
+      <strong style="font-size:15px">Community / advertiser tasks</strong>
+      <p style="font-size:12px;opacity:.9;margin-top:6px;line-height:1.5">These require a <strong>screenshot</strong>. The poster verifies before you are paid. Not the same as daily visit/review tasks.</p>
+    </div>
+    <p id="postedLimitHint" style="font-size:12px;color:#6b7280;margin-bottom:12px"></p>
+    <div id="postedList"><div class="empty">Loading…</div></div>
+    <button class="btn" style="margin-top:12px" onclick="go('posttask')">Post your own task</button>
+  </div>
+</div>
+
 <div class="page" id="page-posttask">
   <header><button class="back-btn" onclick="go('tasks')">←</button><div class="header-title">Post a Task</div></header>
   <div class="container">
@@ -725,6 +741,11 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
           <option value="⭐">⭐ Review</option>
           <option value="🎬">🎬 Video</option>
         </select>
+      </div>
+      <div class="form-group"><label>Example screenshot (how it should look)</label>
+        <input type="file" id="ptExample" accept="image/*"/>
+        <p style="font-size:11px;color:#6b7280;margin-top:6px">Optional. Workers will see this sample so they know what to submit.</p>
+        <img id="ptExamplePrev" style="display:none;max-width:100%;border-radius:12px;margin-top:8px;border:1px solid #eee"/>
       </div>
       <div class="form-group"><label>Completions needed (people)</label><input type="number" id="ptCompletions" min="1" max="5000" value="10" oninput="calcPostTotal()"/></div>
       <div class="form-group"><label>Target views (optional)</label><input type="number" id="ptViews" min="0" value="0" oninput="calcPostTotal()"/></div>
@@ -1044,24 +1065,87 @@ const $=id=>document.getElementById(id);
 const allTasks = [
   {id:1, icon:'🍽️', title:'Google Review – Restaurant', desc:'Leave an honest review for a local restaurant on Google Maps.', type:'review',
    link:'https://www.google.com/maps/search/restaurant+near+me', linkLabel:'Open Google Maps – Restaurants',
-   steps:['Tap “Open Google Maps” below','Pick a restaurant you know or visit','Tap Write a review','Write at least 15 honest words','Submit the review','Return here and confirm']},
+   steps:['Open Google Maps','Pick a restaurant','Write at least 15 honest words','Submit','Return and confirm']},
   {id:2, icon:'💇', title:'Google Review – Salon', desc:'Review a nearby beauty salon on Google Maps.', type:'review',
    link:'https://www.google.com/maps/search/beauty+salon+near+me', linkLabel:'Open Google Maps – Salons',
-   steps:['Tap “Open Google Maps” below','Find a salon','Write a genuine review','Submit','Return and confirm']},
+   steps:['Open Google Maps','Find a salon','Write a genuine review','Submit','Return and confirm']},
   {id:3, icon:'🛒', title:'Visit Jumia', desc:'Browse Jumia for at least 20 seconds.', type:'visit',
    link:'https://www.jumia.com.ng', linkLabel:'Open Jumia.com.ng',
-   steps:['Tap Open Jumia below','Browse products for 20+ seconds','Return here','Confirm completion']},
+   steps:['Open Jumia','Browse products 20+ seconds','Return here','Confirm']},
   {id:4, icon:'💊', title:'Google Review – Pharmacy', desc:'Leave a genuine review for a pharmacy.', type:'review',
    link:'https://www.google.com/maps/search/pharmacy+near+me', linkLabel:'Open Google Maps – Pharmacies',
-   steps:['Tap Open Google Maps','Search or pick a pharmacy','Write an honest review','Submit','Return here']},
+   steps:['Open Google Maps','Pick a pharmacy','Write honest review','Submit','Confirm']},
   {id:5, icon:'🛍️', title:'Visit Konga', desc:'Explore Konga website for 30 seconds.', type:'visit',
    link:'https://www.konga.com', linkLabel:'Open Konga.com',
-   steps:['Tap Open Konga','Browse the site fully','Stay for the timer','Return and confirm']},
+   steps:['Open Konga','Browse the site','Stay for timer','Confirm']},
   {id:6, icon:'👗', title:'Google Review – Fashion Store', desc:'Review a clothing store on Google Maps.', type:'review',
    link:'https://www.google.com/maps/search/clothing+store+near+me', linkLabel:'Open Google Maps – Fashion',
-   steps:['Tap Open Google Maps','Find a fashion/clothing store','Write a genuine review','Submit','Confirm here']}
+   steps:['Open Google Maps','Find clothing store','Write review','Submit','Confirm']},
+  {id:7, icon:'⛽', title:'Google Review – Fuel Station', desc:'Review a nearby petrol station.', type:'review',
+   link:'https://www.google.com/maps/search/petrol+station+near+me', linkLabel:'Open Google Maps – Fuel',
+   steps:['Open Maps','Pick a station','Write short honest review','Submit','Confirm']},
+  {id:8, icon:'🏦', title:'Google Review – Bank Branch', desc:'Review a bank branch you know.', type:'review',
+   link:'https://www.google.com/maps/search/bank+near+me', linkLabel:'Open Google Maps – Banks',
+   steps:['Open Maps','Select a bank branch','Write review','Submit','Confirm']},
+  {id:9, icon:'📱', title:'Visit Jiji', desc:'Browse Jiji classifieds for 20 seconds.', type:'visit',
+   link:'https://jiji.ng', linkLabel:'Open Jiji.ng',
+   steps:['Open Jiji','Browse listings','Wait for timer','Confirm']},
+  {id:10, icon:'📺', title:'Visit Netflix', desc:'Open Netflix homepage and browse for 20 seconds.', type:'visit',
+   link:'https://www.netflix.com', linkLabel:'Open Netflix',
+   steps:['Open Netflix','Browse titles','Wait for timer','Confirm']},
+  {id:11, icon:'🍔', title:'Google Review – Fast Food', desc:'Review a fast food spot on Maps.', type:'review',
+   link:'https://www.google.com/maps/search/fast+food+near+me', linkLabel:'Open Google Maps – Fast food',
+   steps:['Open Maps','Pick a place','Write review','Submit','Confirm']},
+  {id:12, icon:'🏥', title:'Google Review – Clinic', desc:'Review a clinic or hospital.', type:'review',
+   link:'https://www.google.com/maps/search/clinic+near+me', linkLabel:'Open Google Maps – Clinics',
+   steps:['Open Maps','Select clinic','Honest review','Submit','Confirm']},
+  {id:13, icon:'📚', title:'Visit Coursera', desc:'Explore Coursera courses for 20 seconds.', type:'visit',
+   link:'https://www.coursera.org', linkLabel:'Open Coursera',
+   steps:['Open Coursera','Browse courses','Wait timer','Confirm']},
+  {id:14, icon:'🎵', title:'Visit Spotify', desc:'Open Spotify and browse for 20 seconds.', type:'visit',
+   link:'https://www.spotify.com', linkLabel:'Open Spotify',
+   steps:['Open Spotify','Browse','Wait timer','Confirm']},
+  {id:15, icon:'🏪', title:'Google Review – Supermarket', desc:'Review a supermarket on Google Maps.', type:'review',
+   link:'https://www.google.com/maps/search/supermarket+near+me', linkLabel:'Open Google Maps – Supermarket',
+   steps:['Open Maps','Pick supermarket','Write review','Submit','Confirm']},
+  {id:16, icon:'🚕', title:'Visit Bolt', desc:'Open Bolt website and explore for 20 seconds.', type:'visit',
+   link:'https://bolt.eu', linkLabel:'Open Bolt',
+   steps:['Open Bolt','Browse page','Wait timer','Confirm']},
+  {id:17, icon:'📦', title:'Visit Amazon', desc:'Browse Amazon for 20 seconds.', type:'visit',
+   link:'https://www.amazon.com', linkLabel:'Open Amazon',
+   steps:['Open Amazon','Browse products','Wait timer','Confirm']},
+  {id:18, icon:'🏨', title:'Google Review – Hotel', desc:'Review a hotel or lodge on Maps.', type:'review',
+   link:'https://www.google.com/maps/search/hotel+near+me', linkLabel:'Open Google Maps – Hotels',
+   steps:['Open Maps','Pick hotel','Write review','Submit','Confirm']}
 ];
 let sponsoredTasks = [];
+
+function lagosDayKey(){
+  try{ return new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Lagos',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()); }
+  catch(e){ return new Date().toISOString().slice(0,10); }
+}
+function planTaskLimits(plan){
+  // daily platform tasks + max posted tasks per day
+  if(plan==='master') return { daily:6, posted:2 };
+  if(plan==='pro' || plan==='beginner') return { daily:5, posted:1 };
+  return { daily:3, posted:0 }; // free
+}
+function pickDailyTasks(){
+  // stable shuffle from day key so tasks change each day
+  var day = lagosDayKey();
+  var seed = 0;
+  for(var i=0;i<day.length;i++) seed = (seed*31 + day.charCodeAt(i))>>>0;
+  var arr = allTasks.slice();
+  for(var i=arr.length-1;i>0;i--){
+    seed = (seed*1103515245 + 12345)>>>0;
+    var j = seed % (i+1);
+    var tmp=arr[i]; arr[i]=arr[j]; arr[j]=tmp;
+  }
+  var lim = planTaskLimits((currentUser&&currentUser.plan)||'free');
+  return arr.slice(0, lim.daily);
+}
+
+
 
 async function api(path, opts={}) {
   const headers={'Content-Type':'application/json',...(opts.headers||{})};
@@ -1079,6 +1163,7 @@ function go(page){
   window.scrollTo(0,0);
   if(page==='dashboard') loadDashboard();
   if(page==='tasks') loadTasks();
+  if(page==='posted') loadPosted();
   if(page==='plans') loadPlans();
   if(page==='withdraw') loadWithdraw();
   if(page==='referral') loadReferral();
@@ -1148,35 +1233,63 @@ async function loadTasks(){
     currentUser=await api('/api/me');
     const raw=await api('/api/tasks/completed');
     completedTasks=(Array.isArray(raw)?raw:[]);
-    try{ sponsoredTasks=await api('/api/tasks/feed'); }catch(e2){ sponsoredTasks=[]; }
-  }catch(e){ completedTasks=[]; sponsoredTasks=[]; }
+  }catch(e){ completedTasks=[]; }
   const p=plans[currentUser?.plan]||plans.free;
+  const lim=planTaskLimits(currentUser?.plan||'free');
   $('taskPlanBadge').textContent=p.name;
-  $('taskEarnRange').textContent='₦'+p.min+'–'+p.max;
+  $('taskEarnRange').textContent='₦'+p.min+'-'+p.max;
   $('taskPlanDesc').textContent=p.name+' plan';
   $('upgradeBanner').style.display=(currentUser?.plan||'free')==='free'?'block':'none';
+  if($('taskLimitHint')) $('taskLimitHint').textContent='Today: up to '+lim.daily+' daily tasks · '+lim.posted+' posted task slot(s). List changes every day at midnight.';
   const list=$('taskList'); list.innerHTML='';
-  const combined = allTasks.concat(sponsoredTasks||[]);
-  combined.forEach(function(t){
-    var tid = t.id;
-    var done = completedTasks.indexOf(tid)!==-1 || completedTasks.map(Number).indexOf(Number(tid))!==-1;
-    var icon = t.icon || '📋';
-    var rewardLabel = done ? 'Done' : ('₦'+p.min+'-'+p.max);
-    var btn = document.createElement('div');
-    btn.className = 'task';
-    btn.innerHTML = '<div class="task-top"><div style="display:flex;gap:12px;align-items:flex-start;flex:1">'+
+  const daily=pickDailyTasks();
+  daily.forEach(function(t){
+    var tid=t.id;
+    var done=completedTasks.indexOf(tid)!==-1||completedTasks.map(Number).indexOf(Number(tid))!==-1;
+    var icon=t.icon||'📋';
+    var rewardLabel=done?'Done':('₦'+p.min+'-'+p.max);
+    var btn=document.createElement('div');
+    btn.className='task';
+    btn.innerHTML='<div class="task-top"><div style="display:flex;gap:12px;align-items:flex-start;flex:1">'+
       '<div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#fef2f2,#ffe4e6);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">'+icon+'</div>'+
       '<div class="task-info"><h4></h4><p></p></div></div>'+
       '<div class="task-reward">'+rewardLabel+'</div></div>'+
       '<button class="btn '+(done?'dark':'')+'" '+(done?'disabled':'')+'>'+(done?'✓ Completed':'View Task')+'</button>';
-    btn.querySelector('h4').textContent = t.title || '';
-    btn.querySelector('p').textContent = t.desc || '';
-    var b = btn.querySelector('button');
-    if (!done) b.onclick = function(){ openTask(tid); };
+    btn.querySelector('h4').textContent=t.title||'';
+    btn.querySelector('p').textContent=t.desc||'';
+    var b=btn.querySelector('button');
+    if(!done) b.onclick=function(){ openTask(tid); };
     list.appendChild(btn);
   });
 }
-
+async function loadPosted(){
+  if(!token) return go('login');
+  try{
+    if(!currentUser) currentUser=await api('/api/me');
+    sponsoredTasks=await api('/api/tasks/feed');
+  }catch(e){ sponsoredTasks=[]; }
+  var lim=planTaskLimits((currentUser&&currentUser.plan)||'free');
+  var el=$('postedList');
+  if($('postedLimitHint')) $('postedLimitHint').textContent='Your plan allows up to '+lim.posted+' posted task(s) per day. Screenshot required.';
+  if(!el) return;
+  if(!sponsoredTasks.length){ el.innerHTML='<div class="empty">No posted tasks right now. Check back later or post one.</div>'; return; }
+  el.innerHTML='';
+  sponsoredTasks.forEach(function(t){
+    var card=document.createElement('div');
+    card.className='task';
+    var left=Math.max(0, t.completions_left||0);
+    card.innerHTML='<div class="task-top"><div style="display:flex;gap:12px;align-items:flex-start;flex:1">'+
+      '<div style="width:44px;height:44px;border-radius:12px;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px">'+
+      (t.icon||'📢')+'</div><div class="task-info"><h4></h4><p></p></div></div>'+
+      '<div class="task-reward">Proof</div></div>'+
+      '<p style="font-size:11px;color:#6b7280;margin:8px 0">'+left+' slots left · poster verifies screenshot</p>'+
+      '<button class="btn">View &amp; submit proof</button>';
+    card.querySelector('h4').textContent=t.title||'Posted task';
+    card.querySelector('p').textContent=t.desc||'';
+    card.querySelector('button').onclick=function(){ openTask(t.id); };
+    el.appendChild(card);
+  });
+}
 function openTask(id){
   let t=allTasks.find(x=>x.id===id);
   if(!t && typeof id==='string') t=(sponsoredTasks||[]).find(x=>x.id===id);
@@ -1194,11 +1307,42 @@ function openTask(id){
   window._shotData='';
   if($('tdScreenshot')) $('tdScreenshot').value='';
   if($('tdShotPreview')){ $('tdShotPreview').style.display='none'; $('tdShotPreview').src=''; }
-  if($('tdShotBox')) $('tdShotBox').style.display=(t.type==='sponsored'||String(t.id).indexOf('s_')===0)?'block':'none';
+  var isSp = (t.type==='sponsored'||t.sid||String(t.id).indexOf('s_')===0);
+  if($('tdShotBox')) $('tdShotBox').style.display=isSp?'block':'none';
+  if(isSp){
+    $('tdTimerCard').style.display='none';
+    $('tdProofCard').style.display='block';
+    $('tdLinkBox').style.display=t.link?'block':'none';
+    $('tdActionBtn').textContent='Submit screenshot for review';
+    $('tdActionBtn').className='btn';
+    taskPhase='confirm';
+    $('tdStatus').style.display='block';
+    $('tdStatus').style.color='#d97706';
+    $('tdStatus').textContent='Do the task, upload a clear screenshot, then submit. Poster pays after approval.';
+    // Show poster example screenshot if provided
+    var exBox=$('tdExampleBox');
+    if(exBox){
+      if(t.example_screenshot){
+        exBox.style.display='block';
+        $('tdExampleImg').src=t.example_screenshot;
+      } else {
+        exBox.style.display='none';
+      }
+    }
+  } else {
+    var exBox2=$('tdExampleBox'); if(exBox2) exBox2.style.display='none';
+  }
   go('taskdetail');
 }
 // screenshot preview
 document.addEventListener('change',function(e){
+  if(e.target&&e.target.id==='ptExample'&&e.target.files&&e.target.files[0]){
+    var f=e.target.files[0];
+    if(f.size>600000){ showToast('Example image too large (max ~600KB)','error'); e.target.value=''; return; }
+    var reader=new FileReader();
+    reader.onload=function(){ window._ptExample=reader.result; var img=$('ptExamplePrev'); if(img){ img.src=reader.result; img.style.display='block'; } };
+    reader.readAsDataURL(f);
+  }
   if(e.target&&e.target.id==='tdScreenshot'&&e.target.files&&e.target.files[0]){
     var f=e.target.files[0];
     if(f.size>600000){ showToast('Image too large (max ~600KB)','error'); e.target.value=''; return; }
@@ -1614,7 +1758,8 @@ async function submitPostTask(){
       icon:$('ptIcon').value,
       completions_wanted:completions,
       views_wanted:Number($('ptViews').value)||0,
-      pay_method:method
+      pay_method:method,
+      example_screenshot: window._ptExample || ''
     })});
     showToast(data.message||'Submitted','success');
     $('ptStatus').style.display='block';
