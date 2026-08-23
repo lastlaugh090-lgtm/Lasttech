@@ -366,7 +366,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
     </div>
     <div class="card">
       <strong style="font-size:14px">👥 Referral share</strong>
-      <p style="font-size:13px;color:#6b7280;margin-top:6px;line-height:1.5">Earn <strong>30% of every plan deposit</strong> your invited friends make after approval.</p>
+      <p style="font-size:13px;color:#6b7280;margin-top:6px;line-height:1.5">Earn <strong>15% of every plan deposit</strong> your invited friends make after approval.</p>
     </div>
     <div class="card">
       <strong style="font-size:14px">🔒 Account security</strong>
@@ -402,7 +402,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
     </div>
     <div class="card">
       <strong style="font-size:14px">How do referrals work?</strong>
-      <p style="font-size:13px;color:#6b7280;margin-top:6px;line-height:1.5">Share your link. When a friend signs up and their plan deposit is approved, you get 30% of that deposit.</p>
+      <p style="font-size:13px;color:#6b7280;margin-top:6px;line-height:1.5">Share your link. When a friend signs up and their plan deposit is approved, you get 15% of that deposit.</p>
     </div>
     <div class="card">
       <strong style="font-size:14px">Do tasks reset?</strong>
@@ -528,8 +528,8 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
       <p style="font-size:12px;color:#6b7280;margin-top:4px">Open Tasks, finish instructions, claim reward into your wallet. Resets at midnight.</p>
     </div>
     <div class="card" onclick="go('referral')" style="cursor:pointer">
-      <strong style="font-size:14px">Invite friends · 30% commission</strong>
-      <p style="font-size:12px;color:#6b7280;margin-top:4px">Share your link. Earn 30% when they deposit on a plan.</p>
+      <strong style="font-size:14px">Invite friends · 15% commission</strong>
+      <p style="font-size:12px;color:#6b7280;margin-top:4px">Share your link. Earn 15% when they deposit on a plan.</p>
     </div>
     <div class="card">
       <strong style="font-size:14px">Need help?</strong>
@@ -679,7 +679,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
   <header><button class="back-btn" onclick="go('dashboard')">←</button><div class="header-title">Invite & Earn</div></header>
   <div class="container">
     <div class="card" style="background:linear-gradient(135deg,#e11d48,#be123c);color:#fff;text-align:center;border:none">
-      <h2 style="font-size:22px;font-weight:800;margin-bottom:6px">Earn 30% of every deposit</h2>
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:6px">Earn 15% of every deposit</h2>
       <p style="font-size:13px;opacity:.9">When your referral upgrades a plan</p>
     </div>
     <div class="card">
@@ -861,7 +861,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
         <li>Withdrawals are paid to the verified bank account linked to your profile.</li>
       </ul>
       <h2>7. Referrals</h2>
-      <p>Referral rewards (currently 30% of a referred user’s confirmed plan deposit) are credited only after the referred user signs up using your link and their qualifying deposit is approved. Abuse of the referral system is prohibited.</p>
+      <p>Referral rewards (currently 15% of a referred user’s confirmed plan deposit) are credited only after the referred user signs up using your link and their qualifying deposit is approved. Abuse of the referral system is prohibited.</p>
       <h2>8. Prohibited conduct</h2>
       <ul>
         <li>Fake reviews, bots, multiple accounts, or misrepresentation.</li>
@@ -1380,13 +1380,17 @@ function loadWithdraw(){
     if($('mainAmount')) $('mainAmount').placeholder='₦'+minMain.toLocaleString()+' – ₦'+maxMain.toLocaleString();
     if($('mainMinHint')) $('mainMinHint').textContent='Your limit: ₦'+minMain.toLocaleString()+' min · ₦'+maxMain.toLocaleString()+' max';
   $('refBalDisplay').value='₦'+Number(currentUser.ref_balance||0).toLocaleString();
-  const day=new Date().getDate(), hour=new Date().getHours();
+  // Use Lagos (WAT) time so windows match Nigeria
+  var lagosParts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Lagos', day: 'numeric', hour: 'numeric', hour12: false }).formatToParts(new Date());
+  var day = Number((lagosParts.find(function(p){return p.type==='day';})||{}).value)||new Date().getDate();
+  var hour = Number((lagosParts.find(function(p){return p.type==='hour';})||{}).value);
+  if (hour === 24) hour = 0;
   const mainOpen=(day>=30||day<=6), refOpen=(hour===9);
   $('mainStatus').className='status-box '+(mainOpen?'open':'closed');
   $('mainStatus').textContent=mainOpen?'✓ OPEN (30th–6th)':'✗ Closed. Opens 30th–6th';
   $('mainBtn').disabled=!mainOpen;
   $('refStatus').className='status-box '+(refOpen?'open':'closed');
-  $('refStatus').textContent=refOpen?'✓ OPEN (9–10 AM)':'✗ Closed. Only 9AM–10AM';
+  $('refStatus').textContent=refOpen?'✓ OPEN (9–10 AM Lagos)':'✗ Closed. Only 9AM–10AM (Lagos)';
   $('refBtn').disabled=!refOpen;
 }
 async function doMainWithdraw(){
@@ -1399,12 +1403,12 @@ async function doMainWithdraw(){
   if(!amount||amount<minMain) return showToast('Min ₦'+minMain.toLocaleString()+' for your plan','error');
   if(amount>maxMain) return showToast('Max ₦'+maxMain.toLocaleString()+' for your plan','error');
   try{await api('/api/withdrawals',{method:'POST',body:JSON.stringify({type:'main',amount})}); showToast('Withdrawal requested','success'); currentUser=await api('/api/me'); loadWithdraw(); $('mainAmount').value='';}
-  catch(e){alert(e.message);}
+  catch(e){showToast(e.message||'Failed','error');}
 }
 async function doRefWithdraw(){
-  const amount=Number($('refAmount').value); if(!amount||amount<500) return alert('Min ₦500 — about 2 successful referrals');
-  try{await api('/api/withdrawals',{method:'POST',body:JSON.stringify({type:'referral',amount})}); alert('Requested!'); currentUser=await api('/api/me'); loadWithdraw(); $('refAmount').value='';}
-  catch(e){alert(e.message);}
+  const amount=Number($('refAmount').value); if(!amount||amount<500) return showToast('Min ₦500 — about 2 successful referrals','error');
+  try{await api('/api/withdrawals',{method:'POST',body:JSON.stringify({type:'referral',amount})}); showToast('Referral withdrawal requested','success'); currentUser=await api('/api/me'); loadWithdraw(); $('refAmount').value='';}
+  catch(e){showToast(e.message||'Failed','error');}
 }
 
 async function loadReferral(){
@@ -1416,7 +1420,7 @@ async function loadReferral(){
   list.innerHTML='<div class="empty">Loading…</div>';
   // show referral wallet
   var bal=Number((currentUser&&currentUser.ref_balance)||0);
-  var balHtml='<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><strong style="font-size:13px">Referral balance</strong><p style="font-size:12px;color:#6b7280">30% of friends deposits</p></div><strong style="color:#e11d48;font-size:18px">₦'+bal.toLocaleString()+'</strong></div>';
+  var balHtml='<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><strong style="font-size:13px">Referral balance</strong><p style="font-size:12px;color:#6b7280">15% of friends deposits</p></div><strong style="color:#e11d48;font-size:18px">₦'+bal.toLocaleString()+'</strong></div>';
   try{
     var rows=await api('/api/referrals');
     if(!rows.length){
@@ -1457,7 +1461,7 @@ async function loadHistory(){
 async function sendSupport(){
   const message=$('supMsg').value.trim(); if(!message) return alert('Enter message');
   try{await api('/api/messages',{method:'POST',body:JSON.stringify({subject:$('supSubject').value,message})}); alert('Sent!'); $('supMsg').value='';}
-  catch(e){alert(e.message);}
+  catch(e){showToast(e.message||'Failed','error');}
 }
 
 async function adminLogin(){
@@ -1484,8 +1488,8 @@ async function renderAdminDeps(){
       <button class="btn sm" style="flex:1" onclick="rejectDep('${d.id}')">Reject</button></div></div>`).join('');
   }catch(e){$('admin-deposits').innerHTML='<div class="empty">'+e.message+'</div>';}
 }
-async function approveDep(id){try{await api('/api/admin/deposits/'+id+'/approve',{method:'POST',admin:true});alert('Approved');loadAdmin();renderAdminDeps();}catch(e){alert(e.message);}}
-async function rejectDep(id){try{await api('/api/admin/deposits/'+id+'/reject',{method:'POST',admin:true});alert('Rejected');loadAdmin();renderAdminDeps();}catch(e){alert(e.message);}}
+async function approveDep(id){try{await api('/api/admin/deposits/'+id+'/approve',{method:'POST',admin:true});alert('Approved');loadAdmin();renderAdminDeps();}catch(e){showToast(e.message||'Failed','error');}}
+async function rejectDep(id){try{await api('/api/admin/deposits/'+id+'/reject',{method:'POST',admin:true});alert('Rejected');loadAdmin();renderAdminDeps();}catch(e){showToast(e.message||'Failed','error');}}
 async function renderAdminWds(){
   try{const list=await api('/api/admin/withdrawals',{admin:true}); const el=$('admin-withdrawals');
     if(!list.length){el.innerHTML='<div class="empty">No pending</div>';return;}
@@ -1496,8 +1500,8 @@ async function renderAdminWds(){
       <button class="btn sm" style="flex:1" onclick="rejectWd('${w.id}')">Reject</button></div></div>`).join('');
   }catch(e){$('admin-withdrawals').innerHTML='<div class="empty">'+e.message+'</div>';}
 }
-async function approveWd(id){try{await api('/api/admin/withdrawals/'+id+'/approve',{method:'POST',admin:true});alert('Paid');loadAdmin();renderAdminWds();}catch(e){alert(e.message);}}
-async function rejectWd(id){try{await api('/api/admin/withdrawals/'+id+'/reject',{method:'POST',admin:true});alert('Rejected');loadAdmin();renderAdminWds();}catch(e){alert(e.message);}}
+async function approveWd(id){try{await api('/api/admin/withdrawals/'+id+'/approve',{method:'POST',admin:true});alert('Paid');loadAdmin();renderAdminWds();}catch(e){showToast(e.message||'Failed','error');}}
+async function rejectWd(id){try{await api('/api/admin/withdrawals/'+id+'/reject',{method:'POST',admin:true});alert('Rejected');loadAdmin();renderAdminWds();}catch(e){showToast(e.message||'Failed','error');}}
 async function renderAdminUsers(){
   try{const list=await api('/api/admin/users',{admin:true}); const el=$('admin-users');
     if(!list.length){el.innerHTML='<div class="empty">No users</div>';return;}
@@ -1637,6 +1641,13 @@ async function loadMySponsored(){
   }catch(e){ el.innerHTML='<div class="empty">Could not load</div>'; }
 }
 
+async function setRefBalance(userId, amount){
+  try{
+    await api('/api/admin/users/'+userId+'/ref-balance',{method:'POST',body:JSON.stringify({amount:Number(amount)})});
+    showToast('Referral balance updated','success');
+    if(typeof loadAdmin==='function') loadAdmin();
+  }catch(e){ showToast(e.message||'Failed','error'); }
+}
 function checkSecretAdmin(){if(location.hash==='#lt-admin-x9k2') go('admin');}
 window.addEventListener('hashchange',checkSecretAdmin); checkSecretAdmin();
 

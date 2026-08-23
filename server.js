@@ -44,6 +44,7 @@ const depositSchema = new mongoose.Schema({
   plan: { type: String, required: true },
   amount: { type: Number, required: true },
   status: { type: String, default: 'pending' },
+  referral_paid: { type: Boolean, default: false },
   created_at: { type: Date, default: Date.now }
 });
 
@@ -282,13 +283,14 @@ app.post('/api/withdrawals', auth, async (req, res) => {
       });
     }
     if (amount > user.balance) return res.status(400).json({ error: 'Insufficient balance' });
-    const day = new Date().getDate();
-    if (!(day >= 30 || day <= 6)) return res.status(400).json({ error: 'Main withdraw only open 30th–6th' });
+    const day = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Lagos', day: 'numeric' }).format(new Date()));
+    if (!(day >= 30 || day <= 6)) return res.status(400).json({ error: 'Main withdraw only open 30th–6th (Lagos)' });
     user.balance -= amount;
   } else {
     if (type === 'referral' && amount < 500) return res.status(400).json({ error: 'Minimum referral withdraw is ₦500' });
     if (amount > user.ref_balance) return res.status(400).json({ error: 'Insufficient referral balance' });
-    if (new Date().getHours() !== 9) return res.status(400).json({ error: 'Referral withdraw only 9AM–10AM' });
+    const lagosHour = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Lagos', hour: 'numeric', hour12: false }).format(new Date()));
+    if (lagosHour !== 9) return res.status(400).json({ error: 'Referral withdraw only 9:00–10:00 AM (Lagos time)' });
     user.ref_balance -= amount;
   }
   await user.save();
@@ -554,29 +556,49 @@ app.post('/api/admin/deposits/:id/approve', adminAuth, async (req, res) => {
   dep.status = 'approved';
   await dep.save();
   const user = await User.findOne({ id: dep.user_id });
+  let bonusPaid = 0;
   if (user) {
-    user.plan = dep.plan;
-    user.has_deposited = true;
-    await user.save();
-    if (user.referred_by) {
+    // Plan upgrades only (not task_sponsor posts)
+    if (dep.plan && dep.plan !== 'task_sponsor') {
+      user.plan = dep.plan;
+      user.has_deposited = true;
+      await user.save();
+    }
+    // Referral: exactly 15% of THIS deposit, only once
+    if (user.referred_by && !dep.referral_paid && dep.plan !== 'task_sponsor') {
       const ref = await User.findOne({ id: user.referred_by });
       if (ref) {
-        const bonus = Math.floor(Number(dep.amount || 0) * 0.30); // 30% of deposit
+        const amount = Number(dep.amount || 0);
+        const bonus = Math.floor(amount * 0.15); // 15% e.g. 5000 -> 750
         if (bonus > 0) {
           ref.ref_balance = Number(ref.ref_balance || 0) + bonus;
           await ref.save();
+          dep.referral_paid = true;
+          await dep.save();
+          bonusPaid = bonus;
           await History.create({
             id: uuidv4(),
             user_id: ref.id,
             type: 'earning',
-            title: 'Referral 30% of deposit',
+            title: 'Referral 15% of ₦' + amount.toLocaleString(),
             amount: bonus
           });
         }
       }
     }
   }
-  res.json({ ok: true });
+  res.json({ ok: true, referral_bonus: bonusPaid });
+});
+
+// Admin: set referral balance (to correct mistakes)
+app.post('/api/admin/users/:id/ref-balance', adminAuth, async (req, res) => {
+  const amount = Number(req.body.amount);
+  if (Number.isNaN(amount) || amount < 0) return res.status(400).json({ error: 'Invalid amount' });
+  const user = await User.findOne({ id: req.params.id });
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  user.ref_balance = amount;
+  await user.save();
+  res.json({ ok: true, ref_balance: user.ref_balance, name: user.name, email: user.email });
 });
 
 app.post('/api/admin/deposits/:id/reject', adminAuth, async (req, res) => {
