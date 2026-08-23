@@ -7,6 +7,53 @@ const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
 
+
+// Cloudinary (optional — screenshots stored as URLs if configured)
+let cloudinary = null;
+try {
+  if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+    cloudinary = require('cloudinary').v2;
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+      secure: true
+    });
+    console.log('Cloudinary enabled');
+  } else {
+    console.log('Cloudinary not configured — screenshots stay in MongoDB');
+  }
+} catch (e) {
+  console.log('Cloudinary load skipped:', e.message);
+}
+
+async function storeImage(dataUrl, folder) {
+  if (!dataUrl || String(dataUrl).length < 30) return '';
+  // Already a remote URL
+  if (String(dataUrl).startsWith('http://') || String(dataUrl).startsWith('https://')) {
+    return String(dataUrl).slice(0, 500);
+  }
+  if (cloudinary && String(dataUrl).startsWith('data:')) {
+    try {
+      const up = await cloudinary.uploader.upload(dataUrl, {
+        folder: folder || 'lasttech',
+        resource_type: 'image',
+        overwrite: false,
+        invalidate: true
+      });
+      return up.secure_url || up.url || '';
+    } catch (e) {
+      console.log('Cloudinary upload failed:', e.message);
+      // fall back to storing small base64 only if short
+      if (String(dataUrl).length < 200000) return dataUrl;
+      throw new Error('Image upload failed. Try a smaller screenshot.');
+    }
+  }
+  // No Cloudinary: keep base64 if not huge
+  if (String(dataUrl).length > 900000) throw new Error('Screenshot too large');
+  return dataUrl;
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'lasttech-secret-change-me';
@@ -337,9 +384,13 @@ app.post('/api/tasks/complete', auth, async (req, res) => {
     const dailyLimits = { free: 3, beginner: 5, pro: 5, master: 6 };
     const maxDaily = dailyLimits[user.plan] || 3;
     const dayCheck = todayKey();
-    const doneToday = await TaskDone.countDocuments({ user_id: String(req.user.id), day_key: dayCheck });
-    if (doneToday >= maxDaily) {
-      return res.status(400).json({ error: 'Daily task limit reached (' + maxDaily + ' for your plan). Resets at midnight.' });
+    const taskIdNum = Number(req.body.task_id);
+    const ONCE_IDS = [19];
+    if (!ONCE_IDS.includes(taskIdNum)) {
+      const doneToday = await TaskDone.countDocuments({ user_id: String(req.user.id), day_key: dayCheck });
+      if (doneToday >= maxDaily) {
+        return res.status(400).json({ error: 'Daily task limit reached (' + maxDaily + ' for your plan). Resets at midnight.' });
+      }
     }
 
     // Cap by plan
@@ -351,16 +402,21 @@ app.post('/api/tasks/complete', auth, async (req, res) => {
     if (reward < floor) reward = floor;
 
     const day = todayKey();
-    const completion_key = String(req.user.id) + '_' + String(task_id) + '_' + day;
+    const ONCE_TASKS = [19]; // one-time only (never again)
+    const isOnce = ONCE_TASKS.includes(task_id);
+    const completion_key = isOnce
+      ? String(req.user.id) + '_' + String(task_id) + '_once'
+      : String(req.user.id) + '_' + String(task_id) + '_' + day;
 
-    // Atomic: only insert if not done today
+    // One-time tasks skip daily limit check? still count optional - skip daily limit for once
+    // Atomic insert
     let created = null;
     try {
       created = await TaskDone.create({
         id: uuidv4(),
         user_id: String(req.user.id),
         task_id: task_id,
-        day_key: day,
+        day_key: isOnce ? 'once' : day,
         completion_key: completion_key,
         reward: reward
       });
@@ -414,7 +470,7 @@ app.get('/api/tasks/completed', auth, async (req, res) => {
     const day = todayKey();
     const rows = await TaskDone.find({
       user_id: String(req.user.id),
-      day_key: day
+      $or: [{ day_key: day }, { day_key: 'once' }]
     }).lean();
     return res.json(rows.map(r => Number(r.task_id)));
   } catch (e) {
@@ -742,6 +798,14 @@ app.post('/api/tasks/sponsor', auth, async (req, res) => {
       });
     }
 
+    let exampleUrl = '';
+    if (example_screenshot) {
+      try {
+        exampleUrl = await storeImage(example_screenshot, 'lasttech/examples');
+      } catch (ue) {
+        return res.status(400).json({ error: ue.message || 'Example image upload failed' });
+      }
+    }
     const id = uuidv4();
     await SponsoredTask.create({
       id,
@@ -751,7 +815,7 @@ app.post('/api/tasks/sponsor', auth, async (req, res) => {
       description: (description || '').trim().slice(0, 300),
       link: (link || '').trim().slice(0, 500),
       icon: (icon || '📋').slice(0, 8),
-      example_screenshot: (example_screenshot && String(example_screenshot).length < 900000) ? String(example_screenshot) : '',
+      example_screenshot: exampleUrl,
       completions_wanted: completions,
       views_wanted: views,
       price_per: TASK_PRICE_PER,
@@ -863,13 +927,19 @@ app.post('/api/tasks/submit-proof', auth, async (req, res) => {
     if (pay > cap) pay = cap;
     if (pay < floor) pay = floor;
 
+    let shotUrl = '';
+    try {
+      shotUrl = await storeImage(screenshot, 'lasttech/proofs');
+    } catch (ue) {
+      return res.status(400).json({ error: ue.message || 'Could not save screenshot' });
+    }
     try {
       await TaskSubmission.create({
         id: uuidv4(),
         sponsored_id,
         worker_id: user.id,
         worker_name: user.name || '',
-        screenshot: String(screenshot),
+        screenshot: shotUrl,
         note: (note || '').slice(0, 200),
         reward: pay,
         status: 'pending'
@@ -977,7 +1047,41 @@ async function start() {
   try {
     await mongoose.connect(MONGODB_URI);
     console.log('MongoDB connected');
-    app.listen(PORT, () => console.log('Last Tech API on port ' + PORT));
+    
+// Auto-delete screenshots older than 3 days (frees MongoDB space)
+async function cleanupOldScreenshots() {
+  try {
+    const cutoff = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+    // Clear proof screenshots on old submissions
+    const r1 = await TaskSubmission.updateMany(
+      {
+        created_at: { $lt: cutoff },
+        screenshot: { $exists: true, $ne: '' }
+      },
+      { $set: { screenshot: '' } }
+    );
+    // Clear example images on finished sponsored tasks older than 3 days
+    const r2 = await SponsoredTask.updateMany(
+      {
+        status: { $in: ['done', 'rejected', 'paused'] },
+        created_at: { $lt: cutoff },
+        example_screenshot: { $exists: true, $ne: '' }
+      },
+      { $set: { example_screenshot: '' } }
+    );
+    const n1 = r1.modifiedCount || r1.nModified || 0;
+    const n2 = r2.modifiedCount || r2.nModified || 0;
+    if (n1 || n2) console.log('[cleanup] cleared screenshots:', n1, 'proofs,', n2, 'examples');
+  } catch (e) {
+    console.log('[cleanup] error:', e.message);
+  }
+}
+
+app.listen(PORT, () => {
+  console.log('Last Tech API on port ' + PORT);
+  cleanupOldScreenshots();
+  setInterval(cleanupOldScreenshots, 60 * 60 * 1000); // every hour
+});
   } catch (e) {
     console.error('MongoDB connection failed:', e.message);
     process.exit(1);

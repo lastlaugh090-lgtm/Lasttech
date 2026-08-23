@@ -432,7 +432,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
       </div>
       <div class="footer-col">
         <h4>Support</h4>
-        <a href="https://t.me/LASTTECHNIGERIA" target="_blank">Telegram</a>
+        <a href="https://t.me/LastTechNigeriaBot" target="_blank">Telegram</a>
         <a href="#" onclick="go('login');return false">Sign in</a>
         <a href="#" onclick="go('register');return false">Create account</a>
       </div>
@@ -535,7 +535,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
       <strong style="font-size:14px">Need help?</strong>
       <p style="font-size:12px;color:#6b7280;margin-top:4px;line-height:1.5">Chat with us on Telegram or send a message in Support. You can also read Terms &amp; Privacy anytime.</p>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
-        <button class="btn sm" style="width:auto" onclick="window.open('https://t.me/LASTTECHNIGERIA','_blank')">Telegram</button>
+        <button class="btn sm" style="width:auto" onclick="window.open('https://t.me/LastTechNigeriaBot','_blank')">Telegram</button>
         <button class="btn sm dark" style="width:auto" onclick="go('support')">Support page</button>
       </div>
       <p style="font-size:12px;margin-top:12px;color:#6b7280">
@@ -569,11 +569,16 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div class="section-title" style="margin:0">Daily Tasks</div>
-      <button class="btn sm dark" style="width:auto" onclick="go('posted')">Posted</button>
+      <button class="btn sm" style="width:auto" onclick="go('posted')">Posted tasks</button>
     </div>
     <p id="taskLimitHint" style="font-size:12px;color:#6b7280;margin-bottom:12px"></p>
     <div id="taskList"></div>
-    <button class="btn outline" style="margin-top:8px" onclick="go('posttask')">+ Post a task for others</button>
+    <div class="card" style="margin-top:16px;text-align:center;background:linear-gradient(135deg,#e11d48,#be123c);color:#fff;border:none">
+      <strong style="font-size:15px">Want people to do your task?</strong>
+      <p style="font-size:12px;opacity:.9;margin:8px 0 14px">Post a task · ₦300 per completion · screenshot verification</p>
+      <button class="btn" style="background:#fff;color:#e11d48;box-shadow:none;font-weight:800" onclick="go('posttask')">+ Post a task</button>
+    </div>
+    <button class="btn dark" style="margin-top:10px" onclick="go('posted')">View posted tasks</button>
   </div>
   <nav class="bottom-nav">
     <button class="nav-item" onclick="go('dashboard')"><span class="icon">🏠</span>Home</button>
@@ -792,13 +797,16 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
 <div class="page" id="page-support">
   <header><button class="back-btn" onclick="go('dashboard')">←</button><div class="header-title">Support</div></header>
   <div class="container">
+    <div class="card" style="background:linear-gradient(135deg,#229ED9,#1b8bc4);color:#fff;border:none;text-align:center">
+      <div style="font-size:36px;margin-bottom:8px">✈️</div>
+      <strong style="font-size:18px">Telegram Support</strong>
+      <p style="font-size:13px;opacity:.95;margin:8px 0 16px;line-height:1.5">Message @LastTechNigeriaBot on Telegram for help with deposits, withdrawals, and tasks.</p>
+      <a href="https://t.me/LastTechNigeriaBot" target="_blank" class="btn" style="background:#fff;color:#1b8bc4;box-shadow:none;font-weight:800;text-decoration:none;display:block">Open @LastTechNigeriaBot</a>
+      <p style="font-size:12px;margin-top:12px;opacity:.9">t.me/LastTechNigeriaBot</p>
+    </div>
     <div class="card">
-      <a href="https://t.me/LASTTECHNIGERIA" target="_blank" style="display:block;text-decoration:none;color:inherit;margin-bottom:12px">
-        <strong style="color:#e11d48">Telegram</strong>
-        <p style="font-size:13px;color:#6b7280;margin-top:2px">t.me/LASTTECHNIGERIA — fastest support</p>
-      </a>
-      <p style="font-size:14px">Email: support@lasttech.com.ng</p>
-      <p style="font-size:12px;margin-top:12px;color:#6b7280">
+      <p style="font-size:13px;color:#6b7280;margin-bottom:8px">Or send a message here (we also reply on Telegram).</p>
+      <p style="font-size:12px;color:#6b7280">
         <a href="#" onclick="go('terms');return false" style="color:#e11d48">Terms</a> ·
         <a href="#" onclick="go('privacy');return false" style="color:#e11d48">Privacy</a> ·
         <a href="#" onclick="go('regulations');return false" style="color:#e11d48">Regulations</a>
@@ -900,7 +908,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
       <h2>13. Changes</h2>
       <p>We may update these Terms. Continued use after changes constitutes acceptance. Material changes will be indicated by updating the “Last updated” date above.</p>
       <h2>14. Contact</h2>
-      <p>Support: <a href="https://t.me/LASTTECHNIGERIA" target="_blank">Telegram @LASTTECHNIGERIA</a> · Email: support@lasttech.com.ng</p>
+      <p>Support: <a href="https://t.me/LastTechNigeriaBot" target="_blank">Telegram @LASTTECHNIGERIA</a> · Email: support@lasttech.com.ng</p>
     </div>
   </div>
 </div>
@@ -945,7 +953,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
       <h2>9. Children</h2>
       <p>The Platform is not directed at persons under 18. We do not knowingly collect data from minors.</p>
       <h2>10. Contact</h2>
-      <p>Privacy requests: support@lasttech.com.ng · Telegram: t.me/LASTTECHNIGERIA</p>
+      <p>Privacy requests: support@lasttech.com.ng · Telegram: t.me/LastTechNigeriaBot</p>
     </div>
   </div>
 </div>
@@ -979,7 +987,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
       <h2>Intellectual property</h2>
       <p>See our Copyright notice. Platform content, branding, and software are protected.</p>
       <h2>Contact for compliance</h2>
-      <p>support@lasttech.com.ng · <a href="https://t.me/LASTTECHNIGERIA" target="_blank">t.me/LASTTECHNIGERIA</a></p>
+      <p>support@lasttech.com.ng · <a href="https://t.me/LastTechNigeriaBot" target="_blank">t.me/LastTechNigeriaBot</a></p>
     </div>
   </div>
 </div>
@@ -1116,7 +1124,10 @@ const allTasks = [
    steps:['Open Amazon','Browse products','Wait timer','Confirm']},
   {id:18, icon:'🏨', title:'Google Review – Hotel', desc:'Review a hotel or lodge on Maps.', type:'review',
    link:'https://www.google.com/maps/search/hotel+near+me', linkLabel:'Open Google Maps – Hotels',
-   steps:['Open Maps','Pick hotel','Write review','Submit','Confirm']}
+   steps:['Open Maps','Pick hotel','Write review','Submit','Confirm']},
+  {id:19, icon:'✈️', title:'Join Last Tech Telegram', desc:'Join our official Telegram group/channel (one-time task for new users).', type:'once',
+   link:'https://t.me/LASTTECHNIGERIA', linkLabel:'Open Telegram group',
+   steps:['Tap Open Telegram group','Join the Last Tech group/channel','Stay a few seconds','Return here and claim once']}
 ];
 let sponsoredTasks = [];
 
@@ -1242,7 +1253,14 @@ async function loadTasks(){
   $('upgradeBanner').style.display=(currentUser?.plan||'free')==='free'?'block':'none';
   if($('taskLimitHint')) $('taskLimitHint').textContent='Today: up to '+lim.daily+' daily tasks · '+lim.posted+' posted task slot(s). List changes every day at midnight.';
   const list=$('taskList'); list.innerHTML='';
-  const daily=pickDailyTasks();
+  var daily=pickDailyTasks();
+  // One-time onboarding tasks (e.g. Telegram) — only if never completed
+  allTasks.forEach(function(t){
+    if(t.type==='once'){
+      var doneOnce=completedTasks.indexOf(t.id)!==-1||completedTasks.map(Number).indexOf(Number(t.id))!==-1;
+      if(!doneOnce && !daily.find(function(x){return x.id===t.id;})) daily.unshift(t);
+    }
+  });
   daily.forEach(function(t){
     var tid=t.id;
     var done=completedTasks.indexOf(tid)!==-1||completedTasks.map(Number).indexOf(Number(tid))!==-1;
