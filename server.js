@@ -332,7 +332,7 @@ app.post('/api/withdrawals', auth, async (req, res) => {
     }
     if (amount > user.balance) return res.status(400).json({ error: 'Insufficient balance' });
     const day = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Lagos', day: 'numeric' }).format(new Date()));
-    if (!(day >= 30 || day <= 6)) return res.status(400).json({ error: 'Main withdraw only open 30th–6th (Lagos)' });
+    if (!(day >= 30 || day <= 5)) return res.status(400).json({ error: 'Main withdraw only open 30th–5th (Lagos)' });
     user.balance -= amount;
   } else {
     if (type === 'referral' && amount < 500) return res.status(400).json({ error: 'Minimum referral withdraw is ₦500' });

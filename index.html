@@ -353,7 +353,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
     <div class="step"><div class="step-num">01</div><div><strong style="font-size:14px">Create a free account</strong><p style="font-size:12px;color:#6b7280">Register, verify your bank, and start on the Free plan</p></div></div>
     <div class="step"><div class="step-num">02</div><div><strong style="font-size:14px">Open a real task</strong><p style="font-size:12px;color:#6b7280">We open Google Maps or a partner site for you</p></div></div>
     <div class="step"><div class="step-num">03</div><div><strong style="font-size:14px">Complete &amp; claim</strong><p style="font-size:12px;color:#6b7280">Finish the steps, wait for the timer, claim your reward</p></div></div>
-    <div class="step"><div class="step-num">04</div><div><strong style="font-size:14px">Withdraw on schedule</strong><p style="font-size:12px;color:#6b7280">Main wallet: 30th–6th · Referral: 9–10 AM daily</p></div></div>
+    <div class="step"><div class="step-num">04</div><div><strong style="font-size:14px">Withdraw on schedule</strong><p style="font-size:12px;color:#6b7280">Main wallet: 30th–5th · Referral: 9–10 AM daily</p></div></div>
 
     <div class="section-title" style="text-align:center;margin-top:28px">Why Last Tech</div>
     <div class="card">
@@ -398,7 +398,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
     </div>
     <div class="card">
       <strong style="font-size:14px">When can I withdraw?</strong>
-      <p style="font-size:13px;color:#6b7280;margin-top:6px;line-height:1.5">Main balance: 30th–6th of each month. Referral earnings: 9:00–10:00 AM daily.</p>
+      <p style="font-size:13px;color:#6b7280;margin-top:6px;line-height:1.5">Main balance: 30th–5th of each month. Referral earnings: 9:00–10:00 AM daily.</p>
     </div>
     <div class="card">
       <strong style="font-size:14px">How do referrals work?</strong>
@@ -663,7 +663,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
       <div class="form-group"><label>Amount (₦)</label><input type="number" id="mainAmount" placeholder="Min depends on plan"/></div>
       <p id="mainMinHint" style="font-size:12px;color:#e11d48;font-weight:600;margin-bottom:10px">Minimum depends on your plan</p>
       <button class="btn" id="mainBtn" onclick="doMainWithdraw()" disabled>Request Withdrawal</button>
-      <p style="font-size:12px;color:#9ca3af;margin-top:8px;text-align:center">Only open 30th – 6th of every month<br>Beginner ₦10k–20k · Pro ₦50k–100k · Master ₦150k–300k</p>
+      <p style="font-size:12px;color:#9ca3af;margin-top:8px;text-align:center">Only open 30th – 5th of every month<br>Beginner ₦10k–20k · Pro ₦50k–100k · Master ₦150k–300k</p>
     </div>
     <div class="card">
       <h3 style="font-size:15px;font-weight:700;margin-bottom:10px">Referral Withdraw</h3>
@@ -884,7 +884,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
       </ul>
       <h2>6. Withdrawals</h2>
       <ul>
-        <li>Main balance withdrawals are only available from the <strong>30th to the 6th</strong> of each month.</li>
+        <li>Main balance withdrawals are only available from the <strong>30th to the 5th</strong> of each month.</li>
         <li>Referral balance withdrawals are only available daily from <strong>9:00 AM to 10:00 AM</strong> (West Africa Time).</li>
         <li>Minimum amounts and processing times apply as shown in the app.</li>
         <li>Withdrawals are paid to the verified bank account linked to your profile.</li>
@@ -979,7 +979,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
       <h2>Consumer fair dealing</h2>
       <ul>
         <li>Plan prices and task reward ranges are displayed before you pay or start a task.</li>
-        <li>Withdrawal windows are stated in the app (main balance: 30th–6th; referral: 9–10 AM daily).</li>
+        <li>Withdrawal windows are stated in the app (main balance: 30th–5th; referral: 9–10 AM daily).</li>
         <li>Support is available via Telegram and email.</li>
       </ul>
       <h2>Tax</h2>
@@ -1547,9 +1547,9 @@ function loadWithdraw(){
   var day = Number((lagosParts.find(function(p){return p.type==='day';})||{}).value)||new Date().getDate();
   var hour = Number((lagosParts.find(function(p){return p.type==='hour';})||{}).value);
   if (hour === 24) hour = 0;
-  const mainOpen=(day>=30||day<=6), refOpen=(hour===9);
+  const mainOpen=(day>=30||day<=5), refOpen=(hour===9);
   $('mainStatus').className='status-box '+(mainOpen?'open':'closed');
-  $('mainStatus').textContent=mainOpen?'✓ OPEN (30th–6th)':'✗ Closed. Opens 30th–6th';
+  $('mainStatus').textContent=mainOpen?'✓ OPEN (30th–5th)':'✗ Closed. Opens 30th–5th';
   $('mainBtn').disabled=!mainOpen;
   $('refStatus').className='status-box '+(refOpen?'open':'closed');
   $('refStatus').textContent=refOpen?'✓ OPEN (9–10 AM Lagos)':'✗ Closed. Only 9AM–10AM (Lagos)';
