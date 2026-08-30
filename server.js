@@ -69,6 +69,27 @@ app.get('/ads.txt', (req, res) => {
   res.send('google.com, pub-9111222447861434, DIRECT, f08c47fec0942fa0\n');
 });
 
+// Ad network service worker (Monetag-style) — must be at site root
+app.get('/sw.js', (req, res) => {
+  res.set('Content-Type', 'application/javascript; charset=utf-8');
+  res.set('Service-Worker-Allowed', '/');
+  res.set('Cache-Control', 'no-cache');
+  res.send(`self.options = {
+    "domain": "3nbf4.com",
+    "zoneId": 11686565
+}
+self.lary = ""
+importScripts('https://3nbf4.com/act/files/service-worker.min.js?r=sw')
+`);
+});
+
+// Clickadu (or ad network) site verification file
+app.get('/b46541c7e2b127d0e863262f365568e6.html', (req, res) => {
+  res.type('text/html');
+  res.send('b46541c7e2b127d0e863262f365568e6');
+});
+
+
 app.use(express.static(__dirname));
 
 // ========== SCHEMAS ==========
