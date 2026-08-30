@@ -62,6 +62,13 @@ const MONGODB_URI = process.env.MONGODB_URI || '';
 
 app.use(cors());
 app.use(express.json());
+
+// Google AdSense ads.txt
+app.get('/ads.txt', (req, res) => {
+  res.type('text/plain');
+  res.send('google.com, pub-9111222447861434, DIRECT, f08c47fec0942fa0\n');
+});
+
 app.use(express.static(__dirname));
 
 // ========== SCHEMAS ==========
