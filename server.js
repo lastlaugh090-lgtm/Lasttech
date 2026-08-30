@@ -1023,6 +1023,54 @@ app.post('/api/sponsor/review/:id', auth, async (req, res) => {
 });
 
 
+
+// Watch-to-earn (small rewards, daily cap). Not Google rewarded ads API.
+app.post('/api/ads/watch', auth, async (req, res) => {
+  try {
+    const user = await User.findOne({ id: req.user.id });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const day = todayKey();
+    const maxMap = { free: 3, beginner: 5, pro: 8, master: 10 };
+    const rewardMap = { free: 5, beginner: 10, pro: 15, master: 20 };
+    const maxN = maxMap[user.plan] || 3;
+    const reward = rewardMap[user.plan] || 5;
+    const watchKey = String(req.user.id) + '_watch_' + day;
+    // count today's watches via TaskDone task_id 9001
+    const count = await TaskDone.countDocuments({ user_id: String(req.user.id), task_id: 9001, day_key: day });
+    if (count >= maxN) {
+      return res.status(400).json({ error: 'Daily watch limit reached (' + maxN + '). Try again tomorrow.' });
+    }
+    const completion_key = watchKey + '_' + count;
+    try {
+      await TaskDone.create({
+        id: uuidv4(),
+        user_id: String(req.user.id),
+        task_id: 9001,
+        day_key: day,
+        completion_key,
+        reward
+      });
+    } catch (ce) {
+      if (ce.code === 11000) return res.status(400).json({ error: 'Already claimed this slot' });
+      throw ce;
+    }
+    user.balance = Number(user.balance || 0) + reward;
+    await user.save();
+    await History.create({
+      id: uuidv4(),
+      user_id: user.id,
+      type: 'earning',
+      title: 'Watch to earn',
+      amount: reward
+    });
+    res.json({ ok: true, reward, balance: user.balance, left: maxN - count - 1 });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message || 'Server error' });
+  }
+});
+
+
 app.get('/api/health', (req, res) => {
   res.json({
     ok: true,

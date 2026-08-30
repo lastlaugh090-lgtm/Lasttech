@@ -321,6 +321,8 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
 .legal-badge{background:#f8fafc;border:1px solid #e2e8f0;border-radius:999px;padding:6px 12px;font-size:11px;font-weight:600;color:#475569}
 
 </style>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9111222447861434"
+     crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -518,9 +520,9 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
       <div class="quick-item" onclick="go('history')"><div class="qicon">📊</div><div class="qlabel">History</div></div>
       <div class="quick-item" onclick="go('support')"><div class="qicon">💬</div><div class="qlabel">Support</div></div>
     </div>
-    <div class="card" onclick="go('posttask')" style="cursor:pointer">
-      <strong style="font-size:14px">📢 Post a task</strong>
-      <p style="font-size:12px;color:#6b7280;margin-top:4px">Pay ₦300 per person. Get completions from Last Tech users.</p>
+    <div class="card" onclick="go('watch')" style="cursor:pointer">
+      <strong style="font-size:14px">▶️ Watch to earn</strong>
+      <p style="font-size:12px;color:#6b7280;margin-top:4px">Watch a short ad, wait for the timer, claim a small reward.</p>
     </div>
     <div class="section-title">Today</div>
     <div class="card" onclick="go('tasks')" style="cursor:pointer">
@@ -553,6 +555,35 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
   </nav>
 </div>
 
+
+<div class="page" id="page-watch">
+  <header><button class="back-btn" onclick="go('tasks')">←</button><div class="header-title">Watch to Earn</div></header>
+  <div class="container">
+    <div class="card" style="text-align:center">
+      <div style="font-size:40px;margin-bottom:8px">▶️</div>
+      <strong style="font-size:16px">Watch an ad, earn a small reward</strong>
+      <p style="font-size:13px;color:#6b7280;margin-top:8px;line-height:1.5">1. Tap <b>Start</b><br>2. Ad may open / show below<br>3. Wait for the timer<br>4. Claim reward</p>
+      <p style="font-size:12px;color:#e11d48;margin-top:10px;font-weight:600" id="watchLimitInfo">Daily limit applies</p>
+    </div>
+    <div class="card" id="watchAdBox" style="min-height:120px;text-align:center;background:#f8fafc">
+      <p style="font-size:12px;color:#9ca3af;padding:20px 8px">Ad area — ads appear when available from Google</p>
+      <!-- AdSense unit: replace data-ad-slot when Google gives you a slot ID -->
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-9111222447861434"
+           data-ad-slot="0000000000"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+    </div>
+    <div class="card" style="text-align:center">
+      <div style="font-size:13px;color:#6b7280">Time remaining</div>
+      <div style="font-size:36px;font-weight:800;color:#e11d48;margin:8px 0" id="watchTimer">00:15</div>
+      <button class="btn" id="watchBtn" onclick="watchAction()">Start watching</button>
+      <p id="watchStatus" style="font-size:13px;margin-top:12px;display:none"></p>
+    </div>
+  </div>
+</div>
+
 <div class="page" id="page-tasks">
   <header>
     <div class="logo"><div class="logo-icon">L</div><div class="logo-text">Last<span>Tech</span></div></div>
@@ -569,16 +600,15 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div class="section-title" style="margin:0">Daily Tasks</div>
-      <button class="btn sm" style="width:auto" onclick="go('posted')">Posted tasks</button>
+      <button class="btn sm" style="width:auto" onclick="go('watch')">Watch ads</button>
     </div>
     <p id="taskLimitHint" style="font-size:12px;color:#6b7280;margin-bottom:12px"></p>
     <div id="taskList"></div>
-    <div class="card" style="margin-top:16px;text-align:center;background:linear-gradient(135deg,#e11d48,#be123c);color:#fff;border:none">
-      <strong style="font-size:15px">Want people to do your task?</strong>
-      <p style="font-size:12px;opacity:.9;margin:8px 0 14px">Post a task · ₦300 per completion · screenshot verification</p>
-      <button class="btn" style="background:#fff;color:#e11d48;box-shadow:none;font-weight:800" onclick="go('posttask')">+ Post a task</button>
+    <div class="card" style="margin-top:16px;text-align:center;background:linear-gradient(135deg,#111827,#374151);color:#fff;border:none">
+      <strong style="font-size:15px">▶️ Watch to earn</strong>
+      <p style="font-size:12px;opacity:.9;margin:8px 0 14px">Watch an ad · wait for the timer · claim reward (daily limit applies)</p>
+      <button class="btn" style="background:#fff;color:#111827;box-shadow:none;font-weight:800" onclick="go('watch')">Watch ad</button>
     </div>
-    <button class="btn dark" style="margin-top:10px" onclick="go('posted')">View posted tasks</button>
   </div>
   <nav class="bottom-nav">
     <button class="nav-item" onclick="go('dashboard')"><span class="icon">🏠</span>Home</button>
@@ -1174,6 +1204,7 @@ function go(page){
   window.scrollTo(0,0);
   if(page==='dashboard') loadDashboard();
   if(page==='tasks') loadTasks();
+  if(page==='watch') resetWatchPage();
   if(page==='posted') loadPosted();
   if(page==='plans') loadPlans();
   if(page==='withdraw') loadWithdraw();
@@ -1251,7 +1282,7 @@ async function loadTasks(){
   $('taskEarnRange').textContent='₦'+p.min+'-'+p.max;
   $('taskPlanDesc').textContent=p.name+' plan';
   $('upgradeBanner').style.display=(currentUser?.plan||'free')==='free'?'block':'none';
-  if($('taskLimitHint')) $('taskLimitHint').textContent='Today: up to '+lim.daily+' daily tasks · '+lim.posted+' posted task slot(s). List changes every day at midnight.';
+  if($('taskLimitHint')) $('taskLimitHint').textContent='Today: up to '+lim.daily+' daily tasks. List changes at midnight. You can also Watch to earn.';
   const list=$('taskList'); list.innerHTML='';
   var daily=pickDailyTasks();
   // One-time onboarding tasks (e.g. Telegram) — only if never completed
@@ -1811,6 +1842,67 @@ async function setRefBalance(userId, amount){
     if(typeof loadAdmin==='function') loadAdmin();
   }catch(e){ showToast(e.message||'Failed','error'); }
 }
+
+let watchPhase='ready', watchTimer=null, watchLeft=15;
+function watchAction(){
+  if(!token) return go('login');
+  if(watchPhase==='ready'){
+    watchPhase='running'; watchLeft=15;
+    $('watchBtn').disabled=true; $('watchBtn').textContent='Watching...';
+    $('watchStatus').style.display='block'; $('watchStatus').style.color='#d97706';
+    $('watchStatus').textContent='Keep this page open until the timer ends.';
+    try{
+      if(window.adsbygoogle){(adsbygoogle=window.adsbygoogle||[]).push({});}
+      // try open a blank ad path - user stays on page for timer
+    }catch(e){}
+    if(watchTimer) clearInterval(watchTimer);
+    watchTimer=setInterval(function(){
+      watchLeft--; if(watchLeft<0) watchLeft=0;
+      $('watchTimer').textContent='00:'+String(watchLeft).padStart(2,'0');
+      if(watchLeft<=0){
+        clearInterval(watchTimer); watchTimer=null; watchPhase='claim';
+        $('watchBtn').disabled=false; $('watchBtn').textContent='Claim reward';
+        $('watchBtn').className='btn green';
+        $('watchStatus').style.color='#16a34a';
+        $('watchStatus').textContent='Timer done. Tap Claim reward.';
+      }
+    },1000);
+  } else if(watchPhase==='claim'){
+    if($('watchBtn').dataset.busy==='1') return;
+    $('watchBtn').dataset.busy='1';
+    $('watchBtn').disabled=true; $('watchBtn').textContent='Claiming...';
+    api('/api/ads/watch',{method:'POST',body:JSON.stringify({})}).then(function(data){
+      showToast('₦'+Number(data.reward||0).toLocaleString()+' added','success');
+      if(currentUser) currentUser.balance=Number(data.balance!=null?data.balance:currentUser.balance);
+      if($('dashBalance')&&data.balance!=null) $('dashBalance').textContent='₦'+Number(data.balance).toLocaleString()+'.00';
+      $('watchStatus').textContent='₦'+Number(data.reward||0).toLocaleString()+' added to wallet.';
+      $('watchBtn').textContent='Done';
+      $('watchBtn').className='btn dark';
+      watchPhase='done';
+      setTimeout(function(){ go('dashboard'); },1000);
+    }).catch(function(e){
+      showToast(e.message||'Could not claim','error');
+      $('watchBtn').dataset.busy='';
+      $('watchBtn').disabled=false;
+      $('watchBtn').textContent='Claim reward';
+      $('watchStatus').style.color='#be123c';
+      $('watchStatus').textContent=e.message||'Failed';
+    });
+  } else if(watchPhase==='done'){
+    go('tasks');
+  }
+}
+function resetWatchPage(){
+  watchPhase='ready'; if(watchTimer){clearInterval(watchTimer);watchTimer=null;}
+  watchLeft=15;
+  if($('watchTimer')) $('watchTimer').textContent='00:15';
+  if($('watchBtn')){ $('watchBtn').disabled=false; $('watchBtn').textContent='Start watching'; $('watchBtn').className='btn'; $('watchBtn').dataset.busy=''; }
+  if($('watchStatus')) $('watchStatus').style.display='none';
+  var p=(currentUser&&currentUser.plan)||'free';
+  var maxMap={free:3,beginner:5,pro:8,master:10};
+  if($('watchLimitInfo')) $('watchLimitInfo').textContent='Up to '+(maxMap[p]||3)+' ad rewards today on your plan';
+}
+
 function checkSecretAdmin(){if(location.hash==='#lt-admin-x9k2') go('admin');}
 window.addEventListener('hashchange',checkSecretAdmin); checkSecretAdmin();
 
