@@ -323,7 +323,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
 </style>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9111222447861434"
      crossorigin="anonymous"></script>
-<script>(function(s){s.dataset.zone='11686766',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+<!-- Monetag site-wide tag removed for smoother UX; ads open only on Watch to earn -->
 </head>
 <body>
 
@@ -563,22 +563,17 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
     <div class="card" style="text-align:center">
       <div style="font-size:40px;margin-bottom:8px">▶️</div>
       <strong style="font-size:16px">Watch an ad, earn a small reward</strong>
-      <p style="font-size:13px;color:#6b7280;margin-top:8px;line-height:1.5">1. Tap <b>Start</b><br>2. Ad may open / show below<br>3. Wait for the timer<br>4. Claim reward</p>
+      <p style="font-size:13px;color:#6b7280;margin-top:8px;line-height:1.5">1. Tap <b>Start watching</b><br>2. An ad tab opens — view it briefly<br>3. Come back and wait for the timer<br>4. Tap <b>Claim reward</b></p>
       <p style="font-size:12px;color:#e11d48;margin-top:10px;font-weight:600" id="watchLimitInfo">Daily limit applies</p>
     </div>
-    <div class="card" id="watchAdBox" style="min-height:120px;text-align:center;background:#f8fafc">
-      <p style="font-size:12px;color:#9ca3af;padding:20px 8px">Ad area — ads appear when available from Google</p>
-      <!-- AdSense unit: replace data-ad-slot when Google gives you a slot ID -->
-      <ins class="adsbygoogle"
-           style="display:block"
-           data-ad-client="ca-pub-9111222447861434"
-           data-ad-slot="0000000000"
-           data-ad-format="auto"
-           data-full-width-responsive="true"></ins>
+    <div class="card" id="watchAdBox" style="text-align:center;background:linear-gradient(135deg,#f8fafc,#eef2ff)">
+      <p style="font-size:13px;color:#64748b;padding:8px">Ads only open when you tap Start — the rest of the app stays clean.</p>
+      <a id="watchAdLink" href="https://omg10.com/4/11690711" target="_blank" rel="noopener noreferrer"
+         style="display:inline-block;margin-top:8px;padding:12px 20px;background:#111827;color:#fff;border-radius:12px;font-weight:700;text-decoration:none;font-size:14px">Open ad link</a>
     </div>
     <div class="card" style="text-align:center">
       <div style="font-size:13px;color:#6b7280">Time remaining</div>
-      <div style="font-size:36px;font-weight:800;color:#e11d48;margin:8px 0" id="watchTimer">00:15</div>
+      <div style="font-size:36px;font-weight:800;color:#e11d48;margin:8px 0" id="watchTimer">00:20</div>
       <button class="btn" id="watchBtn" onclick="watchAction()">Start watching</button>
       <p id="watchStatus" style="font-size:13px;margin-top:12px;display:none"></p>
     </div>
@@ -1844,43 +1839,62 @@ async function setRefBalance(userId, amount){
   }catch(e){ showToast(e.message||'Failed','error'); }
 }
 
-let watchPhase='ready', watchTimer=null, watchLeft=15;
+const WATCH_AD_URL='https://omg10.com/4/11690711';
+let watchPhase='ready', watchTimer=null, watchLeft=20;
+function openWatchAd(){
+  try{
+    window.open(WATCH_AD_URL,'_blank','noopener,noreferrer');
+  }catch(e){}
+  // soft register SW only when user chooses to watch (not on every page load)
+  try{
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(function(){});
+    }
+  }catch(e){}
+}
 function watchAction(){
   if(!token) return go('login');
   if(watchPhase==='ready'){
-    watchPhase='running'; watchLeft=15;
-    $('watchBtn').disabled=true; $('watchBtn').textContent='Watching...';
+    watchPhase='running'; watchLeft=20;
+    $('watchBtn').disabled=true; $('watchBtn').textContent='Watching…';
     $('watchStatus').style.display='block'; $('watchStatus').style.color='#d97706';
-    $('watchStatus').textContent='Keep this page open until the timer ends.';
-    try{
-      if(window.adsbygoogle){(adsbygoogle=window.adsbygoogle||[]).push({});}
-      // try open a blank ad path - user stays on page for timer
-    }catch(e){}
+    $('watchStatus').textContent='Ad opened in a new tab. Return here and wait for the timer.';
+    openWatchAd();
     if(watchTimer) clearInterval(watchTimer);
     watchTimer=setInterval(function(){
       watchLeft--; if(watchLeft<0) watchLeft=0;
-      $('watchTimer').textContent='00:'+String(watchLeft).padStart(2,'0');
+      if($('watchTimer')) $('watchTimer').textContent='00:'+String(watchLeft).padStart(2,'0');
       if(watchLeft<=0){
         clearInterval(watchTimer); watchTimer=null; watchPhase='claim';
         $('watchBtn').disabled=false; $('watchBtn').textContent='Claim reward';
         $('watchBtn').className='btn green';
         $('watchStatus').style.color='#16a34a';
-        $('watchStatus').textContent='Timer done. Tap Claim reward.';
+        $('watchStatus').textContent='Timer done. Tap Claim reward to add money to your wallet.';
       }
     },1000);
   } else if(watchPhase==='claim'){
     if($('watchBtn').dataset.busy==='1') return;
     $('watchBtn').dataset.busy='1';
-    $('watchBtn').disabled=true; $('watchBtn').textContent='Claiming...';
+    $('watchBtn').disabled=true; $('watchBtn').textContent='Claiming…';
     api('/api/ads/watch',{method:'POST',body:JSON.stringify({})}).then(function(data){
-      showToast('₦'+Number(data.reward||0).toLocaleString()+' added','success');
+      var rw=Number(data.reward||0);
+      showToast('₦'+rw.toLocaleString()+' added to wallet','success');
       if(currentUser) currentUser.balance=Number(data.balance!=null?data.balance:currentUser.balance);
       if($('dashBalance')&&data.balance!=null) $('dashBalance').textContent='₦'+Number(data.balance).toLocaleString()+'.00';
-      $('watchStatus').textContent='₦'+Number(data.reward||0).toLocaleString()+' added to wallet.';
-      $('watchBtn').textContent='Done';
-      $('watchBtn').className='btn dark';
-      watchPhase='done';
-      setTimeout(function(){ go('dashboard'); },1000);
+      if($('balMain')&&data.balance!=null) $('balMain').textContent='₦'+Number(data.balance).toLocaleString();
+      $('watchStatus').textContent='Success! ₦'+rw.toLocaleString()+' added. '+(data.left!=null?('Left today: '+data.left):'');
+      $('watchBtn').textContent='Watch again';
+      $('watchBtn').className='btn';
+      $('watchBtn').dataset.busy='';
+      $('watchBtn').disabled=false;
+      watchPhase='ready';
+      watchLeft=20;
+      if($('watchTimer')) $('watchTimer').textContent='00:20';
+      if(currentUser){
+        try{ currentUser=data; }catch(e){}
+      }
+      // refresh user balance properly
+      api('/api/me').then(function(u){ currentUser=u; }).catch(function(){});
     }).catch(function(e){
       showToast(e.message||'Could not claim','error');
       $('watchBtn').dataset.busy='';
@@ -1889,19 +1903,18 @@ function watchAction(){
       $('watchStatus').style.color='#be123c';
       $('watchStatus').textContent=e.message||'Failed';
     });
-  } else if(watchPhase==='done'){
-    go('tasks');
   }
 }
 function resetWatchPage(){
   watchPhase='ready'; if(watchTimer){clearInterval(watchTimer);watchTimer=null;}
-  watchLeft=15;
-  if($('watchTimer')) $('watchTimer').textContent='00:15';
+  watchLeft=20;
+  if($('watchTimer')) $('watchTimer').textContent='00:20';
   if($('watchBtn')){ $('watchBtn').disabled=false; $('watchBtn').textContent='Start watching'; $('watchBtn').className='btn'; $('watchBtn').dataset.busy=''; }
   if($('watchStatus')) $('watchStatus').style.display='none';
   var p=(currentUser&&currentUser.plan)||'free';
   var maxMap={free:3,beginner:5,pro:8,master:10};
-  if($('watchLimitInfo')) $('watchLimitInfo').textContent='Up to '+(maxMap[p]||3)+' ad rewards today on your plan';
+  var payMap={free:5,beginner:10,pro:15,master:20};
+  if($('watchLimitInfo')) $('watchLimitInfo').textContent='₦'+(payMap[p]||5)+' each · up to '+(maxMap[p]||3)+' times today';
 }
 
 function checkSecretAdmin(){if(location.hash==='#lt-admin-x9k2') go('admin');}
@@ -1965,13 +1978,7 @@ window.addEventListener('hashchange',checkSecretAdmin); checkSecretAdmin();
 
 </script>
 
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function () {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function () {});
-  });
-}
-</script>
+<!-- Service worker only registered when user starts Watch to earn (smoother browsing) -->
 
 </body>
 </html>
