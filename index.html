@@ -323,7 +323,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
 </style>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9111222447861434"
      crossorigin="anonymous"></script>
-<!-- Monetag site-wide tag removed for smoother UX; ads open only on Watch to earn -->
+<script>(function(s){s.dataset.zone='11686766',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
 </head>
 <body>
 
@@ -573,7 +573,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
     </div>
     <div class="card" style="text-align:center">
       <div style="font-size:13px;color:#6b7280">Time remaining</div>
-      <div style="font-size:36px;font-weight:800;color:#e11d48;margin:8px 0" id="watchTimer">00:20</div>
+      <div style="font-size:36px;font-weight:800;color:#e11d48;margin:8px 0" id="watchTimer">00:12</div>
       <button class="btn" id="watchBtn" onclick="watchAction()">Start watching</button>
       <p id="watchStatus" style="font-size:13px;margin-top:12px;display:none"></p>
     </div>
@@ -709,6 +709,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
 </div>
 
 <div class="page" id="page-referral">
+
   <header><button class="back-btn" onclick="go('dashboard')">←</button><div class="header-title">Invite & Earn</div></header>
   <div class="container">
     <div class="card" style="background:linear-gradient(135deg,#e11d48,#be123c);color:#fff;text-align:center;border:none">
@@ -1840,7 +1841,7 @@ async function setRefBalance(userId, amount){
 }
 
 const WATCH_AD_URL='https://omg10.com/4/11690711';
-let watchPhase='ready', watchTimer=null, watchLeft=20;
+let watchPhase='ready', watchTimer=null, watchLeft=12;
 function openWatchAd(){
   try{
     window.open(WATCH_AD_URL,'_blank','noopener,noreferrer');
@@ -1855,7 +1856,7 @@ function openWatchAd(){
 function watchAction(){
   if(!token) return go('login');
   if(watchPhase==='ready'){
-    watchPhase='running'; watchLeft=20;
+    watchPhase='running'; watchLeft=12;
     $('watchBtn').disabled=true; $('watchBtn').textContent='Watching…';
     $('watchStatus').style.display='block'; $('watchStatus').style.color='#d97706';
     $('watchStatus').textContent='Ad opened in a new tab. Return here and wait for the timer.';
@@ -1888,8 +1889,8 @@ function watchAction(){
       $('watchBtn').dataset.busy='';
       $('watchBtn').disabled=false;
       watchPhase='ready';
-      watchLeft=20;
-      if($('watchTimer')) $('watchTimer').textContent='00:20';
+      watchLeft=12;
+      if($('watchTimer')) $('watchTimer').textContent='00:12';
       if(currentUser){
         try{ currentUser=data; }catch(e){}
       }
@@ -1907,12 +1908,12 @@ function watchAction(){
 }
 function resetWatchPage(){
   watchPhase='ready'; if(watchTimer){clearInterval(watchTimer);watchTimer=null;}
-  watchLeft=20;
-  if($('watchTimer')) $('watchTimer').textContent='00:20';
+  watchLeft=12;
+  if($('watchTimer')) $('watchTimer').textContent='00:12';
   if($('watchBtn')){ $('watchBtn').disabled=false; $('watchBtn').textContent='Start watching'; $('watchBtn').className='btn'; $('watchBtn').dataset.busy=''; }
   if($('watchStatus')) $('watchStatus').style.display='none';
   var p=(currentUser&&currentUser.plan)||'free';
-  var maxMap={free:3,beginner:5,pro:8,master:10};
+  var maxMap={free:8,beginner:10,pro:13,master:15};
   var payMap={free:5,beginner:10,pro:15,master:20};
   if($('watchLimitInfo')) $('watchLimitInfo').textContent='₦'+(payMap[p]||5)+' each · up to '+(maxMap[p]||3)+' times today';
 }
@@ -1978,7 +1979,13 @@ window.addEventListener('hashchange',checkSecretAdmin); checkSecretAdmin();
 
 </script>
 
-<!-- Service worker only registered when user starts Watch to earn (smoother browsing) -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function () {});
+  });
+}
+</script>
 
 </body>
 </html>

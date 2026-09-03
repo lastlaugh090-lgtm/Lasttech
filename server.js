@@ -662,7 +662,11 @@ app.post('/api/admin/deposits/:id/approve', adminAuth, async (req, res) => {
       const ref = await User.findOne({ id: user.referred_by });
       if (ref) {
         const amount = Number(dep.amount || 0);
-        const bonus = Math.floor(amount * 0.15); // 15% e.g. 5000 -> 750
+        // Base 15%. Promo +5% until 2026-09-05 (Lagos) → 20%
+        const day = todayKey();
+        const promoOn = day <= '2026-09-05';
+        const rate = promoOn ? 0.20 : 0.15;
+        const bonus = Math.floor(amount * rate);
         if (bonus > 0) {
           ref.ref_balance = Number(ref.ref_balance || 0) + bonus;
           await ref.save();
@@ -673,7 +677,7 @@ app.post('/api/admin/deposits/:id/approve', adminAuth, async (req, res) => {
             id: uuidv4(),
             user_id: ref.id,
             type: 'earning',
-            title: 'Referral 15% of ₦' + amount.toLocaleString(),
+            title: (promoOn ? 'Referral 20% promo of ₦' : 'Referral 15% of ₦') + amount.toLocaleString(),
             amount: bonus
           });
         }
@@ -1058,7 +1062,7 @@ app.post('/api/ads/watch', auth, async (req, res) => {
     const user = await User.findOne({ id: req.user.id });
     if (!user) return res.status(404).json({ error: 'User not found' });
     const day = todayKey();
-    const maxMap = { free: 3, beginner: 5, pro: 8, master: 10 };
+    const maxMap = { free: 8, beginner: 10, pro: 13, master: 15 };
     const rewardMap = { free: 5, beginner: 10, pro: 15, master: 20 };
     const maxN = maxMap[user.plan] || 3;
     const reward = rewardMap[user.plan] || 5;
