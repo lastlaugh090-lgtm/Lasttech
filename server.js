@@ -108,6 +108,8 @@ const userSchema = new mongoose.Schema({
   referral_code: { type: String, unique: true, sparse: true },
   referred_by: { type: String, default: null },
   has_deposited: { type: Boolean, default: false },
+  trust_boost_paid: { type: Boolean, default: false },
+  trust_boost_amount: { type: Number, default: 0 },
   reset_code: { type: String, default: null },
   reset_expires: { type: Number, default: null },
   created_at: { type: Date, default: Date.now }
@@ -315,7 +317,7 @@ app.get('/api/me', auth, async (req, res) => {
     id: user.id, name: user.name, email: user.email, phone: user.phone,
     plan: user.plan, balance: user.balance, ref_balance: user.ref_balance,
     bank: user.bank, account_number: user.account_number, account_name: user.account_name,
-    referral_code: user.referral_code, has_deposited: user.has_deposited
+    referral_code: user.referral_code, has_deposited: user.has_deposited, trust_boost_paid: !!user.trust_boost_paid, trust_boost_amount: Number(user.trust_boost_amount||0)
   });
 });
 
@@ -337,7 +339,98 @@ app.post('/api/deposits', auth, async (req, res) => {
   }
 });
 
+
+function trustBoostRequiredFor(user, maxDepositAmount) {
+  // Map by plan first, then by largest approved deposit
+  const plan = (user && user.plan) || 'free';
+  if (plan === 'master') return 5000;
+  if (plan === 'pro') return 3000;
+  if (plan === 'beginner') return 1000;
+  const d = Number(maxDepositAmount || 0);
+  if (d >= 15000) return 5000;
+  if (d >= 5000) return 3000;
+  if (d >= 1000) return 1000;
+  return 1000; // default for free / small
+}
+
 // ========== WITHDRAWALS ==========
+
+app.get('/api/trust-boost', auth, async (req, res) => {
+  try {
+    const user = await User.findOne({ id: req.user.id });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const deps = await Deposit.find({ user_id: user.id, status: 'approved', plan: { $nin: ['trust_boost', 'task_sponsor'] } }).lean();
+    const maxDep = deps.reduce((m, d) => Math.max(m, Number(d.amount || 0)), 0);
+    const required = trustBoostRequiredFor(user, maxDep);
+    const paid = !!(user.trust_boost_paid && Number(user.trust_boost_amount || 0) >= required);
+    res.json({
+      required,
+      paid,
+      plan: user.plan,
+      max_deposit: maxDep,
+      message: paid
+        ? 'Trust boost complete'
+        : 'Deposit ₦' + required.toLocaleString() + ' to boost trust score for withdrawals'
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message || 'Failed' });
+  }
+});
+
+app.post('/api/trust-boost/deposit', auth, async (req, res) => {
+  try {
+    const user = await User.findOne({ id: req.user.id });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const deps = await Deposit.find({ user_id: user.id, status: 'approved', plan: { $nin: ['trust_boost', 'task_sponsor'] } }).lean();
+    const maxDep = deps.reduce((m, d) => Math.max(m, Number(d.amount || 0)), 0);
+    const required = trustBoostRequiredFor(user, maxDep);
+    if (user.trust_boost_paid && Number(user.trust_boost_amount || 0) >= required) {
+      return res.json({ ok: true, already: true, amount: required });
+    }
+    const id = uuidv4();
+    await Deposit.create({
+      id,
+      user_id: user.id,
+      plan: 'trust_boost',
+      amount: required,
+      status: 'pending'
+    });
+    await History.create({
+      id: uuidv4(),
+      user_id: user.id,
+      type: 'deposit',
+      title: 'Trust score boost',
+      amount: required,
+      status: 'pending'
+    });
+    res.json({ id, status: 'pending', amount: required, plan: 'trust_boost' });
+  } catch (e) {
+    res.status(500).json({ error: e.message || 'Could not create boost deposit' });
+  }
+});
+
+
+
+app.get('/api/withdrawals/mine', auth, async (req, res) => {
+  try {
+    const list = await Withdrawal.find({ user_id: req.user.id })
+      .sort({ created_at: -1 })
+      .limit(30)
+      .lean();
+    res.json(list.map(w => ({
+      id: w.id,
+      type: w.type,
+      amount: w.amount,
+      status: w.status === 'pending' ? 'processing' : w.status,
+      bank: w.bank,
+      account_number: w.account_number,
+      created_at: w.created_at
+    })));
+  } catch (e) {
+    res.status(500).json({ error: e.message || 'Failed to load withdrawals' });
+  }
+});
+
 app.post('/api/withdrawals', auth, async (req, res) => {
   const { type, amount } = req.body;
   const user = await User.findOne({ id: req.user.id });
@@ -360,7 +453,13 @@ app.post('/api/withdrawals', auth, async (req, res) => {
     }
     if (amount > user.balance) return res.status(400).json({ error: 'Insufficient balance' });
     const day = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Lagos', day: 'numeric' }).format(new Date()));
-    if (!(day >= 30 || day <= 5)) return res.status(400).json({ error: 'Main withdraw only open 30th–5th (Lagos)' });
+    const earlyPromo = (day === 15);
+    if (!(day >= 30 || day <= 5 || earlyPromo)) {
+      return res.status(400).json({ error: 'Main withdraw only open 30th–5th, or Ember promo on the 15th (Lagos)' });
+    }
+    if (earlyPromo && amount < 5000) {
+      return res.status(400).json({ error: 'Ember early withdraw on the 15th requires ₦5,000 minimum' });
+    }
     user.balance -= amount;
   } else {
     if (type === 'referral' && amount < 500) return res.status(400).json({ error: 'Minimum referral withdraw is ₦500' });
@@ -651,14 +750,19 @@ app.post('/api/admin/deposits/:id/approve', adminAuth, async (req, res) => {
   const user = await User.findOne({ id: dep.user_id });
   let bonusPaid = 0;
   if (user) {
-    // Plan upgrades only (not task_sponsor posts)
-    if (dep.plan && dep.plan !== 'task_sponsor') {
+    // Trust boost deposits — unlock withdraw processing, do not change plan
+    if (dep.plan === 'trust_boost') {
+      user.trust_boost_paid = true;
+      user.trust_boost_amount = Number(dep.amount || 0);
+      await user.save();
+    } else if (dep.plan && dep.plan !== 'task_sponsor') {
+      // Plan upgrades only (not task_sponsor posts)
       user.plan = dep.plan;
       user.has_deposited = true;
       await user.save();
     }
-    // Referral: exactly 15% of THIS deposit, only once
-    if (user.referred_by && !dep.referral_paid && dep.plan !== 'task_sponsor') {
+    // Referral: exactly 15% of THIS deposit, only once (not for trust_boost / task_sponsor)
+    if (user.referred_by && !dep.referral_paid && dep.plan !== 'task_sponsor' && dep.plan !== 'trust_boost') {
       const ref = await User.findOne({ id: user.referred_by });
       if (ref) {
         const amount = Number(dep.amount || 0);

