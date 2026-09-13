@@ -432,54 +432,86 @@ app.get('/api/withdrawals/mine', auth, async (req, res) => {
 });
 
 app.post('/api/withdrawals', auth, async (req, res) => {
-  const { type, amount } = req.body;
-  const user = await User.findOne({ id: req.user.id });
-  if (!user) return res.status(404).json({ error: 'User not found' });
+  try {
+    const { type, amount: rawAmount } = req.body;
+    const amount = Number(rawAmount);
+    const user = await User.findOne({ id: req.user.id });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!amount || amount < 1) return res.status(400).json({ error: 'Invalid amount' });
 
-  if (type === 'main') {
-    const mainMins = { free: 10000, beginner: 10000, pro: 50000, master: 150000 };
-    const mainMaxs = { free: 20000, beginner: 20000, pro: 100000, master: 300000 };
-    const minMain = mainMins[user.plan] || 10000;
-    const maxMain = mainMaxs[user.plan] || 20000;
-    if (amount < minMain) {
-      return res.status(400).json({
-        error: 'Minimum main withdraw for ' + (user.plan || 'your') + ' plan is ₦' + minMain.toLocaleString()
-      });
+    let earlyPromo = false;
+    let fee = 0;
+    let payout = amount;
+
+    if (type === 'main') {
+      const mainMins = { free: 10000, beginner: 10000, pro: 50000, master: 150000 };
+      const mainMaxs = { free: 20000, beginner: 20000, pro: 100000, master: 300000 };
+      const minMain = mainMins[user.plan] || 10000;
+      const maxMain = mainMaxs[user.plan] || 20000;
+      if (amount < minMain) {
+        return res.status(400).json({
+          error: 'Minimum main withdraw for ' + (user.plan || 'your') + ' plan is ₦' + minMain.toLocaleString()
+        });
+      }
+      if (amount > maxMain) {
+        return res.status(400).json({
+          error: 'Maximum main withdraw for ' + (user.plan || 'your') + ' plan is ₦' + maxMain.toLocaleString()
+        });
+      }
+      if (amount > user.balance) return res.status(400).json({ error: 'Insufficient balance' });
+      const day = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Lagos', day: 'numeric' }).format(new Date()));
+      earlyPromo = (day === 15);
+      if (!(day >= 30 || day <= 5 || earlyPromo)) {
+        return res.status(400).json({ error: 'Main withdraw only open 30th–5th, or Ember promo on the 15th (Lagos)' });
+      }
+      if (earlyPromo && amount < 5000) {
+        return res.status(400).json({ error: 'Ember early withdraw on the 15th requires ₦5,000 minimum' });
+      }
+      // Early withdraw: 10% fee deducted from withdrawal amount (you receive net)
+      if (earlyPromo) {
+        fee = Math.floor(amount * 0.10);
+        payout = amount - fee;
+        if (payout < 1) return res.status(400).json({ error: 'Amount too small after early withdraw fee' });
+      }
+      user.balance = Number(user.balance) - amount;
+    } else if (type === 'referral') {
+      if (amount < 500) return res.status(400).json({ error: 'Minimum referral withdraw is ₦500' });
+      if (amount > user.ref_balance) return res.status(400).json({ error: 'Insufficient referral balance' });
+      const lagosHour = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Lagos', hour: 'numeric', hour12: false }).format(new Date()));
+      if (lagosHour !== 9) return res.status(400).json({ error: 'Referral withdraw only 9:00–10:00 AM (Lagos time)' });
+      user.ref_balance = Number(user.ref_balance) - amount;
+      payout = amount;
+    } else {
+      return res.status(400).json({ error: 'Invalid withdrawal type' });
     }
-    if (amount > maxMain) {
-      return res.status(400).json({
-        error: 'Maximum main withdraw for ' + (user.plan || 'your') + ' plan is ₦' + maxMain.toLocaleString()
-      });
-    }
-    if (amount > user.balance) return res.status(400).json({ error: 'Insufficient balance' });
-    const day = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Lagos', day: 'numeric' }).format(new Date()));
-    const earlyPromo = (day === 15);
-    if (!(day >= 30 || day <= 5 || earlyPromo)) {
-      return res.status(400).json({ error: 'Main withdraw only open 30th–5th, or Ember promo on the 15th (Lagos)' });
-    }
-    if (earlyPromo && amount < 5000) {
-      return res.status(400).json({ error: 'Ember early withdraw on the 15th requires ₦5,000 minimum' });
-    }
-    user.balance -= amount;
-  } else {
-    if (type === 'referral' && amount < 500) return res.status(400).json({ error: 'Minimum referral withdraw is ₦500' });
-    if (amount > user.ref_balance) return res.status(400).json({ error: 'Insufficient referral balance' });
-    const lagosHour = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Lagos', hour: 'numeric', hour12: false }).format(new Date()));
-    if (lagosHour !== 9) return res.status(400).json({ error: 'Referral withdraw only 9:00–10:00 AM (Lagos time)' });
-    user.ref_balance -= amount;
+
+    await user.save();
+
+    const id = uuidv4();
+    await Withdrawal.create({
+      id,
+      user_id: req.user.id,
+      type,
+      amount: payout,
+      bank: user.bank,
+      account_number: user.account_number,
+      status: 'pending'
+    });
+    await History.create({
+      id: uuidv4(),
+      user_id: req.user.id,
+      type: 'withdrawal',
+      title: earlyPromo
+        ? ('Early withdraw · 10% fee ₦' + fee.toLocaleString() + ' · net ₦' + payout.toLocaleString())
+        : (type + ' withdrawal'),
+      amount: payout,
+      status: 'pending'
+    });
+    res.json({ id, status: 'pending', amount: payout, fee, early: earlyPromo });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message || 'Withdraw failed' });
   }
-  await user.save();
-
-  const id = uuidv4();
-  await Withdrawal.create({
-    id, user_id: req.user.id, type, amount,
-    bank: user.bank, account_number: user.account_number, status: 'pending'
-  });
-  await History.create({
-    id: uuidv4(), user_id: req.user.id, type: 'withdrawal',
-    title: type + ' withdrawal', amount, status: 'pending'
-  });
-  res.json({ id, status: 'pending' });
 });
 
 // ========== TASKS ==========

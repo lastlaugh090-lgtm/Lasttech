@@ -335,6 +335,20 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
 <body>
 
 
+
+<div id="earlyWdModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(15,23,42,.55);align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:18px;padding:22px 20px;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.25)">
+    <div style="width:52px;height:52px;margin:0 auto 12px;border-radius:50%;background:rgba(225,29,72,.12);display:flex;align-items:center;justify-content:center;font-size:24px">📅</div>
+    <div style="font-weight:800;font-size:17px;margin-bottom:8px">Ember early withdraw</div>
+    <p style="font-size:13px;color:#6b7280;line-height:1.55;margin-bottom:12px;text-align:left">
+      Early withdraw is open on the <b>15th</b> for balances from <b>₦5,000</b>.<br><br>
+      <b>Early withdraw fee:</b> <span style="color:#e11d48">10%</span> is deducted from your withdrawal amount. You receive the remaining <b>90%</b>.
+    </p>
+    <button class="btn" type="button" onclick="closeEarlyWdModal()">Got it</button>
+    <button class="btn dark" type="button" style="margin-top:8px;background:#e5e7eb;color:#374151;box-shadow:none" onclick="closeEarlyWdModal();go('withdraw')">Go to withdraw</button>
+  </div>
+</div>
+
 <div id="wdProcessModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.55);align-items:center;justify-content:center;padding:20px">
   <div style="background:#fff;border-radius:18px;padding:22px 20px;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.25)">
     <div style="width:52px;height:52px;margin:0 auto 12px;border-radius:50%;background:rgba(225,29,72,.12);display:flex;align-items:center;justify-content:center;font-size:24px">🛡️</div>
@@ -711,7 +725,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
       <div class="form-group"><label>Amount (₦)</label><input type="number" id="mainAmount" placeholder="Min depends on plan"/></div>
       <p id="mainMinHint" style="font-size:12px;color:#e11d48;font-weight:600;margin-bottom:10px">Minimum depends on your plan</p>
       <button class="btn" id="mainBtn" onclick="doMainWithdraw()" disabled>Request Withdrawal</button>
-      <p style="font-size:12px;color:#9ca3af;margin-top:8px;text-align:center">Only open 30th – 5th of every month<br>Beginner ₦10k–20k · Pro ₦50k–100k · Master ₦150k–300k</p>
+      <p style="font-size:12px;color:#9ca3af;margin-top:8px;text-align:center">Open 30th–5th · Ember early withdraw on the <b>15th</b> (₦5,000+)<br>Early withdraw fee: <b>10%</b> deducted from amount<br>Beginner ₦10k–20k · Pro ₦50k–100k · Master ₦150k–300k</p>
     </div>
     <div class="card">
       <h3 style="font-size:15px;font-weight:700;margin-bottom:10px">Your withdrawals</h3>
@@ -1244,7 +1258,7 @@ async function doLogin(){
   $('loginError').style.display='none'; $('loginBtn').disabled=true;
   try{
     const data=await api('/api/login',{method:'POST',body:JSON.stringify({email:$('loginEmail').value.trim(),password:$('loginPass').value})});
-    token=data.token; localStorage.setItem('lt_token',token); currentUser=data.user; go('dashboard');
+    token=data.token; localStorage.setItem('lt_token',token); currentUser=data.user; go('dashboard'); showEarlyWdNotice();
   }catch(e){$('loginError').textContent=e.message;$('loginError').style.display='block';}
   $('loginBtn').disabled=false;
 }
@@ -1280,6 +1294,8 @@ async function doRegister(){
 }
 
 async function loadDashboard(){
+  try{ showEarlyWdNotice(); }catch(e){}
+
   if(!token) return go('login');
   try{
     currentUser=await api('/api/me');
@@ -1605,7 +1621,7 @@ function loadWithdraw(){
   var refOpen = (hour===9);
   if($('mainStatus')){
     $('mainStatus').className='status-box '+(mainOpen?'open':'closed');
-    if(earlyPromo) $('mainStatus').textContent='✓ EMBER PROMO OPEN (15th · ₦5,000+)';
+    if(earlyPromo) $('mainStatus').textContent='✓ EMBER EARLY OPEN (15th · ₦5k+ · 10% fee)';
     else if(day>=30||day<=5) $('mainStatus').textContent='✓ OPEN (30th–5th)';
     else $('mainStatus').textContent='✗ Closed. Opens 30th–5th · Ember promo on 15th';
   }
@@ -1640,6 +1656,26 @@ function trustBoostAmountForLocal(user){
   if(plan==='beginner') return 1000;
   return 1000;
 }
+
+function isEmberEarlyWindow(){
+  try{
+    var day = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Lagos', day: 'numeric' }).format(new Date()));
+    return day === 15;
+  }catch(e){ return false; }
+}
+function showEarlyWdNotice(force){
+  var m = $('earlyWdModal');
+  if(!m) return;
+  // Show every login session once (sessionStorage), or force
+  if(!force && sessionStorage.getItem('lt_early_wd_seen') === '1') return;
+  sessionStorage.setItem('lt_early_wd_seen', '1');
+  m.style.display = 'flex';
+}
+function closeEarlyWdModal(){
+  var m = $('earlyWdModal');
+  if(m) m.style.display = 'none';
+}
+
 function scheduleWdProcessPopup(amount, type){
   try{ clearTimeout(window._wdPopupTimer); }catch(e){}
   window._pendingWdPopup={ amount: amount, type: type };
