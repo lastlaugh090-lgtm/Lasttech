@@ -1956,22 +1956,45 @@ function adminTab(name,el){
 }
 async function loadAdmin(){try{const s=await api('/api/admin/stats',{admin:true});$('aUsers').textContent=s.users;$('aDeps').textContent=s.pendingDeps;$('aWds').textContent=s.pendingWds;}catch(e){}}
 async function renderAdminDeps(){
-  try{const list=await api('/api/admin/deposits',{admin:true}); const el=$('admin-deposits');
+  try{
+    const list=await api('/api/admin/deposits',{admin:true});
+    const el=$('admin-deposits');
     if(!list.length){el.innerHTML='<div class="empty">No pending</div>';return;}
-    el.innerHTML=list.map(d=>{
-      var proof = d.has_proof && d.proof_image
-        ? '<div style="margin-top:8px"><div class="admin-row"><span class="l">Screenshot</span><span>Attached</span></div><img src="'+d.proof_image+'" alt="proof" style="max-width:100%;border-radius:10px;margin-top:6px;border:1px solid #eee" onclick="window.open(this.src)"/></div>'
-        : '<div class="admin-row"><span class="l">Screenshot</span><span style="color:#b45309">None</span></div>';
-      return '<div class="admin-card"><div class="admin-row"><span class="l">User</span><span>'+(d.user_name||'')+'</span></div>'
+    el.innerHTML=list.map(function(d){
+      var proofBtn = d.has_proof
+        ? '<button class="btn sm" style="margin-top:8px;width:100%" onclick="viewDepProof(\''+d.id+'\')">📷 View screenshot</button><div id="proof-'+d.id+'" style="display:none;margin-top:8px"></div>'
+        : '<div class="admin-row" style="margin-top:6px"><span class="l">Screenshot</span><span style="color:#b45309">None uploaded</span></div>';
+      return '<div class="admin-card">'
+        +'<div class="admin-row"><span class="l">User</span><span>'+(d.user_name||'')+'</span></div>'
         +'<div class="admin-row"><span class="l">Email</span><span>'+(d.email||'')+'</span></div>'
-        +'<div class="admin-row"><span class="l">Plan</span><span>'+d.plan+'</span></div>'
-        +'<div class="admin-row"><span class="l">Amount</span><span>₦'+Number(d.amount).toLocaleString()+'</span></div>'
-        +proof
-        +'<div style="display:flex;gap:8px;margin-top:10px"><button class="btn sm green" style="flex:1" onclick="approveDep(\''+d.id+'\')">Approve</button>'
-        +'<button class="btn sm" style="flex:1" onclick="rejectDep(\''+d.id+'\')">Reject</button></div></div>';
+        +'<div class="admin-row"><span class="l">Plan</span><span>'+(d.plan||'')+'</span></div>'
+        +'<div class="admin-row"><span class="l">Amount</span><span>₦'+Number(d.amount||0).toLocaleString()+'</span></div>'
+        +proofBtn
+        +'<div style="display:flex;gap:8px;margin-top:10px">'
+        +'<button class="btn sm green" style="flex:1" onclick="approveDep(\''+d.id+'\')">Approve</button>'
+        +'<button class="btn sm" style="flex:1" onclick="rejectDep(\''+d.id+'\')">Reject</button>'
+        +'</div></div>';
     }).join('');
-  }catch(e){$('admin-deposits').innerHTML='<div class="empty">'+e.message+'</div>';}
+  }catch(e){
+    $('admin-deposits').innerHTML='<div class="empty">'+(e.message||'Failed')+'</div>';
+  }
 }
+async function viewDepProof(id){
+  var box=$('proof-'+id);
+  if(!box) return;
+  if(box.style.display==='block' && box.innerHTML){ box.style.display='none'; return; }
+  box.style.display='block';
+  box.innerHTML='<p style="font-size:12px;color:#6b7280">Loading screenshot…</p>';
+  try{
+    var data=await api('/api/admin/deposits/'+id+'/proof',{admin:true});
+    if(!data.proof_image){ box.innerHTML='<p style="color:#b45309">No image</p>'; return; }
+    box.innerHTML='<img src="'+data.proof_image+'" alt="Payment proof" style="max-width:100%;border-radius:12px;border:1px solid #eee;display:block"/>'
+      +'<a href="'+data.proof_image+'" download="deposit-'+id+'.jpg" style="display:inline-block;margin-top:8px;font-size:12px;color:#e11d48;font-weight:600">Download</a>';
+  }catch(e){
+    box.innerHTML='<p style="color:#be123c">'+(e.message||'Could not load screenshot')+'</p>';
+  }
+}
+
 async function approveDep(id){try{await api('/api/admin/deposits/'+id+'/approve',{method:'POST',admin:true});alert('Approved');loadAdmin();renderAdminDeps();}catch(e){showToast(e.message||'Failed','error');}}
 async function rejectDep(id){try{await api('/api/admin/deposits/'+id+'/reject',{method:'POST',admin:true});alert('Rejected');loadAdmin();renderAdminDeps();}catch(e){showToast(e.message||'Failed','error');}}
 async function renderAdminWds(){

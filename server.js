@@ -61,7 +61,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 const MONGODB_URI = process.env.MONGODB_URI || '';
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
 
 // Google AdSense ads.txt
 app.get('/ads.txt', (req, res) => {
@@ -838,25 +838,39 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
 });
 
 app.get('/api/admin/deposits', adminAuth, async (req, res) => {
-  const list = await Deposit.find({ status: 'pending' }).sort({ created_at: -1 });
-  const out = [];
-  for (const d of list) {
-    const u = await User.findOne({ id: d.user_id });
-    const obj = d.toObject ? d.toObject() : d;
-    out.push({
-      id: obj.id,
-      user_id: obj.user_id,
-      user_name: u?.name,
-      email: u?.email,
-      plan: obj.plan,
-      amount: obj.amount,
-      status: obj.status,
-      has_proof: !!(obj.proof_image && obj.proof_image.length > 30),
-      proof_image: obj.proof_image || '',
-      created_at: obj.created_at
-    });
+  try {
+    const list = await Deposit.find({ status: 'pending' }).sort({ created_at: -1 });
+    const out = [];
+    for (const d of list) {
+      const u = await User.findOne({ id: d.user_id });
+      const obj = d.toObject ? d.toObject() : d;
+      out.push({
+        id: obj.id,
+        user_id: obj.user_id,
+        user_name: u?.name,
+        email: u?.email,
+        plan: obj.plan,
+        amount: obj.amount,
+        status: obj.status,
+        has_proof: !!(obj.proof_image && String(obj.proof_image).length > 30),
+        created_at: obj.created_at
+      });
+    }
+    res.json(out);
+  } catch (e) {
+    res.status(500).json({ error: e.message || 'Failed' });
   }
-  res.json(out);
+});
+
+app.get('/api/admin/deposits/:id/proof', adminAuth, async (req, res) => {
+  try {
+    const d = await Deposit.findOne({ id: req.params.id }).lean();
+    if (!d) return res.status(404).json({ error: 'Not found' });
+    if (!d.proof_image) return res.status(404).json({ error: 'No screenshot for this deposit' });
+    res.json({ id: d.id, proof_image: d.proof_image });
+  } catch (e) {
+    res.status(500).json({ error: e.message || 'Failed' });
+  }
 });
 
 app.post('/api/admin/deposits/:id/approve', adminAuth, async (req, res) => {
