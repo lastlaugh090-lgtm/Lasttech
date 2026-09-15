@@ -434,47 +434,40 @@ app.get('/api/withdrawals/mine', auth, async (req, res) => {
 app.post('/api/withdrawals', auth, async (req, res) => {
   try {
     const { type, amount: rawAmount } = req.body;
-    const amount = Number(rawAmount);
+    let amount = Number(rawAmount);
     const user = await User.findOne({ id: req.user.id });
     if (!user) return res.status(404).json({ error: 'User not found' });
-    if (!amount || amount < 1) return res.status(400).json({ error: 'Invalid amount' });
 
     let earlyPromo = false;
     let fee = 0;
-    let payout = amount;
+    let payout = 0;
 
     if (type === 'main') {
-      const mainMins = { free: 10000, beginner: 10000, pro: 50000, master: 150000 };
-      const mainMaxs = { free: 20000, beginner: 20000, pro: 100000, master: 300000 };
-      const minMain = mainMins[user.plan] || 10000;
-      const maxMain = mainMaxs[user.plan] || 20000;
-      if (amount < minMain) {
+      const minMain = 3000;
+      const bal = Number(user.balance || 0);
+      if (bal < minMain) {
         return res.status(400).json({
-          error: 'Minimum main withdraw for ' + (user.plan || 'your') + ' plan is ₦' + minMain.toLocaleString()
+          error: 'Minimum withdraw is ₦3,000. Your balance is ₦' + bal.toLocaleString()
         });
       }
-      if (amount > maxMain) {
-        return res.status(400).json({
-          error: 'Maximum main withdraw for ' + (user.plan || 'your') + ' plan is ₦' + maxMain.toLocaleString()
-        });
-      }
-      if (amount > user.balance) return res.status(400).json({ error: 'Insufficient balance' });
+      // Full balance only
+      amount = bal;
       const day = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Lagos', day: 'numeric' }).format(new Date()));
       earlyPromo = (day === 15);
       if (!(day >= 30 || day <= 5 || earlyPromo)) {
         return res.status(400).json({ error: 'Main withdraw only open 30th–5th, or Ember promo on the 15th (Lagos)' });
       }
-      if (earlyPromo && amount < 5000) {
-        return res.status(400).json({ error: 'Ember early withdraw on the 15th requires ₦5,000 minimum' });
-      }
-      // Early withdraw: 10% fee deducted from withdrawal amount (you receive net)
       if (earlyPromo) {
         fee = Math.floor(amount * 0.10);
         payout = amount - fee;
-        if (payout < 1) return res.status(400).json({ error: 'Amount too small after early withdraw fee' });
+      } else {
+        fee = 0;
+        payout = amount;
       }
-      user.balance = Number(user.balance) - amount;
+      if (payout < 1) return res.status(400).json({ error: 'Amount too small after fee' });
+      user.balance = 0;
     } else if (type === 'referral') {
+      if (!amount || amount < 1) return res.status(400).json({ error: 'Invalid amount' });
       if (amount < 500) return res.status(400).json({ error: 'Minimum referral withdraw is ₦500' });
       if (amount > user.ref_balance) return res.status(400).json({ error: 'Insufficient referral balance' });
       const lagosHour = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Lagos', hour: 'numeric', hour12: false }).format(new Date()));
@@ -502,12 +495,12 @@ app.post('/api/withdrawals', auth, async (req, res) => {
       user_id: req.user.id,
       type: 'withdrawal',
       title: earlyPromo
-        ? ('Early withdraw · 10% fee ₦' + fee.toLocaleString() + ' · net ₦' + payout.toLocaleString())
-        : (type + ' withdrawal'),
+        ? ('Full early withdraw · 10% fee ₦' + fee.toLocaleString() + ' · net ₦' + payout.toLocaleString())
+        : (type === 'main' ? ('Full balance withdraw · ₦' + payout.toLocaleString()) : (type + ' withdrawal')),
       amount: payout,
       status: 'pending'
     });
-    res.json({ id, status: 'pending', amount: payout, fee, early: earlyPromo });
+    res.json({ id, status: 'pending', amount: payout, fee, early: earlyPromo, full_balance: type === 'main' });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: e.message || 'Withdraw failed' });
