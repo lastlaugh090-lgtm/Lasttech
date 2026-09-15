@@ -1740,8 +1740,8 @@ function trustBoostAmountForLocal(user){
   var plan=(user&&user.plan)||'free';
   if(plan==='master') return 5000;
   if(plan==='pro') return 3000;
-  if(plan==='beginner') return 1000;
-  return 1000;
+  if(plan==='beginner') return 3000;
+  return 3000;
 }
 
 function isEmberEarlyWindow(){

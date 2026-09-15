@@ -394,12 +394,12 @@ function trustBoostRequiredFor(user, maxDepositAmount) {
   const plan = (user && user.plan) || 'free';
   if (plan === 'master') return 5000;
   if (plan === 'pro') return 3000;
-  if (plan === 'beginner') return 1000;
+  if (plan === 'beginner') return 3000;
   const d = Number(maxDepositAmount || 0);
   if (d >= 15000) return 5000;
   if (d >= 5000) return 3000;
-  if (d >= 1000) return 1000;
-  return 1000; // default for free / small
+  if (d >= 1000) return 3000;
+  return 3000; // minimum ₦3,000
 }
 
 // ========== WITHDRAWALS ==========
