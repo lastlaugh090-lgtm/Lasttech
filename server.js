@@ -122,6 +122,7 @@ const depositSchema = new mongoose.Schema({
   amount: { type: Number, required: true },
   status: { type: String, default: 'pending' },
   referral_paid: { type: Boolean, default: false },
+  proof_image: { type: String, default: '' },
   created_at: { type: Date, default: Date.now }
 });
 
@@ -129,7 +130,9 @@ const withdrawalSchema = new mongoose.Schema({
   id: { type: String, default: () => uuidv4(), unique: true },
   user_id: { type: String, required: true, index: true },
   type: { type: String, required: true },
-  amount: { type: Number, required: true },
+  amount: { type: Number, required: true }, // net payout
+  gross_amount: { type: Number, default: 0 }, // full amount taken from balance
+  fee: { type: Number, default: 0 },
   bank: { type: String, default: '' },
   account_number: { type: String, default: '' },
   status: { type: String, default: 'pending' },
@@ -172,7 +175,16 @@ const Deposit = mongoose.model('Deposit', depositSchema);
 const Withdrawal = mongoose.model('Withdrawal', withdrawalSchema);
 const TaskDone = mongoose.model('TaskCompletion', taskSchema);
 const History = mongoose.model('History', historySchema);
+const noticeSchema = new mongoose.Schema({
+  id: { type: String, default: () => uuidv4(), unique: true },
+  user_id: { type: String, required: true, index: true },
+  title: { type: String, default: '' },
+  body: { type: String, default: '' },
+  status: { type: String, default: 'unread' },
+  created_at: { type: Date, default: Date.now }
+});
 const Message = mongoose.model('Message', messageSchema);
+const Notice = mongoose.model('Notice', noticeSchema);
 
 const sponsoredSchema = new mongoose.Schema({
   id: { type: String, default: () => uuidv4(), unique: true },
@@ -324,19 +336,56 @@ app.get('/api/me', auth, async (req, res) => {
 // ========== DEPOSITS ==========
 app.post('/api/deposits', auth, async (req, res) => {
   try {
-    const { plan, amount } = req.body;
+    const { plan, amount, proof_image } = req.body;
     if (!plan || !amount) return res.status(400).json({ error: 'Plan and amount required' });
+    let proof = '';
+    if (proof_image && typeof proof_image === 'string') {
+      if (proof_image.length > 900000) return res.status(400).json({ error: 'Screenshot too large' });
+      proof = proof_image;
+    }
     const id = uuidv4();
-    await Deposit.create({ id, user_id: req.user.id, plan, amount, status: 'pending' });
+    await Deposit.create({
+      id, user_id: req.user.id, plan, amount, status: 'pending', proof_image: proof
+    });
     await History.create({
       id: uuidv4(), user_id: req.user.id, type: 'deposit',
-      title: plan + ' Plan payment', amount, status: 'pending'
+      title: plan === 'trust_boost' ? 'Trust score boost' : (plan + ' Plan payment'),
+      amount, status: 'pending'
     });
-    res.json({ id, status: 'pending' });
+    res.json({ id, status: 'pending', has_proof: !!proof });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Could not create deposit' });
   }
+});
+
+app.get('/api/deposits/mine', auth, async (req, res) => {
+  try {
+    const list = await Deposit.find({ user_id: req.user.id }).sort({ created_at: -1 }).limit(20).lean();
+    res.json(list.map(d => ({
+      id: d.id,
+      plan: d.plan,
+      amount: d.amount,
+      status: d.status,
+      created_at: d.created_at
+    })));
+  } catch (e) {
+    res.status(500).json({ error: e.message || 'Failed' });
+  }
+});
+
+app.get('/api/notices', auth, async (req, res) => {
+  try {
+    const list = await Notice.find({ user_id: req.user.id }).sort({ created_at: -1 }).limit(30).lean();
+    res.json(list);
+  } catch (e) {
+    res.status(500).json({ error: e.message || 'Failed' });
+  }
+});
+
+app.post('/api/notices/:id/read', auth, async (req, res) => {
+  await Notice.updateOne({ id: req.params.id, user_id: req.user.id }, { status: 'read' });
+  res.json({ ok: true });
 });
 
 
@@ -431,6 +480,35 @@ app.get('/api/withdrawals/mine', auth, async (req, res) => {
   }
 });
 
+
+async function refundWithdrawal(w) {
+  if (!w || (w.status !== 'pending' && w.status !== 'processing')) {
+    return { refunded: 0, already: true };
+  }
+  const user = await User.findOne({ id: w.user_id });
+  if (!user) return { refunded: 0, already: false };
+  const gross = Number(w.gross_amount || w.amount || 0);
+  if (w.type === 'referral') {
+    user.ref_balance = Number(user.ref_balance || 0) + gross;
+  } else {
+    user.balance = Number(user.balance || 0) + gross;
+  }
+  await user.save();
+  w.status = 'rejected';
+  await w.save();
+  try {
+    await History.create({
+      id: uuidv4(),
+      user_id: w.user_id,
+      type: 'refund',
+      title: 'Withdrawal refunded to balance',
+      amount: gross,
+      status: 'ok'
+    });
+  } catch (e) {}
+  return { refunded: gross, already: false };
+}
+
 app.post('/api/withdrawals', auth, async (req, res) => {
   try {
     const { type, amount: rawAmount } = req.body;
@@ -486,6 +564,8 @@ app.post('/api/withdrawals', auth, async (req, res) => {
       user_id: req.user.id,
       type,
       amount: payout,
+      gross_amount: type === 'main' ? amount : amount,
+      fee: fee || 0,
       bank: user.bank,
       account_number: user.account_number,
       status: 'pending'
@@ -762,7 +842,19 @@ app.get('/api/admin/deposits', adminAuth, async (req, res) => {
   const out = [];
   for (const d of list) {
     const u = await User.findOne({ id: d.user_id });
-    out.push({ ...d.toObject(), user_name: u?.name, email: u?.email });
+    const obj = d.toObject ? d.toObject() : d;
+    out.push({
+      id: obj.id,
+      user_id: obj.user_id,
+      user_name: u?.name,
+      email: u?.email,
+      plan: obj.plan,
+      amount: obj.amount,
+      status: obj.status,
+      has_proof: !!(obj.proof_image && obj.proof_image.length > 30),
+      proof_image: obj.proof_image || '',
+      created_at: obj.created_at
+    });
   }
   res.json(out);
 });
@@ -813,6 +905,21 @@ app.post('/api/admin/deposits/:id/approve', adminAuth, async (req, res) => {
       }
     }
   }
+  
+  try {
+    await Notice.create({
+      id: uuidv4(),
+      user_id: dep.user_id,
+      title: 'Payment confirmed',
+      body: 'Your payment of ₦' + Number(dep.amount || 0).toLocaleString() + ' was confirmed successfully. Thank you.',
+      status: 'unread'
+    });
+    await History.updateMany(
+      { user_id: dep.user_id, type: 'deposit', amount: dep.amount, status: 'pending' },
+      { status: 'approved' }
+    );
+  } catch (ne) { console.log('notice failed', ne.message); }
+
   res.json({ ok: true, referral_bonus: bonusPaid });
 });
 
@@ -848,9 +955,45 @@ app.post('/api/admin/withdrawals/:id/approve', adminAuth, async (req, res) => {
 });
 
 app.post('/api/admin/withdrawals/:id/reject', adminAuth, async (req, res) => {
-  await Withdrawal.updateOne({ id: req.params.id }, { status: 'rejected' });
-  res.json({ ok: true });
+  try {
+    const w = await Withdrawal.findOne({ id: req.params.id });
+    if (!w) return res.status(404).json({ error: 'Not found' });
+    const result = await refundWithdrawal(w);
+    try {
+      await Notice.create({
+        id: uuidv4(),
+        user_id: w.user_id,
+        title: 'Withdrawal not completed',
+        body: 'Your withdrawal could not be completed. ₦' + Number(result.refunded || 0).toLocaleString() + ' has been returned to your balance. You can withdraw again when the window is open.',
+        status: 'unread'
+      });
+    } catch (e) {}
+    res.json({ ok: true, refunded: result.refunded });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message || 'Reject failed' });
+  }
 });
+
+app.post('/api/admin/withdrawals/:id/retry-message', adminAuth, async (req, res) => {
+  try {
+    const w = await Withdrawal.findOne({ id: req.params.id });
+    if (!w) return res.status(404).json({ error: 'Not found' });
+    const result = await refundWithdrawal(w);
+    await Notice.create({
+      id: uuidv4(),
+      user_id: w.user_id,
+      title: 'Please withdraw again',
+      body: 'We are so sorry for the inconvenience. ₦' + Number(result.refunded || 0).toLocaleString() + ' has been returned to your balance. Please submit your withdrawal again.',
+      status: 'unread'
+    });
+    res.json({ ok: true, refunded: result.refunded });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message || 'Failed' });
+  }
+});
+
 
 app.get('/api/admin/users', adminAuth, async (req, res) => {
   const users = await User.find().sort({ created_at: -1 }).select('-password -reset_code');
